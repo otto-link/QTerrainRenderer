@@ -39,8 +39,11 @@ protected:
 
 private:
   std::string title;
-  QTimer      frame_timer;
 
+  QTimer frame_timer;
+  bool   need_update = false;
+
+  // DBG
   float a = 10.f;
 };
 

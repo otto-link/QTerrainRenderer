@@ -24,9 +24,15 @@ RenderWidget::RenderWidget(const std::string &_title, QWidget *parent)
   // force 60 FPS update
   this->connect(&frame_timer,
                 &QTimer::timeout,
-                this,
-                QOverload<>::of(&RenderWidget::update));
-  this->frame_timer.start(32);
+                [this]()
+                {
+                  if (this->need_update)
+                  {
+                    this->update();
+                    this->need_update = false;
+                  }
+                });
+  this->frame_timer.start(16);
 }
 
 RenderWidget::~RenderWidget()
@@ -116,12 +122,32 @@ void RenderWidget::paintGL()
   ImGui_ImplOpenGL3_NewFrame();
   ImGui::NewFrame();
 
+  // FPS
+  if (true)
+  {
+    ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration |
+                             ImGuiWindowFlags_AlwaysAutoResize |
+                             ImGuiWindowFlags_NoSavedSettings |
+                             ImGuiWindowFlags_NoFocusOnAppearing |
+                             ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoMove;
+
+    ImGui::SetNextWindowBgAlpha(0.0f); // Fully transparent background
+    ImGui::SetNextWindowPos(ImVec2(10, 10),
+                            ImGuiCond_Always); // Position: top-left corner
+
+    const std::string str = this->title + " - FPS: %.1f";
+
+    ImGui::Begin("TopLeftText", nullptr, flags);
+    ImGui::Text(str.c_str(), ImGui::GetIO().Framerate);
+    ImGui::End();
+  }
+
   ImGui::Begin("Hello ImGui");
   ImGui::Text("Qt6 + QOpenGLWidget + ImGui");
 
   if (ImGui::SliderFloat("A a value", &a, 0.f, 10.f))
     QTR_LOG->trace("a: {}", this->a);
-  
+
   ImGui::End();
 
   ImGui::Render();
