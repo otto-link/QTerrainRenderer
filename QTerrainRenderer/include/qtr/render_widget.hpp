@@ -16,6 +16,7 @@ class RenderWidget : public QOpenGLWidget, protected QOpenGLFunctions
 
 public:
   explicit RenderWidget(const std::string &_title = "", QWidget *parent = nullptr);
+  ~RenderWidget();
 
   void           json_from(nlohmann::json const &json);
   nlohmann::json json_to() const;
@@ -24,12 +25,23 @@ public:
 
 protected:
   void initializeGL() override;
+  void paintGL() override;
   void resizeEvent(QResizeEvent *event) override;
   void resizeGL(int w, int h) override;
+
+  // --- Input forwarding to ImGui
+  void mousePressEvent(QMouseEvent *e) override;
+  void mouseReleaseEvent(QMouseEvent *e) override;
+  void mouseMoveEvent(QMouseEvent *e) override;
+  void wheelEvent(QWheelEvent *e) override;
+  void keyPressEvent(QKeyEvent *e) override;
+  void keyReleaseEvent(QKeyEvent *e) override;
 
 private:
   std::string title;
   QTimer      frame_timer;
+
+  float a = 10.f;
 };
 
 } // namespace qtr

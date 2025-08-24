@@ -2,6 +2,9 @@
    License. The full license is in the file LICENSE, distributed with this software. */
 #include <QOpenGLFunctions>
 
+#include <backends/imgui_impl_opengl3.h>
+#include <imgui.h>
+
 #include "qtr/config.hpp"
 #include "qtr/logger.hpp"
 #include "qtr/render_widget.hpp"
@@ -23,7 +26,15 @@ RenderWidget::RenderWidget(const std::string &_title, QWidget *parent)
                 &QTimer::timeout,
                 this,
                 QOverload<>::of(&RenderWidget::update));
-  this->frame_timer.start(16);
+  this->frame_timer.start(32);
+}
+
+RenderWidget::~RenderWidget()
+{
+  this->makeCurrent();
+  ImGui_ImplOpenGL3_Shutdown();
+  ImGui::DestroyContext();
+  this->doneCurrent();
 }
 
 void RenderWidget::initializeGL()
@@ -31,6 +42,16 @@ void RenderWidget::initializeGL()
   QTR_LOG->trace("RenderWidget::initializeGL");
 
   QOpenGLFunctions::initializeOpenGLFunctions();
+
+  QTR_LOG->trace("RenderWidget::initializeGL: setup ImGui context");
+
+  // ImGui context
+  IMGUI_CHECKVERSION();
+  ImGui::CreateContext();
+  ImGui::StyleColorsDark();
+
+  // OpenGL3 backend
+  ImGui_ImplOpenGL3_Init("#version 330");
 }
 
 void RenderWidget::json_from(nlohmann::json const &json)
@@ -79,6 +100,42 @@ nlohmann::json RenderWidget::json_to() const
   return json;
 }
 
+void RenderWidget::paintGL()
+{
+  // --- FIRST - OpenGL scene rendering
+
+  glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glDisable(GL_DEPTH_TEST);
+
+  // --- LAST - ImGui overlay rendering
+
+  ImGui_ImplOpenGL3_NewFrame();
+  ImGui::NewFrame();
+
+  ImGui::Begin("Hello ImGui");
+  ImGui::Text("Qt6 + QOpenGLWidget + ImGui");
+
+  if (ImGui::SliderFloat("A a value", &a, 0.f, 10.f))
+    QTR_LOG->trace("a: {}", this->a);
+  
+  ImGui::End();
+
+  ImGui::Render();
+  ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+  // --- check for errors...
+
+  {
+    GLenum err;
+    while ((err = glGetError()) != GL_NO_ERROR)
+      QTR_LOG->error("RenderWidget::paintGL: OpenGL error: {}", err);
+  }
+}
+
 void RenderWidget::resizeEvent(QResizeEvent *event)
 {
   QOpenGLWidget::resizeEvent(event);
@@ -90,6 +147,7 @@ void RenderWidget::resizeEvent(QResizeEvent *event)
 void RenderWidget::resizeGL(int w, int h)
 {
   this->glViewport(0, 0, w, h);
+  ImGui::GetIO().DisplaySize = ImVec2(float(w), float(h));
   this->repaint();
 }
 

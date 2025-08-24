@@ -28,5 +28,11 @@ file(COPY ${CMAKE_SOURCE_DIR}/QTerrainRenderer/data
 
 # Link libraries
 target_link_libraries(
-  ${PROJECT_NAME} PUBLIC spdlog::spdlog nlohmann_json::nlohmann_json Qt6::Core
-                         Qt6::Widgets Qt6::OpenGL Qt6::OpenGLWidgets)
+  ${PROJECT_NAME}
+  PUBLIC spdlog::spdlog
+         nlohmann_json::nlohmann_json
+         Qt6::Core
+         Qt6::Widgets
+         Qt6::OpenGL
+         Qt6::OpenGLWidgets
+         imgui::imgui)
