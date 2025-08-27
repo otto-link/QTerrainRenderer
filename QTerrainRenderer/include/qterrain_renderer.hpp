@@ -4,5 +4,7 @@
 
 #include "qtr/config.hpp"
 #include "qtr/logger.hpp"
+#include "qtr/mesh.hpp"
 #include "qtr/render_widget.hpp"
 #include "qtr/shader.hpp"
+#include "qtr/texture.hpp"

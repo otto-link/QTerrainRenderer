@@ -26,7 +26,7 @@ void Texture::destroy()
 
 bool Texture::from_image_8bit_grayscale(const std::vector<uint8_t> &img, int new_width)
 {
-  QOpenGLFunctions::initializeOpenGLFunctions();
+  initializeOpenGLFunctions();
   this->destroy();
 
   this->width = new_width;
@@ -57,7 +57,7 @@ bool Texture::from_image_8bit_grayscale(const std::vector<uint8_t> &img, int new
 
 bool Texture::from_image_8bit_rgba(const std::vector<uint8_t> &img, int new_width)
 {
-  QOpenGLFunctions::initializeOpenGLFunctions();
+  initializeOpenGLFunctions();
   this->destroy();
 
   this->width = new_width;
