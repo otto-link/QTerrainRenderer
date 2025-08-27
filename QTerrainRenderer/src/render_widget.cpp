@@ -49,6 +49,11 @@ void RenderWidget::initializeGL()
 
   QOpenGLFunctions::initializeOpenGLFunctions();
 
+  // shaders
+  QTR_LOG->trace("RenderWidget::initializeGL: setting up shaders...");
+
+  this->sp_shader_manager = std::make_unique<ShaderManager>();
+
   QTR_LOG->trace("RenderWidget::initializeGL: setup ImGui context");
 
   // ImGui context
@@ -113,9 +118,10 @@ void RenderWidget::paintGL()
   glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  glDisable(GL_DEPTH_TEST);
+  glEnable(GL_BLEND);
+  glEnable(GL_DEPTH_TEST);
+  glDisable(GL_CULL_FACE);
 
   // --- LAST - ImGui overlay rendering
 

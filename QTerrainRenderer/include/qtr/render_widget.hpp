@@ -7,6 +7,8 @@
 
 #include "nlohmann/json.hpp"
 
+#include "qtr/shader_manager.hpp"
+
 namespace qtr
 {
 
@@ -38,10 +40,15 @@ protected:
   void keyReleaseEvent(QKeyEvent *e) override;
 
 private:
+  // --- Members
   std::string title;
 
+  // GUI
   QTimer frame_timer;
   bool   need_update = false;
+
+  // OpenGL
+  std::unique_ptr<ShaderManager> sp_shader_manager;
 
   // DBG
   float a = 10.f;
