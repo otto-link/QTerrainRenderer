@@ -5,7 +5,6 @@
 #include <backends/imgui_impl_opengl3.h>
 #include <imgui.h>
 
-#include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
@@ -38,6 +37,9 @@ RenderWidget::RenderWidget(const std::string &_title, QWidget *parent)
                   }
                 });
   this->frame_timer.start(16);
+
+  // init.
+  this->reset_camera_position();
 }
 
 RenderWidget::~RenderWidget()
@@ -136,30 +138,28 @@ void RenderWidget::paintGL()
   else
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-  // OpenGL rendering
-
-  // TODO DBG
-  // cube.create(face_vertices, face_indices); //, cube_indices);
-
   {
     // transformation matrices
 
     // MODEL
-    glm::mat4 model = glm::mat4(1.f);
-    glm::vec3 position(this->dx, this->dy, 0.f);
-    model = glm::translate(model, position);
-
-    model = glm::rotate(model, this->alpha_y, glm::vec3(0.f, 1.f, 0.f));
-    model = glm::rotate(model, this->alpha_x, glm::vec3(1.f, 0.f, 0.f));
-
-    glm::vec3 scale_mat(this->scale, this->scale * this->scale_h, this->scale);
-    model = glm::scale(model, scale_mat);
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::scale(model, glm::vec3(1.f, this->scale_h, 1.f));
 
     // VIEW
-    glm::vec3 camera_pos = glm::vec3(5.f, 1.f, 5.f);
-    glm::vec3 camera_target = glm::vec3(0.f, 0.f, 0.f);
-    glm::vec3 up_vector = glm::vec3(0.f, 1.f, 0.f);
-    glm::mat4 view = glm::lookAt(camera_pos, camera_target, up_vector);
+    glm::vec3 camera_pos;
+
+    camera_pos = this->target;
+    camera_pos.x += this->distance * cos(this->alpha_x) * sin(this->alpha_y);
+    camera_pos.y += this->distance * sin(this->alpha_x);
+    camera_pos.z += this->distance * cos(this->alpha_x) * cos(this->alpha_y);
+
+    glm::vec3 pan(this->pan_offset.x * cos(this->alpha_y),
+                  this->pan_offset.y,
+                  -this->pan_offset.x * sin(this->alpha_y));
+    camera_pos += pan;
+
+    glm::vec3 look_target = this->target + pan;
+    glm::mat4 view = glm::lookAt(camera_pos, look_target, glm::vec3(0.f, 1.f, 0.f));
 
     // PROJECTION
     float aspect_ratio = static_cast<float>(this->width()) /
@@ -170,7 +170,7 @@ void RenderWidget::paintGL()
                                             this->near_plane,
                                             this->far_plane);
 
-    // RENDER
+    // DRAW CALL
 
     QOpenGLShaderProgram *p_shader = this->sp_shader_manager->get("base")->get();
 
@@ -219,11 +219,52 @@ void RenderWidget::paintGL()
   ImGui::Begin("Terrain Renderer");
   ImGui::Text("View");
 
-  ImGui::Checkbox("Wireframe mode", &this->wireframe_mode);
-  ImGui::SliderAngle("alpha_x", &this->alpha_x);
-  ImGui::SliderAngle("alpha_y", &this->alpha_y);
-  ImGui::SliderFloat("scale", &this->scale, 0.f, 10.f);
-  ImGui::SliderFloat("scale_h", &this->scale_h, 0.f, 1.f);
+  bool ret = false;
+
+  ret |= ImGui::Checkbox("Wireframe mode", &this->wireframe_mode);
+  ret |= ImGui::SliderFloat("scale_h", &this->scale_h, 0.f, 1.f);
+
+  ImGui::SliderFloat("alpha_x", &this->alpha_x, -180.f, 180.f);
+  ImGui::SliderFloat("alpha_y", &this->alpha_y, -180.f, 180.f);
+
+  if (ImGui::Button("Reset view"))
+  {
+    ret |= true;
+    this->reset_camera_position();
+  }
+
+  this->need_update |= ret;
+
+  // ImGUI IO
+  if (!ret) // to prevent capture of widget mouse motions (partially...)
+  {
+    ImGuiIO &io = ImGui::GetIO();
+
+    if (ImGui::IsMouseDown(ImGuiMouseButton_Left))
+    {
+      this->alpha_y -= io.MouseDelta.x * 0.005f; // Rotate horizontally
+      this->alpha_x += io.MouseDelta.y * 0.005f; // Rotate vertically
+
+      this->alpha_x = glm::clamp(this->alpha_x,
+                                 -glm::half_pi<float>(),
+                                 glm::half_pi<float>());
+      this->alpha_y = glm::clamp(this->alpha_y,
+                                 -2.f * glm::half_pi<float>(),
+                                 2.f * glm::half_pi<float>());
+    }
+
+    if (ImGui::IsMouseDown(ImGuiMouseButton_Right))
+    {
+      this->pan_offset.x -= io.MouseDelta.x * 0.001f * this->distance;
+      this->pan_offset.y += io.MouseDelta.y * 0.001f * this->distance;
+    }
+
+    if (io.MouseWheel != 0.0f)
+    {
+      this->distance *= (1.0f - io.MouseWheel * 0.1f);
+      this->distance = glm::clamp(this->distance, 0.f, 50.0f);
+    }
+  }
 
   ImGui::End();
 
@@ -237,6 +278,16 @@ void RenderWidget::paintGL()
     while ((err = glGetError()) != GL_NO_ERROR)
       QTR_LOG->error("RenderWidget::paintGL: OpenGL error: {}", err);
   }
+}
+
+void RenderWidget::reset_camera_position()
+{
+  this->target = glm::vec3(0.0f, 0.0f, 0.0f);
+  this->pan_offset = glm::vec2(0.0f, 0.0f);
+  this->distance = 5.0f;
+  this->alpha_x = 35.f / 180.f * 3.14f;
+  this->alpha_y = -25.f / 180.f * 3.14f;
+  // float fov = 45.f;
 }
 
 void RenderWidget::resizeEvent(QResizeEvent *event)

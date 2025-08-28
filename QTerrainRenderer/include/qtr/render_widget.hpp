@@ -5,6 +5,8 @@
 #include <QOpenGLWidget>
 #include <QTimer>
 
+#include <glm/glm.hpp>
+
 #include "nlohmann/json.hpp"
 
 #include "qtr/mesh.hpp"
@@ -41,21 +43,28 @@ protected:
   void keyReleaseEvent(QKeyEvent *e) override;
 
 private:
+  void reset_camera_position();
+
   // --- Members
   std::string title;
 
   // GUI
-  QTimer frame_timer;
-  bool   need_update = false;
+  QTimer               frame_timer;
+  bool                 need_update = false;
+  bool                 rotating = false;
+  bool                 panning = false;
+  std::array<float, 2> last_mouse_pos;
 
   // user parameters
   bool wireframe_mode = false;
 
-  float dx = 0.f;
-  float dy = 0.f;
-  float alpha_x = 35.f / 180.f * 3.14f;
-  float alpha_y = -25.f / 180.f * 3.14f;
-  float scale = 0.7f;
+  // camera parameters
+  glm::vec3 target;     // Orbit center
+  glm::vec2 pan_offset; // Panning offset
+  float     distance;   // Zoom (distance to target)
+  float     alpha_x;    // Rotation around X (pitch)
+  float     alpha_y;    // Rotation around Y (yaw)
+
   float scale_h = 0.4f;
   float fov = 45.f;
   float near_plane = 0.1f;
