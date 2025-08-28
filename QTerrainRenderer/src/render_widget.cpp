@@ -5,15 +5,20 @@
 #include <backends/imgui_impl_opengl3.h>
 #include <imgui.h>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 #include "qtr/config.hpp"
 #include "qtr/logger.hpp"
+#include "qtr/mesh.hpp"
 #include "qtr/render_widget.hpp"
 
 namespace qtr
 {
 
 RenderWidget::RenderWidget(const std::string &_title, QWidget *parent)
-    : QOpenGLWidget(parent), QOpenGLFunctions(), title(_title)
+    : QOpenGLWidget(parent), title(_title)
 {
   QTR_LOG->trace("RenderWidget::RenderWidget");
 
@@ -47,12 +52,15 @@ void RenderWidget::initializeGL()
 {
   QTR_LOG->trace("RenderWidget::initializeGL");
 
-  QOpenGLFunctions::initializeOpenGLFunctions();
+  QOpenGLFunctions_3_3_Core::initializeOpenGLFunctions();
 
-  // shaders
+  // shaders (NB, context needs to be set beforehand...)
   QTR_LOG->trace("RenderWidget::initializeGL: setting up shaders...");
 
   this->sp_shader_manager = std::make_unique<ShaderManager>();
+  this->sp_shader_manager->add_shader_from_code("base", vertex_normal, fragment_normal);
+
+  this->cube.create(cube_vertices, cube_indices);
 
   QTR_LOG->trace("RenderWidget::initializeGL: setup ImGui context");
 
@@ -123,6 +131,67 @@ void RenderWidget::paintGL()
   glEnable(GL_DEPTH_TEST);
   glDisable(GL_CULL_FACE);
 
+  if (this->wireframe_mode)
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+  else
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+  // OpenGL rendering
+
+  // TODO DBG
+  // cube.create(face_vertices, face_indices); //, cube_indices);
+
+  {
+    // transformation matrices
+
+    // MODEL
+    glm::mat4 model = glm::mat4(1.f);
+    glm::vec3 position(this->dx, this->dy, 0.f);
+    model = glm::translate(model, position);
+
+    model = glm::rotate(model, this->alpha_y, glm::vec3(0.f, 1.f, 0.f));
+    model = glm::rotate(model, this->alpha_x, glm::vec3(1.f, 0.f, 0.f));
+
+    glm::vec3 scale_mat(this->scale, this->scale * this->scale_h, this->scale);
+    model = glm::scale(model, scale_mat);
+
+    // VIEW
+    glm::vec3 camera_pos = glm::vec3(5.f, 1.f, 5.f);
+    glm::vec3 camera_target = glm::vec3(0.f, 0.f, 0.f);
+    glm::vec3 up_vector = glm::vec3(0.f, 1.f, 0.f);
+    glm::mat4 view = glm::lookAt(camera_pos, camera_target, up_vector);
+
+    // PROJECTION
+    float aspect_ratio = static_cast<float>(this->width()) /
+                         static_cast<float>(this->height());
+
+    glm::mat4 projection = glm::perspective(glm::radians(this->fov),
+                                            aspect_ratio,
+                                            this->near_plane,
+                                            this->far_plane);
+
+    // RENDER
+
+    QOpenGLShaderProgram *p_shader = this->sp_shader_manager->get("base")->get();
+
+    if (p_shader)
+    {
+      p_shader->bind();
+      p_shader->setUniformValue("model",
+                                QMatrix4x4(glm::value_ptr(glm::transpose(model))));
+      p_shader->setUniformValue("view", QMatrix4x4(glm::value_ptr(glm::transpose(view))));
+      p_shader->setUniformValue("projection",
+                                QMatrix4x4(glm::value_ptr(glm::transpose(projection))));
+
+      p_shader->setUniformValue("color", QVector3D(0.8f, 0.3f, 0.2f));
+      p_shader->setUniformValue("light_dir", QVector3D(0.5f, 2.0f, 0.3f));
+
+      cube.draw();
+
+      p_shader->release();
+    }
+  }
+
   // --- LAST - ImGui overlay rendering
 
   ImGui_ImplOpenGL3_NewFrame();
@@ -137,9 +206,8 @@ void RenderWidget::paintGL()
                              ImGuiWindowFlags_NoFocusOnAppearing |
                              ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoMove;
 
-    ImGui::SetNextWindowBgAlpha(0.0f); // Fully transparent background
-    ImGui::SetNextWindowPos(ImVec2(10, 10),
-                            ImGuiCond_Always); // Position: top-left corner
+    ImGui::SetNextWindowBgAlpha(0.f);
+    ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_Always);
 
     const std::string str = this->title + " - FPS: %.1f";
 
@@ -148,11 +216,14 @@ void RenderWidget::paintGL()
     ImGui::End();
   }
 
-  ImGui::Begin("Hello ImGui");
-  ImGui::Text("Qt6 + QOpenGLWidget + ImGui");
+  ImGui::Begin("Terrain Renderer");
+  ImGui::Text("View");
 
-  if (ImGui::SliderFloat("A a value", &a, 0.f, 10.f))
-    QTR_LOG->trace("a: {}", this->a);
+  ImGui::Checkbox("Wireframe mode", &this->wireframe_mode);
+  ImGui::SliderAngle("alpha_x", &this->alpha_x);
+  ImGui::SliderAngle("alpha_y", &this->alpha_y);
+  ImGui::SliderFloat("scale", &this->scale, 0.f, 10.f);
+  ImGui::SliderFloat("scale_h", &this->scale_h, 0.f, 1.f);
 
   ImGui::End();
 

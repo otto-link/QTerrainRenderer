@@ -12,13 +12,18 @@ Shader::~Shader() { this->destroy(); }
 
 bool Shader::from_code(const std::string &vertex_code, const std::string &fragment_code)
 {
+  QOpenGLFunctions_3_3_Core::initializeOpenGLFunctions();
+
   this->destroy();
   this->sp_program = std::make_unique<QOpenGLShaderProgram>();
 
   if (!this->sp_program->addShaderFromSourceCode(QOpenGLShader::Vertex,
                                                  vertex_code.c_str()))
   {
-    QTR_LOG->error("Shader::from_code: could not add shader source code");
+    QTR_LOG->error("Shader::from_code: could not add vertex shader source code");
+    QTR_LOG->error("Shader::from_code: build log >>>");
+    QTR_LOG->error("{}", this->sp_program->log().toStdString());
+    QTR_LOG->error("Shader::from_code: <<< build log");
     return false;
   }
 
@@ -26,12 +31,18 @@ bool Shader::from_code(const std::string &vertex_code, const std::string &fragme
                                                  fragment_code.c_str()))
   {
     QTR_LOG->error("Shader::from_code: could not add fragment source code");
+    QTR_LOG->error("Shader::from_code: build log >>>");
+    QTR_LOG->error("{}", this->sp_program->log().toStdString());
+    QTR_LOG->error("Shader::from_code: <<< build log");
     return false;
   }
 
   if (!this->sp_program->link())
   {
     QTR_LOG->error("Shader::from_code: could not link shader program");
+    QTR_LOG->error("Shader::from_code: build log >>>");
+    QTR_LOG->error("{}", this->sp_program->log().toStdString());
+    QTR_LOG->error("Shader::from_code: <<< build log");
     return false;
   }
 
@@ -40,6 +51,8 @@ bool Shader::from_code(const std::string &vertex_code, const std::string &fragme
 
 bool Shader::from_file(const std::string &vertex_path, const std::string &fragment_path)
 {
+  QOpenGLFunctions_3_3_Core::initializeOpenGLFunctions();
+
   // Helper lambda to read file contents into a string
   auto read_file = [](const std::string &path) -> std::string
   {

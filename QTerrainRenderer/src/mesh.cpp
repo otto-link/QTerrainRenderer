@@ -6,18 +6,23 @@
 namespace qtr
 {
 
-Mesh::Mesh() { QOpenGLFunctions_3_3_Core::initializeOpenGLFunctions(); }
+Mesh::Mesh() {}
 
 Mesh::~Mesh() { this->destroy(); }
 
 void Mesh::create(const std::vector<Vertex>       &vertices,
                   const std::vector<unsigned int> &indices)
 {
+  QOpenGLFunctions_3_3_Core::initializeOpenGLFunctions();
   this->destroy();
 
   this->vertex_count = vertices.size();
   this->index_count = indices.size();
   this->has_indices = !indices.empty();
+
+  // QTR_LOG->trace("vertex_count: {}", this->vertex_count);
+  // QTR_LOG->trace("index_count: {}", this->index_count);
+  // QTR_LOG->trace("has_indices: {}", this->has_indices);
 
   // Create VAO
   glGenVertexArrays(1, &this->vao);
@@ -80,12 +85,16 @@ void Mesh::draw()
 
 void Mesh::destroy()
 {
-  for (GLuint &gid : {this->ebo, this->vbo, this->vao})
-    if (gid)
-    {
-      glDeleteBuffers(1, &gid);
-      gid = 0;
-    }
+  if (this->vbo)
+    glDeleteBuffers(1, &this->vbo);
+  if (this->ebo)
+    glDeleteBuffers(1, &this->ebo);
+  if (this->vao)
+    glDeleteVertexArrays(1, &this->vao);
+
+  this->vbo = 0;
+  this->ebo = 0;
+  this->vao = 0;
 
   this->vertex_count = 0;
   this->index_count = 0;

@@ -1,18 +1,19 @@
 /* Copyright (c) 2025 Otto Link. Distributed under the terms of the GNU General Public
    License. The full license is in the file LICENSE, distributed with this software. */
 #pragma once
-#include <QOpenGLFunctions>
+#include <QOpenGLFunctions_3_3_Core>
 #include <QOpenGLWidget>
 #include <QTimer>
 
 #include "nlohmann/json.hpp"
 
+#include "qtr/mesh.hpp"
 #include "qtr/shader_manager.hpp"
 
 namespace qtr
 {
 
-class RenderWidget : public QOpenGLWidget, protected QOpenGLFunctions
+class RenderWidget : public QOpenGLWidget, protected QOpenGLFunctions_3_3_Core
 {
   Q_OBJECT
 
@@ -47,11 +48,24 @@ private:
   QTimer frame_timer;
   bool   need_update = false;
 
+  // user parameters
+  bool wireframe_mode = false;
+
+  float dx = 0.f;
+  float dy = 0.f;
+  float alpha_x = 35.f / 180.f * 3.14f;
+  float alpha_y = -25.f / 180.f * 3.14f;
+  float scale = 0.7f;
+  float scale_h = 0.4f;
+  float fov = 45.f;
+  float near_plane = 0.1f;
+  float far_plane = 100.f;
+
   // OpenGL
   std::unique_ptr<ShaderManager> sp_shader_manager;
 
-  // DBG
-  float a = 10.f;
+  // TODO DBG
+  Mesh cube;
 };
 
 } // namespace qtr

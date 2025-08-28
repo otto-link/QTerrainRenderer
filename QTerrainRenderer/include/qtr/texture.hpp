@@ -3,12 +3,12 @@
 #pragma once
 #include <string>
 
-#include <QOpenGLFunctions>
+#include <QOpenGLFunctions_3_3_Core>
 
 namespace qtr
 {
 
-class Texture : protected QOpenGLFunctions
+class Texture : protected QOpenGLFunctions_3_3_Core
 {
 public:
   Texture();
