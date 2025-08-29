@@ -20,10 +20,6 @@ void Mesh::create(const std::vector<Vertex>       &vertices,
   this->index_count = indices.size();
   this->has_indices = !indices.empty();
 
-  // QTR_LOG->trace("vertex_count: {}", this->vertex_count);
-  // QTR_LOG->trace("index_count: {}", this->index_count);
-  // QTR_LOG->trace("has_indices: {}", this->has_indices);
-
   // Create VAO
   glGenVertexArrays(1, &this->vao);
   glBindVertexArray(this->vao);

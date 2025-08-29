@@ -5,9 +5,6 @@
 #include <backends/imgui_impl_opengl3.h>
 #include <imgui.h>
 
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-
 #include "qtr/config.hpp"
 #include "qtr/logger.hpp"
 #include "qtr/mesh.hpp"
@@ -60,7 +57,18 @@ void RenderWidget::initializeGL()
   QTR_LOG->trace("RenderWidget::initializeGL: setting up shaders...");
 
   this->sp_shader_manager = std::make_unique<ShaderManager>();
-  this->sp_shader_manager->add_shader_from_code("base", vertex_normal, fragment_normal);
+
+  this->sp_shader_manager->add_shader_from_code("diffuse_basic",
+                                                diffuse_basic_vertex,
+                                                diffuse_basic_frag);
+
+  this->sp_shader_manager->add_shader_from_code("diffuse_phong",
+                                                diffuse_basic_vertex,
+                                                diffuse_phong_frag);
+
+  this->sp_shader_manager->add_shader_from_code("diffuse_blinn_phong",
+                                                diffuse_basic_vertex,
+                                                diffuse_blinn_phong_frag);
 
   this->cube.create(cube_vertices, cube_indices);
 
@@ -165,26 +173,35 @@ void RenderWidget::paintGL()
     float aspect_ratio = static_cast<float>(this->width()) /
                          static_cast<float>(this->height());
 
-    glm::mat4 projection = glm::perspective(glm::radians(this->fov),
+    glm::mat4 projection = glm::perspective(this->fov,
                                             aspect_ratio,
                                             this->near_plane,
                                             this->far_plane);
 
+    // LIGHT
+    glm::vec3 light_dir(sin(this->light_theta) * sin(this->light_phi),
+                        cos(this->light_theta),
+                        sin(this->light_theta) * cos(this->light_phi));
+
     // DRAW CALL
 
-    QOpenGLShaderProgram *p_shader = this->sp_shader_manager->get("base")->get();
+    // QOpenGLShaderProgram *p_shader =
+    // this->sp_shader_manager->get("diffuse_basic")->get();
+    QOpenGLShaderProgram *p_shader = this->sp_shader_manager->get("diffuse_basic")->get();
 
     if (p_shader)
     {
       p_shader->bind();
-      p_shader->setUniformValue("model",
-                                QMatrix4x4(glm::value_ptr(glm::transpose(model))));
-      p_shader->setUniformValue("view", QMatrix4x4(glm::value_ptr(glm::transpose(view))));
-      p_shader->setUniformValue("projection",
-                                QMatrix4x4(glm::value_ptr(glm::transpose(projection))));
+      p_shader->setUniformValue("model", toQMat(model));
+      p_shader->setUniformValue("view", toQMat(view));
+      p_shader->setUniformValue("projection", toQMat(projection));
 
-      p_shader->setUniformValue("color", QVector3D(0.8f, 0.3f, 0.2f));
-      p_shader->setUniformValue("light_dir", QVector3D(0.5f, 2.0f, 0.3f));
+      p_shader->setUniformValue("color", QVector3D(0.8f, 0.3f, 0.2f)); // object color
+      p_shader->setUniformValue("light_dir", toQVec(light_dir));
+
+      // p_shader->setUniformValue("view_pos", toQVec(camera_pos));
+      // p_shader->setUniformValue("shininess", 32.0f);
+      // p_shader->setUniformValue("spec_strength", 0.5f);
 
       cube.draw();
 
@@ -223,9 +240,11 @@ void RenderWidget::paintGL()
 
   ret |= ImGui::Checkbox("Wireframe mode", &this->wireframe_mode);
   ret |= ImGui::SliderFloat("scale_h", &this->scale_h, 0.f, 1.f);
+  ret |= ImGui::SliderAngle("FOV", &this->fov, 10.f, 180.f);
 
-  ImGui::SliderFloat("alpha_x", &this->alpha_x, -180.f, 180.f);
-  ImGui::SliderFloat("alpha_y", &this->alpha_y, -180.f, 180.f);
+  ImGui::Text("Light");
+  ret |= ImGui::SliderAngle("Azimuth", &this->light_phi, -180.f, 180.f);
+  ret |= ImGui::SliderAngle("Zenith", &this->light_theta, 0.f, 90.f);
 
   if (ImGui::Button("Reset view"))
   {
@@ -242,15 +261,16 @@ void RenderWidget::paintGL()
 
     if (ImGui::IsMouseDown(ImGuiMouseButton_Left))
     {
-      this->alpha_y -= io.MouseDelta.x * 0.005f; // Rotate horizontally
-      this->alpha_x += io.MouseDelta.y * 0.005f; // Rotate vertically
+      this->alpha_y -= io.MouseDelta.x * 0.005f; // horizontally
+      this->alpha_x += io.MouseDelta.y * 0.005f; // vertically
 
       this->alpha_x = glm::clamp(this->alpha_x,
                                  -glm::half_pi<float>(),
                                  glm::half_pi<float>());
-      this->alpha_y = glm::clamp(this->alpha_y,
-                                 -2.f * glm::half_pi<float>(),
-                                 2.f * glm::half_pi<float>());
+
+      // this->alpha_y = glm::clamp(this->alpha_y,
+      //                            -2.f * glm::half_pi<float>(),
+      //                            2.f * glm::half_pi<float>());
     }
 
     if (ImGui::IsMouseDown(ImGuiMouseButton_Right))
@@ -287,7 +307,10 @@ void RenderWidget::reset_camera_position()
   this->distance = 5.0f;
   this->alpha_x = 35.f / 180.f * 3.14f;
   this->alpha_y = -25.f / 180.f * 3.14f;
-  // float fov = 45.f;
+  this->fov = 45.f / 180.f * 3.14f;
+
+  this->light_phi = -30.f / 180.f * 3.14f;
+  this->light_theta = 20.f / 180.f * 3.14f;
 }
 
 void RenderWidget::resizeEvent(QResizeEvent *event)

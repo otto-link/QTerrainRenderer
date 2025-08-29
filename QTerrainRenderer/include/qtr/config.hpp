@@ -18,7 +18,7 @@ public:
 
   struct Widget
   {
-    QSize size_hint = QSize(768, 512);
+    QSize size_hint = QSize(1024, 768);
   } widget;
 
 private:

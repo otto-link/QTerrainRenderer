@@ -26,7 +26,7 @@ private:
   std::unique_ptr<QOpenGLShaderProgram> sp_program;
 };
 
-static const std::string vertex_normal = R""(
+static const std::string diffuse_basic_vertex = R""(
 #version 330 core
 
 layout(location = 0) in vec3 pos;
@@ -53,7 +53,7 @@ void main()
 }
 )"";
 
-static const std::string fragment_normal = R""(
+static const std::string diffuse_basic_frag = R""(
 #version 330 core
 
 in vec3 frag_normal;
@@ -77,6 +77,84 @@ void main()
 
     frag_color = vec4(base_color, 1.0);
     // frag_color = vec4(1.0, 0.0, 0.0, 1.0);
+}
+)"";
+
+static const std::string diffuse_phong_frag = R""(
+#version 330 core
+
+in vec3 frag_normal;
+in vec3 frag_pos;
+in vec2 frag_uv;
+
+out vec4 frag_color;
+
+uniform vec3 color;        // Base color of the object
+uniform vec3 light_dir;    // Direction *towards* the light
+uniform vec3 view_pos;     // Camera position in world space
+uniform float shininess;   // Controls specular sharpness
+uniform float spec_strength; // Controls specular intensity
+
+void main()
+{
+    vec3 norm = normalize(frag_normal);
+    vec3 light = normalize(light_dir);
+    vec3 view_dir = normalize(view_pos - frag_pos);
+
+    // --- Diffuse ---
+    float diff = max(dot(norm, light), 0.0);
+    vec3 diffuse = color * diff;
+
+    // --- Specular (Phong) ---
+    vec3 reflect_dir = reflect(-light, norm);
+    float spec = pow(max(dot(view_dir, reflect_dir), 0.0), shininess);
+    vec3 specular = spec_strength * spec * vec3(1.0);
+
+    // --- Ambient ---
+    vec3 ambient = 0.2 * color;
+
+    // Combine results
+    vec3 result = ambient + diffuse + specular;
+    frag_color = vec4(result, 1.0);
+}
+)"";
+
+static const std::string diffuse_blinn_phong_frag = R""(
+#version 330 core
+
+in vec3 frag_normal;
+in vec3 frag_pos;
+in vec2 frag_uv;
+
+out vec4 frag_color;
+
+uniform vec3 color;        // Base color of the object
+uniform vec3 light_dir;    // Direction *towards* the light
+uniform vec3 view_pos;     // Camera position in world space
+uniform float shininess;   // Controls specular sharpness
+uniform float spec_strength; // Controls specular intensity
+
+void main()
+{
+    vec3 norm = normalize(frag_normal);
+    vec3 light = normalize(light_dir);
+    vec3 view_dir = normalize(view_pos - frag_pos);
+
+    // --- Diffuse ---
+    float diff = max(dot(norm, light), 0.0);
+    vec3 diffuse = color * diff;
+
+    // --- Specular (Blinn-Phong) ---
+    vec3 halfway_dir = normalize(light + view_dir);
+    float spec = pow(max(dot(norm, halfway_dir), 0.0), shininess);
+    vec3 specular = spec_strength * spec * vec3(1.0);
+
+    // --- Ambient ---
+    vec3 ambient = 0.2 * color;
+
+    // Combine results
+    vec3 result = ambient + diffuse + specular;
+    frag_color = vec4(result, 1.0);
 }
 )"";
 

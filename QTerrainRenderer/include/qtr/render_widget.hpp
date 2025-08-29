@@ -6,6 +6,8 @@
 #include <QTimer>
 
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include "nlohmann/json.hpp"
 
@@ -58,15 +60,17 @@ private:
   // user parameters
   bool wireframe_mode = false;
 
-  // camera parameters
+  // camera parameters (see reset_camera_position())
   glm::vec3 target;     // Orbit center
   glm::vec2 pan_offset; // Panning offset
   float     distance;   // Zoom (distance to target)
   float     alpha_x;    // Rotation around X (pitch)
   float     alpha_y;    // Rotation around Y (yaw)
+  float     fov;
+  float     light_phi;   // azimuth
+  float     light_theta; // zenith
 
   float scale_h = 0.4f;
-  float fov = 45.f;
   float near_plane = 0.1f;
   float far_plane = 100.f;
 
@@ -76,5 +80,13 @@ private:
   // TODO DBG
   Mesh cube;
 };
+
+// some helpers
+inline QMatrix4x4 toQMat(const glm::mat4 &m)
+{
+  return QMatrix4x4(glm::value_ptr(glm::transpose(m)));
+}
+
+inline QVector3D toQVec(const glm::vec3 &v) { return QVector3D(v.x, v.y, v.z); }
 
 } // namespace qtr
