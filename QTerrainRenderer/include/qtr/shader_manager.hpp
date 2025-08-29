@@ -1,7 +1,7 @@
 /* Copyright (c) 2025 Otto Link. Distributed under the terms of the GNU General Public
    License. The full license is in the file LICENSE, distributed with this software. */
 #pragma once
-#include <unordered_map>
+#include <map>
 
 #include "qtr/shader.hpp"
 
@@ -25,7 +25,7 @@ public:
   Shader *get(const std::string &name);
 
 private:
-  std::unordered_map<std::string, std::unique_ptr<Shader>> shaders;
+  std::map<std::string, std::unique_ptr<Shader>> shaders;
 };
 
 } // namespace qtr

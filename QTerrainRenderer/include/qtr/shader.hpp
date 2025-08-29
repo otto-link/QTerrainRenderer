@@ -48,8 +48,6 @@ void main()
     frag_uv = uv;
 
     gl_Position = projection * view * vec4(frag_pos, 1.0);
-
-    // gl_Position = vec4(pos, 1.0);
 }
 )"";
 
@@ -76,7 +74,6 @@ void main()
     vec3 base_color = color * (0.2 + 0.8 * diff);
 
     frag_color = vec4(base_color, 1.0);
-    // frag_color = vec4(1.0, 0.0, 0.0, 1.0);
 }
 )"";
 
@@ -155,6 +152,142 @@ void main()
     // Combine results
     vec3 result = ambient + diffuse + specular;
     frag_color = vec4(result, 1.0);
+}
+)"";
+
+static const std::string shadow_map_depth_pass_vertex = R""(
+#version 330 core
+
+layout(location = 0) in vec3 pos;
+
+uniform mat4 light_space_matrix;
+uniform mat4 model;
+
+void main()
+{
+    gl_Position = light_space_matrix * model * vec4(pos, 1.0);
+}
+
+)"";
+
+static const std::string shadow_map_depth_pass_frag = R""(
+#version 330 core
+
+void main()
+{
+    // depth only, no output needed
+}
+)"";
+
+static const std::string shadow_map_lit_pass_vertex = R""(
+#version 330 core
+
+layout (location = 0) in vec3 pos;    
+layout (location = 1) in vec3 normal; 
+layout (location = 2) in vec2 uv;   
+
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 projection;
+uniform mat4 light_space_matrix; // From first pass
+
+out vec3 frag_pos;
+out vec3 frag_normal;
+out vec2 frag_uv;
+out vec4 frag_pos_light_space;
+
+void main()
+{
+    frag_pos = vec3(model * vec4(pos, 1.0));
+    frag_normal = mat3(transpose(inverse(model))) * normal;
+    frag_uv = uv;
+
+    frag_pos_light_space = light_space_matrix * vec4(frag_pos, 1.0);
+    gl_Position = projection * view * vec4(frag_pos, 1.0);
+}
+
+)"";
+
+static const std::string shadow_map_lit_pass_frag = R""(
+#version 330 core
+
+in vec3 frag_pos;
+in vec3 frag_normal;
+in vec2 frag_uv;
+in vec4 frag_pos_light_space;
+
+out vec4 frag_color;
+
+uniform vec3 light_pos;
+uniform vec3 view_pos;
+uniform vec3 base_color;      // object base color
+uniform float shininess;   // Controls specular sharpness
+uniform float spec_strength; // Controls specular intensity
+uniform sampler2D shadow_map; // depth texture
+
+float calculate_shadow(vec4 frag_pos_light_space, vec3 light_dir, vec3 frag_normal)
+{
+    // Perspective divide
+    vec3 proj_coords = frag_pos_light_space.xyz / frag_pos_light_space.w;
+    proj_coords = proj_coords * 0.5 + 0.5; // [0,1] range
+
+    // Check if outside light frustum
+    if (proj_coords.z > 1.0)
+        return 0.0;
+
+    if (false)
+    {
+        float closest_depth = texture(shadow_map, proj_coords.xy).r;
+        float current_depth = proj_coords.z;
+
+        // Bias to prevent shadow acne
+        float bias = max(0.05 * (1.0 - dot(frag_normal, light_dir)), 0.001);  
+
+        // Simple shadow (0 or 1)
+        return current_depth - bias > closest_depth ? 1.0 : 0.0;
+    }
+
+    if (true) // PCF
+    {
+        float current_depth = proj_coords.z;
+        float bias = max(0.05 * (1.0 - dot(frag_normal, light_dir)), 0.001); 
+
+        float shadow = 0.0;
+        vec2 texel_size = 1.0 / textureSize(shadow_map, 0);
+        int count = 0;
+        for(int x = -1; x <= 1; ++x)
+            for(int y = -1; y <= 1; ++y)
+            {
+                float pcf_depth = texture(shadow_map, proj_coords.xy + vec2(x, y) * texel_size).r; 
+                shadow += current_depth - bias > pcf_depth ? 1.0 : 0.0;
+                count++;
+            }    
+        shadow /= count;
+        return shadow;
+    }
+
+}
+
+void main()
+{
+    vec3 norm = normalize(frag_normal);
+    vec3 light_dir = normalize(light_pos - frag_pos);
+    vec3 view_dir = normalize(view_pos - frag_pos);
+
+    // Diffuse
+    float diff = max(dot(norm, light_dir), 0.0);
+
+    // Specular
+    vec3 reflect_dir = reflect(-light_dir, norm);
+    float spec = spec_strength * pow(max(dot(view_dir, reflect_dir), 0.0), shininess);
+
+    // Shadow factor
+    float shadow = calculate_shadow(frag_pos_light_space, light_dir, frag_normal);
+
+    vec3 color = base_color;
+    vec3 lighting = (0.2 * color) + ((1.0 - shadow) * (diff * color + 0.5 * spec * vec3(1.0)));
+
+    frag_color = vec4(lighting, 1.0);
 }
 )"";
 

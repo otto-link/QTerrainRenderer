@@ -3,6 +3,7 @@
 #pragma once
 
 #include "qtr/config.hpp"
+#include "qtr/gl_errors.hpp"
 #include "qtr/logger.hpp"
 #include "qtr/mesh.hpp"
 #include "qtr/primitives.hpp"

@@ -50,8 +50,13 @@ bool ShaderManager::add_shader_from_file(const std::string &name,
 
 Shader *ShaderManager::get(const std::string &name)
 {
-  auto it = this->shaders.find(name);
-  return (it != this->shaders.end()) ? it->second.get() : nullptr;
+  if (this->shaders.contains(name))
+    return this->shaders.at(name).get();
+  else
+  {
+    QTR_LOG->error("unknown shader: {}", name);
+    return nullptr;
+  }
 }
 
 void ShaderManager::clear() { this->shaders.clear(); }

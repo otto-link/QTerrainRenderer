@@ -6,6 +6,7 @@
 #include <imgui.h>
 
 #include "qtr/config.hpp"
+#include "qtr/gl_errors.hpp"
 #include "qtr/logger.hpp"
 #include "qtr/mesh.hpp"
 #include "qtr/primitives.hpp"
@@ -37,6 +38,7 @@ RenderWidget::RenderWidget(const std::string &_title, QWidget *parent)
   this->frame_timer.start(16);
 
   // init.
+  this->timer.start(); // global timer
   this->reset_camera_position();
 }
 
@@ -71,8 +73,35 @@ void RenderWidget::initializeGL()
                                                 diffuse_basic_vertex,
                                                 diffuse_blinn_phong_frag);
 
+  this->sp_shader_manager->add_shader_from_code("shadow_map_depth_pass",
+                                                shadow_map_depth_pass_vertex,
+                                                shadow_map_depth_pass_frag);
+
+  this->sp_shader_manager->add_shader_from_code("shadow_map_lit_pass",
+                                                shadow_map_lit_pass_vertex,
+                                                shadow_map_lit_pass_frag);
+
   generate_cube(this->cube, 0.f, 0.5, 0.0f, 1.f, 1.f, 1.f);
   generate_plane(this->plane, 0.f, 0.f, 0.f, 2.f, 2.f);
+
+  this->shadow_depth_texture.generate_depth_texture(1024, 1024);
+
+  // Create framebuffer for shadow depth
+  {
+    glGenFramebuffers(1, &this->fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, this->fbo);
+    glFramebufferTexture2D(GL_FRAMEBUFFER,
+                           GL_DEPTH_ATTACHMENT,
+                           GL_TEXTURE_2D,
+                           this->shadow_depth_texture.get_id(),
+                           0);
+    glDrawBuffer(GL_NONE);
+    glReadBuffer(GL_NONE);
+
+    check_gl_error("Texture::initializeGL: attach FBO");
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  }
 
   QTR_LOG->trace("RenderWidget::initializeGL: setup ImGui context");
 
@@ -133,27 +162,83 @@ nlohmann::json RenderWidget::json_to() const
 
 void RenderWidget::paintGL()
 {
+  // calculate dt (in seconds)
+  float dt = static_cast<float>(timer.restart()) / 1000.0f;
+
   // --- FIRST - OpenGL scene rendering
 
-  glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  // MODEL
+  glm::mat4 model = glm::mat4(1.0f);
+  model = glm::scale(model, glm::vec3(1.f, this->scale_h, 1.f));
 
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  glEnable(GL_BLEND);
-  glEnable(GL_DEPTH_TEST);
-  glDisable(GL_CULL_FACE);
+  // shadow depth pass
+  glm::vec3 light_pos;
+  float     light_distance = 10.f;
 
-  if (this->wireframe_mode)
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-  else
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+  light_pos.x = light_distance * cos(this->light_theta) * sin(this->light_phi);
+  light_pos.y = light_distance * sin(this->light_theta);
+  light_pos.z = light_distance * cos(this->light_theta) * cos(this->light_phi);
+
+  glm::mat4 light_projection, light_view, light_space_matrix;
+  float     near_plane = 1.0f;
+  float     far_plane = 20.0f;
+  float     ortho_size = 4.0f;
+
+  light_projection = glm::ortho(-ortho_size,
+                                ortho_size,
+                                -ortho_size,
+                                ortho_size,
+                                near_plane,
+                                far_plane);
+  light_view = glm::lookAt(light_pos, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
+  light_space_matrix = light_projection * light_view;
+
+  {
+    QOpenGLShaderProgram *p_shader = this->sp_shader_manager->get("shadow_map_depth_pass")
+                                         ->get();
+
+    if (p_shader)
+    {
+      // backup FBO state to avoid messing up with others FBO (ImGUI
+      // for instance...)
+      GLint previous_fbo;
+      glGetIntegerv(GL_FRAMEBUFFER_BINDING, &previous_fbo);
+
+      glViewport(0,
+                 0,
+                 this->shadow_depth_texture.get_width(),
+                 this->shadow_depth_texture.get_height());
+      glBindFramebuffer(GL_FRAMEBUFFER, this->fbo);
+
+      glClear(GL_DEPTH_BUFFER_BIT);
+      glEnable(GL_DEPTH_TEST);
+      glCullFace(GL_FRONT);
+
+      p_shader->bind();
+      p_shader->setUniformValue("light_space_matrix", toQMat(light_space_matrix));
+      p_shader->setUniformValue("model", toQMat(model));
+
+      plane.draw();
+      cube.draw();
+
+      p_shader->release();
+
+      glCullFace(GL_BACK);
+      glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+      check_gl_error("Texture::paintGL: render shadow pass");
+
+      // set previous FBO back
+      glBindFramebuffer(GL_FRAMEBUFFER, previous_fbo);
+    }
+  }
 
   {
     // transformation matrices
 
     // MODEL
-    glm::mat4 model = glm::mat4(1.0f);
-    model = glm::scale(model, glm::vec3(1.f, this->scale_h, 1.f));
+    // glm::mat4 model = glm::mat4(1.0f);
+    // model = glm::scale(model, glm::vec3(1.f, this->scale_h, 1.f));
 
     // VIEW
     glm::vec3 camera_pos;
@@ -186,10 +271,45 @@ void RenderWidget::paintGL()
                         sin(this->light_theta) * cos(this->light_phi));
 
     // DRAW CALL
+    glViewport(0, 0, this->width(), this->height());
+    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_BLEND);
+    glEnable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
+
+    if (this->wireframe_mode)
+      glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    else
+      glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     // QOpenGLShaderProgram *p_shader =
     // this->sp_shader_manager->get("diffuse_basic")->get();
-    QOpenGLShaderProgram *p_shader = this->sp_shader_manager->get("diffuse_basic")->get();
+
+    // if (p_shader)
+    // {
+    //   p_shader->bind();
+    //   p_shader->setUniformValue("model", toQMat(model));
+    //   p_shader->setUniformValue("view", toQMat(view));
+    //   p_shader->setUniformValue("projection", toQMat(projection));
+
+    //   p_shader->setUniformValue("color", QVector3D(0.8f, 0.3f, 0.2f)); // object color
+    //   p_shader->setUniformValue("light_dir", toQVec(light_dir));
+
+    //   // p_shader->setUniformValue("view_pos", toQVec(camera_pos));
+    //   // p_shader->setUniformValue("shininess", 32.0f);
+    //   // p_shader->setUniformValue("spec_strength", 0.5f);
+
+    //   plane.draw();
+    //   cube.draw();
+
+    //   p_shader->release();
+    // }
+
+    QOpenGLShaderProgram *p_shader = this->sp_shader_manager->get("shadow_map_lit_pass")
+                                         ->get();
 
     if (p_shader)
     {
@@ -197,15 +317,19 @@ void RenderWidget::paintGL()
       p_shader->setUniformValue("model", toQMat(model));
       p_shader->setUniformValue("view", toQMat(view));
       p_shader->setUniformValue("projection", toQMat(projection));
+      p_shader->setUniformValue("light_space_matrix", toQMat(light_space_matrix));
 
-      p_shader->setUniformValue("color", QVector3D(0.8f, 0.3f, 0.2f)); // object color
-      p_shader->setUniformValue("light_dir", toQVec(light_dir));
+      p_shader->setUniformValue("light_pos", toQVec(light_pos));
+      p_shader->setUniformValue("view_pos", toQVec(camera_pos));
+      p_shader->setUniformValue("shininess", 32.f);
+      p_shader->setUniformValue("spec_strength", 1.f);
 
-      // p_shader->setUniformValue("view_pos", toQVec(camera_pos));
-      // p_shader->setUniformValue("shininess", 32.0f);
-      // p_shader->setUniformValue("spec_strength", 0.5f);
+      this->shadow_depth_texture.bind(0);
 
+      p_shader->setUniformValue("base_color", QVector3D(0.5f, 0.5f, 0.5f));
       plane.draw();
+
+      p_shader->setUniformValue("base_color", QVector3D(0.8f, 0.3f, 0.2f));
       cube.draw();
 
       p_shader->release();
@@ -249,10 +373,18 @@ void RenderWidget::paintGL()
   ret |= ImGui::SliderAngle("Azimuth", &this->light_phi, -180.f, 180.f);
   ret |= ImGui::SliderAngle("Zenith", &this->light_theta, 0.f, 90.f);
 
+  ImGui::Checkbox("auto_rotate_light", &this->auto_rotate_light);
+
+  if (this->auto_rotate_light)
+  {
+    this->light_phi += 0.5f * dt;
+    this->need_update = true;
+  }
+
   if (ImGui::Button("Reset view"))
   {
-    ret |= true;
     this->reset_camera_position();
+    this->need_update = true;
   }
 
   this->need_update |= ret;
@@ -312,8 +444,8 @@ void RenderWidget::reset_camera_position()
   this->alpha_y = -25.f / 180.f * 3.14f;
   this->fov = 45.f / 180.f * 3.14f;
 
-  this->light_phi = -30.f / 180.f * 3.14f;
-  this->light_theta = 20.f / 180.f * 3.14f;
+  this->light_phi = -45.f / 180.f * 3.14f;
+  this->light_theta = 45.f / 180.f * 3.14f;
 }
 
 void RenderWidget::resizeEvent(QResizeEvent *event)

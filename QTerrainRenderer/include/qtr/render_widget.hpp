@@ -1,6 +1,7 @@
 /* Copyright (c) 2025 Otto Link. Distributed under the terms of the GNU General Public
    License. The full license is in the file LICENSE, distributed with this software. */
 #pragma once
+#include <QElapsedTimer>
 #include <QOpenGLFunctions_3_3_Core>
 #include <QOpenGLWidget>
 #include <QTimer>
@@ -13,6 +14,7 @@
 
 #include "qtr/mesh.hpp"
 #include "qtr/shader_manager.hpp"
+#include "qtr/texture.hpp"
 
 namespace qtr
 {
@@ -52,6 +54,7 @@ private:
 
   // GUI
   QTimer               frame_timer;
+  QElapsedTimer        timer;
   bool                 need_update = false;
   bool                 rotating = false;
   bool                 panning = false;
@@ -59,6 +62,7 @@ private:
 
   // user parameters
   bool wireframe_mode = false;
+  bool auto_rotate_light = false;
 
   // camera parameters (see reset_camera_position())
   glm::vec3 target;     // Orbit center
@@ -76,10 +80,12 @@ private:
 
   // OpenGL
   std::unique_ptr<ShaderManager> sp_shader_manager;
+  GLuint                         fbo;
 
   // TODO DBG
-  Mesh cube;
-  Mesh plane;
+  Mesh    cube;
+  Mesh    plane;
+  Texture shadow_depth_texture, tex;
 };
 
 // some helpers

@@ -1,6 +1,8 @@
 /* Copyright (c) 2025 Otto Link. Distributed under the terms of the GNU General Public
  License. The full license is in the file LICENSE, distributed with this software. */
 #include "qtr/texture.hpp"
+#include "qtr/gl_errors.hpp"
+#include "qtr/logger.hpp"
 
 namespace qtr
 {
@@ -115,6 +117,40 @@ bool Texture::from_image_16bit_grayscale(const std::vector<uint16_t> &img, int n
   glBindTexture(GL_TEXTURE_2D, 0);
 
   return true;
+}
+
+void Texture::generate_depth_texture(int new_width, int new_height)
+{
+  QOpenGLFunctions_3_3_Core::initializeOpenGLFunctions();
+  this->destroy();
+
+  this->width = new_width;
+  this->height = new_height;
+
+  glGenTextures(1, &this->id);
+  glBindTexture(GL_TEXTURE_2D, this->id);
+
+  check_gl_error("Texture::generate_depth_texture: gen/bind");
+
+  glTexImage2D(GL_TEXTURE_2D,
+               0,
+               GL_DEPTH_COMPONENT,
+               this->width,
+               this->height,
+               0,
+               GL_DEPTH_COMPONENT,
+               GL_FLOAT,
+               nullptr);
+
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+
+  float border_color[] = {1.0f, 1.0f, 1.0f, 1.0f};
+  glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border_color);
+
+  glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 GLuint Texture::get_id() const { return this->id; }
