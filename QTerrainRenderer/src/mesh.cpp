@@ -6,12 +6,18 @@
 namespace qtr
 {
 
+Vertex::Vertex(const glm::vec3 &pos, const glm::vec3 &norm, const glm::vec2 &tex_uv)
+{
+  this->position = {pos.x, pos.y, pos.z};
+  this->normal = {norm.x, norm.y, norm.z};
+  this->uv = {tex_uv.x, tex_uv.y};
+}
+
 Mesh::Mesh() {}
 
 Mesh::~Mesh() { this->destroy(); }
 
-void Mesh::create(const std::vector<Vertex>       &vertices,
-                  const std::vector<unsigned int> &indices)
+void Mesh::create(const std::vector<Vertex> &vertices, const std::vector<uint> &indices)
 {
   QOpenGLFunctions_3_3_Core::initializeOpenGLFunctions();
   this->destroy();
@@ -38,7 +44,7 @@ void Mesh::create(const std::vector<Vertex>       &vertices,
     glGenBuffers(1, &this->ebo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->ebo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-                 indices.size() * sizeof(unsigned int),
+                 indices.size() * sizeof(uint),
                  indices.data(),
                  GL_STATIC_DRAW);
   }

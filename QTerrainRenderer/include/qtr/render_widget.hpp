@@ -79,6 +79,7 @@ private:
 
   // TODO DBG
   Mesh cube;
+  Mesh plane;
 };
 
 // some helpers

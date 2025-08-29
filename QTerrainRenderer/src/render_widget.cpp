@@ -8,6 +8,7 @@
 #include "qtr/config.hpp"
 #include "qtr/logger.hpp"
 #include "qtr/mesh.hpp"
+#include "qtr/primitives.hpp"
 #include "qtr/render_widget.hpp"
 
 namespace qtr
@@ -70,7 +71,8 @@ void RenderWidget::initializeGL()
                                                 diffuse_basic_vertex,
                                                 diffuse_blinn_phong_frag);
 
-  this->cube.create(cube_vertices, cube_indices);
+  generate_cube(this->cube, 0.f, 0.5, 0.0f, 1.f, 1.f, 1.f);
+  generate_plane(this->plane, 0.f, 0.f, 0.f, 2.f, 2.f);
 
   QTR_LOG->trace("RenderWidget::initializeGL: setup ImGui context");
 
@@ -203,6 +205,7 @@ void RenderWidget::paintGL()
       // p_shader->setUniformValue("shininess", 32.0f);
       // p_shader->setUniformValue("spec_strength", 0.5f);
 
+      plane.draw();
       cube.draw();
 
       p_shader->release();
