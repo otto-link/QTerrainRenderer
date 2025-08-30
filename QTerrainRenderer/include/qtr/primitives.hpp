@@ -7,6 +7,18 @@ namespace qtr
 {
 
 void generate_cube(Mesh &mesh, float x, float y, float z, float lx, float ly, float lz);
+
+void generate_heightmap(Mesh                     &mesh,
+                        const std::vector<float> &data,
+                        int                       width,
+                        int                       height,
+                        float                     x,
+                        float                     y,
+                        float                     z,
+                        float                     lx,
+                        float                     ly,
+                        float                     lz);
+
 void generate_plane(Mesh &mesh, float x, float y, float z, float lx, float ly);
 
 } // namespace qtr

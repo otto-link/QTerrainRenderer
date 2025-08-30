@@ -85,6 +85,7 @@ private:
   // TODO DBG
   Mesh    cube;
   Mesh    plane;
+  Mesh    hmap;
   Texture shadow_depth_texture, tex;
 };
 

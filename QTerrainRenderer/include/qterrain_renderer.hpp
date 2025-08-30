@@ -10,3 +10,4 @@
 #include "qtr/render_widget.hpp"
 #include "qtr/shader.hpp"
 #include "qtr/texture.hpp"
+#include "qtr/utils.hpp"

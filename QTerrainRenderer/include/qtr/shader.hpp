@@ -250,10 +250,11 @@ float calculate_shadow(vec4 frag_pos_light_space, vec3 light_dir, vec3 frag_norm
     if (true) // PCF
     {
         float current_depth = proj_coords.z;
-        float bias = max(0.05 * (1.0 - dot(frag_normal, light_dir)), 0.001); 
+        float bias = max(0.0001 * (1.0 - dot(frag_normal, light_dir)), 0.0005); 
 
         float shadow = 0.0;
         vec2 texel_size = 1.0 / textureSize(shadow_map, 0);
+        
         int count = 0;
         for(int x = -1; x <= 1; ++x)
             for(int y = -1; y <= 1; ++y)
@@ -263,6 +264,19 @@ float calculate_shadow(vec4 frag_pos_light_space, vec3 light_dir, vec3 frag_norm
                 count++;
             }    
         shadow /= count;
+        
+        // float sum = 0;
+        // int ir = 5;
+        // for(int x = -ir; x <= ir; ++x)
+        //     for(int y = -ir; y <= ir; ++y)
+        //     {
+        //         float pcf_depth = texture(shadow_map, proj_coords.xy + vec2(x, y) * texel_size).r; 
+        //         float weight = 1.0 - length(vec2(x, y)) / ir / 1.414213f;
+        //         shadow += weight * (current_depth - bias > pcf_depth ? 1.0 : 0.0);
+        //         sum += weight;
+        //     }    
+        // shadow /= sum;
+
         return shadow;
     }
 

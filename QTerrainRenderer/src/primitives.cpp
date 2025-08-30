@@ -65,6 +65,88 @@ void generate_cube(Mesh &mesh, float x, float y, float z, float lx, float ly, fl
   mesh.create(vertices, indices);
 }
 
+void generate_heightmap(Mesh                     &mesh,
+                        const std::vector<float> &data,
+                        int                       width,
+                        int                       height,
+                        float                     x,
+                        float                     y,
+                        float                     z,
+                        float                     lx,
+                        float                     ly,
+                        float                     lz)
+{
+  std::vector<Vertex> vertices;
+  std::vector<uint>   indices;
+
+  vertices.reserve(width * height);
+  indices.reserve((width - 1) * (height - 1) * 6);
+
+  float hx = lx * 0.5f;
+  float hy = ly * 0.5f;
+
+  float dx = lx / (width - 1);
+  float dy = ly / (height - 1);
+
+  // generate vertices
+  for (int j = 0; j < height; ++j)
+    for (int i = 0; i < width; ++i)
+    {
+      int idx = j * width + i;
+
+      glm::vec3 position(x - hx + i * dx, z + data[idx] * lz, y - hy + j * dy);
+      glm::vec3 normal(0.0f, 1.0f, 0.0f); // placeholder normal
+      glm::vec2 uv(static_cast<float>(i) / (width - 1),
+                   static_cast<float>(j) / (height - 1));
+
+      Vertex v(position, normal, uv);
+
+      vertices.push_back(v);
+    }
+
+  // generate indices
+  for (int j = 0; j < height - 1; ++j)
+    for (int i = 0; i < width - 1; ++i)
+    {
+      int topLeft = j * width + i;
+      int topRight = topLeft + 1;
+      int bottomLeft = (j + 1) * width + i;
+      int bottomRight = bottomLeft + 1;
+
+      // First triangle
+      indices.push_back(topLeft);
+      indices.push_back(bottomLeft);
+      indices.push_back(topRight);
+
+      // Second triangle
+      indices.push_back(topRight);
+      indices.push_back(bottomLeft);
+      indices.push_back(bottomRight);
+    }
+
+  // recalculate normals
+  for (size_t i = 0; i < indices.size(); i += 3)
+  {
+    Vertex &v0 = vertices[indices[i + 0]];
+    Vertex &v1 = vertices[indices[i + 1]];
+    Vertex &v2 = vertices[indices[i + 2]];
+
+    glm::vec3 edge1 = v1.position - v0.position;
+    glm::vec3 edge2 = v2.position - v0.position;
+    glm::vec3 normal = glm::normalize(glm::cross(edge1, edge2));
+
+    v0.normal += normal;
+    v1.normal += normal;
+    v2.normal += normal;
+  }
+
+  for (auto &v : vertices)
+    v.normal = glm::normalize(glm::vec3(v.normal[0], v.normal[1], v.normal[2]));
+
+  //
+  mesh.create(vertices, indices);
+}
+
 void generate_plane(Mesh &mesh, float x, float y, float z, float lx, float ly)
 {
   std::vector<Vertex> vertices;

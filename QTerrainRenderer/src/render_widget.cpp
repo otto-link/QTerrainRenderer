@@ -11,6 +11,9 @@
 #include "qtr/mesh.hpp"
 #include "qtr/primitives.hpp"
 #include "qtr/render_widget.hpp"
+#include "qtr/utils.hpp"
+
+// TODO tmp
 
 namespace qtr
 {
@@ -82,7 +85,12 @@ void RenderWidget::initializeGL()
                                                 shadow_map_lit_pass_frag);
 
   generate_cube(this->cube, 0.f, 0.5, 0.0f, 1.f, 1.f, 1.f);
-  generate_plane(this->plane, 0.f, 0.f, 0.f, 2.f, 2.f);
+  generate_plane(this->plane, 0.f, 0.f, 0.f, 4.f, 4.f);
+
+  int                width, height;
+  std::vector<float> data = load_png_as_grayscale("hmap.png", width, height);
+  generate_heightmap(this->hmap, data, width, height, 0.f, 0.f, 0.f, 2.f, 2.f, 1.f);
+  //
 
   this->shadow_depth_texture.generate_depth_texture(1024, 1024);
 
@@ -171,7 +179,7 @@ void RenderWidget::paintGL()
   glm::mat4 model = glm::mat4(1.0f);
   model = glm::scale(model, glm::vec3(1.f, this->scale_h, 1.f));
 
-  // shadow depth pass
+  // LIGHT
   glm::vec3 light_pos;
   float     light_distance = 10.f;
 
@@ -179,19 +187,25 @@ void RenderWidget::paintGL()
   light_pos.y = light_distance * sin(this->light_theta);
   light_pos.z = light_distance * cos(this->light_theta) * cos(this->light_phi);
 
-  glm::mat4 light_projection, light_view, light_space_matrix;
-  float     near_plane = 1.0f;
-  float     far_plane = 20.0f;
-  float     ortho_size = 4.0f;
+  glm::vec3 light_dir(sin(this->light_theta) * sin(this->light_phi),
+                      cos(this->light_theta),
+                      sin(this->light_theta) * cos(this->light_phi));
 
-  light_projection = glm::ortho(-ortho_size,
-                                ortho_size,
-                                -ortho_size,
-                                ortho_size,
-                                near_plane,
-                                far_plane);
-  light_view = glm::lookAt(light_pos, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
-  light_space_matrix = light_projection * light_view;
+  // shadow depth pass
+  float near_plane = 1.0f;
+  float far_plane = 20.0f;
+  float ortho_size = 4.0f;
+
+  glm::mat4 light_projection = glm::ortho(-ortho_size,
+                                          ortho_size,
+                                          -ortho_size,
+                                          ortho_size,
+                                          near_plane,
+                                          far_plane);
+  glm::mat4 light_view = glm::lookAt(light_pos,
+                                     glm::vec3(0.0f),
+                                     glm::vec3(0.0, 1.0, 0.0));
+  glm::mat4 light_space_matrix = light_projection * light_view;
 
   {
     QOpenGLShaderProgram *p_shader = this->sp_shader_manager->get("shadow_map_depth_pass")
@@ -219,7 +233,8 @@ void RenderWidget::paintGL()
       p_shader->setUniformValue("model", toQMat(model));
 
       plane.draw();
-      cube.draw();
+      hmap.draw();
+      // cube.draw();
 
       p_shader->release();
 
@@ -264,11 +279,6 @@ void RenderWidget::paintGL()
                                             aspect_ratio,
                                             this->near_plane,
                                             this->far_plane);
-
-    // LIGHT
-    glm::vec3 light_dir(sin(this->light_theta) * sin(this->light_phi),
-                        cos(this->light_theta),
-                        sin(this->light_theta) * cos(this->light_phi));
 
     // DRAW CALL
     glViewport(0, 0, this->width(), this->height());
@@ -329,8 +339,11 @@ void RenderWidget::paintGL()
       p_shader->setUniformValue("base_color", QVector3D(0.5f, 0.5f, 0.5f));
       plane.draw();
 
-      p_shader->setUniformValue("base_color", QVector3D(0.8f, 0.3f, 0.2f));
-      cube.draw();
+      p_shader->setUniformValue("base_color", QVector3D(0.8f, 0.8f, 0.8f));
+      hmap.draw();
+
+      // p_shader->setUniformValue("base_color", QVector3D(0.8f, 0.3f, 0.2f));
+      // cube.draw();
 
       p_shader->release();
     }

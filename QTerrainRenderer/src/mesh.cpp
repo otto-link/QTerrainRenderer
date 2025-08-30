@@ -6,13 +6,6 @@
 namespace qtr
 {
 
-Vertex::Vertex(const glm::vec3 &pos, const glm::vec3 &norm, const glm::vec2 &tex_uv)
-{
-  this->position = {pos.x, pos.y, pos.z};
-  this->normal = {norm.x, norm.y, norm.z};
-  this->uv = {tex_uv.x, tex_uv.y};
-}
-
 Mesh::Mesh() {}
 
 Mesh::~Mesh() { this->destroy(); }

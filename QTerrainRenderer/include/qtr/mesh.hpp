@@ -13,12 +13,9 @@ namespace qtr
 
 struct Vertex
 {
-  std::array<float, 3> position;
-  std::array<float, 3> normal;
-  std::array<float, 2> uv;
-
-  // for conveniency
-  Vertex(const glm::vec3 &pos, const glm::vec3 &norm, const glm::vec2 &tex_uv);
+  glm::vec3 position;
+  glm::vec3 normal;
+  glm::vec2 uv;
 };
 
 class Mesh : protected QOpenGLFunctions_3_3_Core
