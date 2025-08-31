@@ -337,6 +337,7 @@ void RenderWidget::paintGL()
       p_shader->setUniformValue("shadow_strength", this->shadow_strength);
       p_shader->setUniformValue("use_texture", false);
       p_shader->setUniformValue("gamma_correction", this->gamma_correction);
+      p_shader->setUniformValue("apply_tonemap", this->apply_tonemap);
 
       p_shader->setUniformValue("shadow_map", 0);
       p_shader->setUniformValue("texture_albedo", 1);
@@ -417,6 +418,7 @@ void RenderWidget::paintGL()
   ImGui::Text("Albedo");
   ret |= ImGui::SliderFloat("Gamma correction", &this->gamma_correction, 0.01f, 4.f);
   ret |= ImGui::Checkbox("Bypass albedo texture", &this->bypass_hmap_texture);
+  ret |= ImGui::Checkbox("Apply tonemap", &this->apply_tonemap);
 
   this->need_update |= ret;
 

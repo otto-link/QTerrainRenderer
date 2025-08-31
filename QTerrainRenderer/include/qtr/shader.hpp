@@ -227,6 +227,7 @@ uniform bool bypass_shadow_map;
 uniform float shadow_strength;
 uniform bool use_texture;
 uniform float gamma_correction;
+uniform bool apply_tonemap;
 
 uniform sampler2D shadow_map; // depth texture
 uniform sampler2D texture_albedo; // albedo texture
@@ -266,16 +267,6 @@ float calculate_shadow(vec4 frag_pos_light_space, vec3 light_dir, vec3 frag_norm
         float shadow = 0.0;
         vec2 texel_size = 1.0 / textureSize(shadow_map, 0);
         
-        // int count = 0;
-        // for(int x = -1; x <= 1; ++x)
-        //     for(int y = -1; y <= 1; ++y)
-        //     {
-        //         float pcf_depth = texture(shadow_map, proj_coords.xy + vec2(x, y) * texel_size).r; 
-        //         shadow += current_depth - bias > pcf_depth ? 1.0 : 0.0;
-        //         count++;
-        //     }    
-        // shadow /= count;
-        
         float sum = 0;
         int ir = 2;
         for(int x = -ir; x <= ir; ++x)
@@ -290,7 +281,18 @@ float calculate_shadow(vec4 frag_pos_light_space, vec3 light_dir, vec3 frag_norm
 
         return shadow;
     }
+}
 
+// https://www.shadertoy.com/view/WdjSW3
+vec3 tonemap_ACES(vec3 x)
+{
+    // Narkowicz 2015, "ACES Filmic Tone Mapping Curve"
+    const float a = 2.51;
+    const float b = 0.03;
+    const float c = 2.43;
+    const float d = 0.59;
+    const float e = 0.14;
+    return (x * (a * x + b)) / (x * (c * x + d) + e);
 }
 
 void main()
@@ -355,6 +357,8 @@ void main()
         frag_color = vec4(result, 1.0);
     }
     
+    if (apply_tonemap)
+        frag_color = vec4(tonemap_ACES(frag_color.xyz), 1.0);
 }
 )"";
 

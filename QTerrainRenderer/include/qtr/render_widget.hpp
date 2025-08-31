@@ -86,6 +86,8 @@ private:
   bool  bypass_shadow_map = false;
   float shadow_strength = 0.9f;
 
+  bool apply_tonemap = false;
+
   // OpenGL
   std::unique_ptr<ShaderManager> sp_shader_manager;
   GLuint                         fbo;
