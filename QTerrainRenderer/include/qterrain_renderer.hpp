@@ -2,6 +2,7 @@
    License. The full license is in the file LICENSE, distributed with this software. */
 #pragma once
 
+#include "qtr/camera.hpp"
 #include "qtr/config.hpp"
 #include "qtr/gl_errors.hpp"
 #include "qtr/logger.hpp"

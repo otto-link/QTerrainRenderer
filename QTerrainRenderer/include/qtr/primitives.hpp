@@ -17,7 +17,9 @@ void generate_heightmap(Mesh                     &mesh,
                         float                     z,
                         float                     lx,
                         float                     ly,
-                        float                     lz);
+                        float                     lz,
+                        bool                      add_skirt = false,
+                        float                     add_level = 0.f);
 
 void generate_plane(Mesh &mesh, float x, float y, float z, float lx, float ly);
 

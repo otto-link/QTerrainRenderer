@@ -85,14 +85,25 @@ void RenderWidget::initializeGL()
                                                 shadow_map_lit_pass_frag);
 
   generate_cube(this->cube, 0.f, 0.5, 0.0f, 1.f, 1.f, 1.f);
-  generate_plane(this->plane, 0.f, 0.f, 0.f, 4.f, 4.f);
+  generate_plane(this->plane, 0.f, -1e-3f, 0.f, 4.f, 4.f);
 
   int                width, height;
-  std::vector<float> data = load_png_as_grayscale("hmap.png", width, height);
-  generate_heightmap(this->hmap, data, width, height, 0.f, 0.f, 0.f, 2.f, 2.f, 1.f);
+  std::vector<float> data = load_png_as_grayscale("hmap_2048.png", width, height);
+  generate_heightmap(this->hmap,
+                     data,
+                     width,
+                     height,
+                     0.f,
+                     0.f,
+                     0.f,
+                     2.f,
+                     2.f,
+                     1.f,
+                     true,
+                     0.f);
   //
-
-  this->shadow_depth_texture.generate_depth_texture(1024, 1024);
+  int shadow_map_res = 2048;
+  this->shadow_depth_texture.generate_depth_texture(shadow_map_res, shadow_map_res);
 
   // Create framebuffer for shadow depth
   {
@@ -180,31 +191,19 @@ void RenderWidget::paintGL()
   model = glm::scale(model, glm::vec3(1.f, this->scale_h, 1.f));
 
   // LIGHT
-  glm::vec3 light_pos;
-  float     light_distance = 10.f;
+  this->light.set_position_spherical(this->light_distance,
+                                     this->light_theta,
+                                     this->light_phi);
 
-  light_pos.x = light_distance * cos(this->light_theta) * sin(this->light_phi);
-  light_pos.y = light_distance * sin(this->light_theta);
-  light_pos.z = light_distance * cos(this->light_theta) * cos(this->light_phi);
+  // shadow depth pass, camera at the light position
+  this->camera_shadow_pass.position = this->light.position;
+  this->camera_shadow_pass.near_plane = 0.f;
+  this->camera_shadow_pass.far_plane = 100.f;
 
-  glm::vec3 light_dir(sin(this->light_theta) * sin(this->light_phi),
-                      cos(this->light_theta),
-                      sin(this->light_theta) * cos(this->light_phi));
-
-  // shadow depth pass
-  float near_plane = 1.0f;
-  float far_plane = 20.0f;
-  float ortho_size = 4.0f;
-
-  glm::mat4 light_projection = glm::ortho(-ortho_size,
-                                          ortho_size,
-                                          -ortho_size,
-                                          ortho_size,
-                                          near_plane,
-                                          far_plane);
-  glm::mat4 light_view = glm::lookAt(light_pos,
-                                     glm::vec3(0.0f),
-                                     glm::vec3(0.0, 1.0, 0.0));
+  float     ortho_size = 1.5f;
+  glm::mat4 light_projection = this->camera_shadow_pass.get_projection_matrix_ortho(
+      ortho_size);
+  glm::mat4 light_view = this->camera_shadow_pass.get_view_matrix();
   glm::mat4 light_space_matrix = light_projection * light_view;
 
   {
@@ -251,34 +250,22 @@ void RenderWidget::paintGL()
   {
     // transformation matrices
 
-    // MODEL
-    // glm::mat4 model = glm::mat4(1.0f);
-    // model = glm::scale(model, glm::vec3(1.f, this->scale_h, 1.f));
-
     // VIEW
-    glm::vec3 camera_pos;
 
-    camera_pos = this->target;
-    camera_pos.x += this->distance * cos(this->alpha_x) * sin(this->alpha_y);
-    camera_pos.y += this->distance * sin(this->alpha_x);
-    camera_pos.z += this->distance * cos(this->alpha_x) * cos(this->alpha_y);
+    this->camera.set_position_angles(this->distance, this->alpha_x, this->alpha_y);
 
     glm::vec3 pan(this->pan_offset.x * cos(this->alpha_y),
                   this->pan_offset.y,
                   -this->pan_offset.x * sin(this->alpha_y));
-    camera_pos += pan;
 
-    glm::vec3 look_target = this->target + pan;
-    glm::mat4 view = glm::lookAt(camera_pos, look_target, glm::vec3(0.f, 1.f, 0.f));
+    this->camera.position += pan;
+    this->camera.target = this->target + pan;
 
     // PROJECTION
     float aspect_ratio = static_cast<float>(this->width()) /
                          static_cast<float>(this->height());
 
-    glm::mat4 projection = glm::perspective(this->fov,
-                                            aspect_ratio,
-                                            this->near_plane,
-                                            this->far_plane);
+    glm::mat4 projection = this->camera.get_projection_matrix_perspective(aspect_ratio);
 
     // DRAW CALL
     glViewport(0, 0, this->width(), this->height());
@@ -306,7 +293,7 @@ void RenderWidget::paintGL()
     //   p_shader->setUniformValue("projection", toQMat(projection));
 
     //   p_shader->setUniformValue("color", QVector3D(0.8f, 0.3f, 0.2f)); // object color
-    //   p_shader->setUniformValue("light_dir", toQVec(light_dir));
+    //   p_shader->setUniformValue("light_dir", toQVec(light.get_dir()));
 
     //   // p_shader->setUniformValue("view_pos", toQVec(camera_pos));
     //   // p_shader->setUniformValue("shininess", 32.0f);
@@ -325,12 +312,12 @@ void RenderWidget::paintGL()
     {
       p_shader->bind();
       p_shader->setUniformValue("model", toQMat(model));
-      p_shader->setUniformValue("view", toQMat(view));
+      p_shader->setUniformValue("view", toQMat(camera.get_view_matrix()));
       p_shader->setUniformValue("projection", toQMat(projection));
       p_shader->setUniformValue("light_space_matrix", toQMat(light_space_matrix));
 
-      p_shader->setUniformValue("light_pos", toQVec(light_pos));
-      p_shader->setUniformValue("view_pos", toQVec(camera_pos));
+      p_shader->setUniformValue("light_pos", toQVec(this->light.position));
+      p_shader->setUniformValue("view_pos", toQVec(this->camera.position));
       p_shader->setUniformValue("shininess", 32.f);
       p_shader->setUniformValue("spec_strength", 1.f);
 
@@ -339,7 +326,7 @@ void RenderWidget::paintGL()
       p_shader->setUniformValue("base_color", QVector3D(0.5f, 0.5f, 0.5f));
       plane.draw();
 
-      p_shader->setUniformValue("base_color", QVector3D(0.8f, 0.8f, 0.8f));
+      p_shader->setUniformValue("base_color", QVector3D(1.f, 1.f, 1.f));
       hmap.draw();
 
       // p_shader->setUniformValue("base_color", QVector3D(0.8f, 0.3f, 0.2f));
@@ -459,6 +446,9 @@ void RenderWidget::reset_camera_position()
 
   this->light_phi = -45.f / 180.f * 3.14f;
   this->light_theta = 45.f / 180.f * 3.14f;
+
+  // this->light_phi = -3.f / 180.f * 3.14f;
+  // this->light_theta = 10.f / 180.f * 3.14f;
 }
 
 void RenderWidget::resizeEvent(QResizeEvent *event)

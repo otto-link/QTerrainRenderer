@@ -12,6 +12,8 @@
 
 #include "nlohmann/json.hpp"
 
+#include "qtr/camera.hpp"
+#include "qtr/light.hpp"
 #include "qtr/mesh.hpp"
 #include "qtr/shader_manager.hpp"
 #include "qtr/texture.hpp"
@@ -73,6 +75,7 @@ private:
   float     fov;
   float     light_phi;   // azimuth
   float     light_theta; // zenith
+  float     light_distance = 10.f;
 
   float scale_h = 0.4f;
   float near_plane = 0.1f;
@@ -82,7 +85,11 @@ private:
   std::unique_ptr<ShaderManager> sp_shader_manager;
   GLuint                         fbo;
 
-  // TODO DBG
+  // TODO clean-up
+  Camera camera_shadow_pass;
+  Camera camera;
+  Light  light;
+
   Mesh    cube;
   Mesh    plane;
   Mesh    hmap;

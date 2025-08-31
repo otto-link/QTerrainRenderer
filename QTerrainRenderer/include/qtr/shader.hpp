@@ -241,7 +241,7 @@ float calculate_shadow(vec4 frag_pos_light_space, vec3 light_dir, vec3 frag_norm
         float current_depth = proj_coords.z;
 
         // Bias to prevent shadow acne
-        float bias = max(0.05 * (1.0 - dot(frag_normal, light_dir)), 0.001);  
+        float bias = max(0.001 * (1.0 - dot(frag_normal, light_dir)), 0.0001);
 
         // Simple shadow (0 or 1)
         return current_depth - bias > closest_depth ? 1.0 : 0.0;
@@ -250,32 +250,37 @@ float calculate_shadow(vec4 frag_pos_light_space, vec3 light_dir, vec3 frag_norm
     if (true) // PCF
     {
         float current_depth = proj_coords.z;
-        float bias = max(0.0001 * (1.0 - dot(frag_normal, light_dir)), 0.0005); 
+     
+        // locally tune bias
+        float bias_min = 0.0005f;
+        float bias_max = 0.001f;
+        float bias_t = clamp(dot(frag_normal, light_dir), 0.0, 1.0); // in [0, 1]
+        float bias = mix(bias_max, bias_min, bias_t);
 
         float shadow = 0.0;
         vec2 texel_size = 1.0 / textureSize(shadow_map, 0);
         
-        int count = 0;
-        for(int x = -1; x <= 1; ++x)
-            for(int y = -1; y <= 1; ++y)
-            {
-                float pcf_depth = texture(shadow_map, proj_coords.xy + vec2(x, y) * texel_size).r; 
-                shadow += current_depth - bias > pcf_depth ? 1.0 : 0.0;
-                count++;
-            }    
-        shadow /= count;
-        
-        // float sum = 0;
-        // int ir = 5;
-        // for(int x = -ir; x <= ir; ++x)
-        //     for(int y = -ir; y <= ir; ++y)
+        // int count = 0;
+        // for(int x = -1; x <= 1; ++x)
+        //     for(int y = -1; y <= 1; ++y)
         //     {
         //         float pcf_depth = texture(shadow_map, proj_coords.xy + vec2(x, y) * texel_size).r; 
-        //         float weight = 1.0 - length(vec2(x, y)) / ir / 1.414213f;
-        //         shadow += weight * (current_depth - bias > pcf_depth ? 1.0 : 0.0);
-        //         sum += weight;
+        //         shadow += current_depth - bias > pcf_depth ? 1.0 : 0.0;
+        //         count++;
         //     }    
-        // shadow /= sum;
+        // shadow /= count;
+        
+        float sum = 0;
+        int ir = 2;
+        for(int x = -ir; x <= ir; ++x)
+            for(int y = -ir; y <= ir; ++y)
+            {
+                float pcf_depth = texture(shadow_map, proj_coords.xy + vec2(x, y) * texel_size).r; 
+                float weight = 1.0 - length(vec2(x, y)) / (ir + 1);
+                shadow += weight * (current_depth - bias > pcf_depth ? 1.0 : 0.0);
+                sum += weight;
+            }    
+        shadow /= sum;
 
         return shadow;
     }
@@ -299,9 +304,48 @@ void main()
     float shadow = calculate_shadow(frag_pos_light_space, light_dir, frag_normal);
 
     vec3 color = base_color;
-    vec3 lighting = (0.2 * color) + ((1.0 - shadow) * (diff * color + 0.5 * spec * vec3(1.0)));
 
-    frag_color = vec4(lighting, 1.0);
+    if (true)
+    {
+        // vec3 lighting = (0.2 * color) + ((1.0 - shadow) * (diff * color + 0.5 * spec * vec3(1.0)));
+
+        // vec3 shadow_color = vec3(0.4, 0.4, 0.5); // bluish soft shadow tint (0-1 range)
+        // vec3 shadow_color = vec3(0.5, 0.3, 0.2); // warm sunset shadows
+        vec3 shadow_color = vec3(0., 0., 0.); // dark night
+
+        float shadow_intensity = 1;            // 0 = no shadow, 1 = full shadow
+
+        vec3 base_light = diff * color + 0.5 * spec * vec3(1.0);
+        vec3 shadow_mix = mix(base_light, base_light * shadow_color, shadow * shadow_intensity);
+
+        vec3 lighting = (0.2 * color) + shadow_mix; // ambiant light + shadow
+
+        frag_color = vec4(lighting, 1.0);
+    }
+
+    if (false)
+    {
+        vec3 shadow_color = vec3(0.4, 0.4, 0.5); // soft bluish tint
+        float shadow_intensity = 0.5;
+
+        // Base diffuse and specular contributions
+        diff = max(diff, 0.5f);
+        vec3 base_diffuse  = diff * color;
+        vec3 baseSpecular = 0.5 * spec * vec3(1.0);
+
+        // Scale diffuse by (1 - shadow) and blend color
+        vec3 shadowedDiffuse = mix(base_diffuse, base_diffuse * shadow_color, shadow * shadow_intensity);
+
+        // Scale specular separately (usually less shadowed in nature)
+        vec3 shadowedSpecular = baseSpecular * (1.0 - shadow * 0.8);
+
+        // Combine with ambient
+        vec3 lighting = (0.2 * color) + base_diffuse + shadowedSpecular;
+
+        frag_color = vec4(lighting, 1.0);
+    }
+
+    
 }
 )"";
 

@@ -74,7 +74,9 @@ void generate_heightmap(Mesh                     &mesh,
                         float                     z,
                         float                     lx,
                         float                     ly,
-                        float                     lz)
+                        float                     lz,
+                        bool                      add_skirt,
+                        float                     add_level)
 {
   std::vector<Vertex> vertices;
   std::vector<uint>   indices;
@@ -88,8 +90,9 @@ void generate_heightmap(Mesh                     &mesh,
   float dx = lx / (width - 1);
   float dy = ly / (height - 1);
 
-  // generate vertices
+  // ---- Generate main surface vertices ----
   for (int j = 0; j < height; ++j)
+  {
     for (int i = 0; i < width; ++i)
     {
       int idx = j * width + i;
@@ -99,13 +102,13 @@ void generate_heightmap(Mesh                     &mesh,
       glm::vec2 uv(static_cast<float>(i) / (width - 1),
                    static_cast<float>(j) / (height - 1));
 
-      Vertex v(position, normal, uv);
-
-      vertices.push_back(v);
+      vertices.emplace_back(position, normal, uv);
     }
+  }
 
-  // generate indices
+  // ---- Generate main surface indices ----
   for (int j = 0; j < height - 1; ++j)
+  {
     for (int i = 0; i < width - 1; ++i)
     {
       int topLeft = j * width + i;
@@ -113,18 +116,66 @@ void generate_heightmap(Mesh                     &mesh,
       int bottomLeft = (j + 1) * width + i;
       int bottomRight = bottomLeft + 1;
 
-      // First triangle
       indices.push_back(topLeft);
       indices.push_back(bottomLeft);
       indices.push_back(topRight);
 
-      // Second triangle
       indices.push_back(topRight);
       indices.push_back(bottomLeft);
       indices.push_back(bottomRight);
     }
+  }
 
-  // recalculate normals
+  // ---- Add skirts ----
+  if (add_skirt)
+  {
+    auto add_skirt_edge = [&](auto getIndex, int count)
+    {
+      for (int k = 0; k < count - 1; ++k)
+      {
+        int baseIdx = static_cast<int>(vertices.size());
+
+        // Original top vertex
+        int top0 = getIndex(k);
+        int top1 = getIndex(k + 1);
+
+        // Bottom skirt vertices
+        glm::vec3 bottomPos0 = vertices[top0].position;
+        bottomPos0.y = add_level;
+        glm::vec3 bottomPos1 = vertices[top1].position;
+        bottomPos1.y = add_level;
+
+        vertices.emplace_back(bottomPos0, glm::vec3(0, 0, 0), vertices[top0].uv);
+        vertices.emplace_back(bottomPos1, glm::vec3(0, 0, 0), vertices[top1].uv);
+
+        int bottom0 = baseIdx;
+        int bottom1 = baseIdx + 1;
+
+        // Two triangles per quad
+        indices.push_back(top0);
+        indices.push_back(bottom0);
+        indices.push_back(top1);
+
+        indices.push_back(top1);
+        indices.push_back(bottom0);
+        indices.push_back(bottom1);
+      }
+    };
+
+    // Left edge (x-min)
+    add_skirt_edge([&](int j) { return j * width + 0; }, height);
+
+    // Right edge (x-max)
+    add_skirt_edge([&](int j) { return j * width + (width - 1); }, height);
+
+    // Bottom edge (y-min)
+    add_skirt_edge([&](int i) { return i; }, width);
+
+    // Top edge (y-max)
+    add_skirt_edge([&](int i) { return (height - 1) * width + i; }, width);
+  }
+
+  // ---- Recalculate normals ----
   for (size_t i = 0; i < indices.size(); i += 3)
   {
     Vertex &v0 = vertices[indices[i + 0]];
@@ -141,9 +192,8 @@ void generate_heightmap(Mesh                     &mesh,
   }
 
   for (auto &v : vertices)
-    v.normal = glm::normalize(glm::vec3(v.normal[0], v.normal[1], v.normal[2]));
+    v.normal = glm::normalize(v.normal);
 
-  //
   mesh.create(vertices, indices);
 }
 
