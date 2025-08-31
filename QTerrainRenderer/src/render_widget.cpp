@@ -85,17 +85,17 @@ void RenderWidget::initializeGL()
                                                 shadow_map_lit_pass_frag);
 
   generate_cube(this->cube, 0.f, 0.5, 0.0f, 1.f, 1.f, 1.f);
-  generate_plane(this->plane, 0.f, -1e-3f, 0.f, 4.f, 4.f);
+  generate_plane(this->plane, 0.f, 0.f, 0.f, 4.f, 4.f);
 
   int                width, height;
-  std::vector<float> data = load_png_as_grayscale("hmap_2048.png", width, height);
+  std::vector<float> data = load_png_as_grayscale("hmap.png", width, height);
   generate_heightmap(this->hmap,
                      data,
                      width,
                      height,
                      0.f,
                      0.f,
-                     0.f,
+                     0.05f,
                      2.f,
                      2.f,
                      1.f,

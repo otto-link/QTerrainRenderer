@@ -303,11 +303,9 @@ void main()
     // Shadow factor
     float shadow = calculate_shadow(frag_pos_light_space, light_dir, frag_normal);
 
-    vec3 color = base_color;
-
-    if (true)
+    if (false)
     {
-        // vec3 lighting = (0.2 * color) + ((1.0 - shadow) * (diff * color + 0.5 * spec * vec3(1.0)));
+        // vec3 lighting = (0.2 * base_color) + ((1.0 - shadow) * (diff * base_color + 0.5 * spec * vec3(1.0)));
 
         // vec3 shadow_color = vec3(0.4, 0.4, 0.5); // bluish soft shadow tint (0-1 range)
         // vec3 shadow_color = vec3(0.5, 0.3, 0.2); // warm sunset shadows
@@ -315,36 +313,24 @@ void main()
 
         float shadow_intensity = 1;            // 0 = no shadow, 1 = full shadow
 
-        vec3 base_light = diff * color + 0.5 * spec * vec3(1.0);
+        vec3 base_light = diff * base_color + 0.5 * spec * vec3(1.0);
         vec3 shadow_mix = mix(base_light, base_light * shadow_color, shadow * shadow_intensity);
 
-        vec3 lighting = (0.2 * color) + shadow_mix; // ambiant light + shadow
+        vec3 lighting = (0.2 * base_color) + shadow_mix; // ambiant light + shadow
 
         frag_color = vec4(lighting, 1.0);
     }
 
-    if (false)
+    if (true)
     {
-        vec3 shadow_color = vec3(0.4, 0.4, 0.5); // soft bluish tint
-        float shadow_intensity = 0.5;
+        float diff_m = min(diff, 1.0 - shadow);
+        vec3 diffuse = base_color * diff_m;
+        vec3 specular = spec_strength * spec * vec3(1.0);
+        vec3 ambient = 0.2 * base_color;
+        vec3 result = ambient + diffuse + specular;
 
-        // Base diffuse and specular contributions
-        diff = max(diff, 0.5f);
-        vec3 base_diffuse  = diff * color;
-        vec3 baseSpecular = 0.5 * spec * vec3(1.0);
-
-        // Scale diffuse by (1 - shadow) and blend color
-        vec3 shadowedDiffuse = mix(base_diffuse, base_diffuse * shadow_color, shadow * shadow_intensity);
-
-        // Scale specular separately (usually less shadowed in nature)
-        vec3 shadowedSpecular = baseSpecular * (1.0 - shadow * 0.8);
-
-        // Combine with ambient
-        vec3 lighting = (0.2 * color) + base_diffuse + shadowedSpecular;
-
-        frag_color = vec4(lighting, 1.0);
+        frag_color = vec4(result, 1.0);
     }
-
     
 }
 )"";
