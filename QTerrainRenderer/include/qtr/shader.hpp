@@ -220,10 +220,16 @@ out vec4 frag_color;
 
 uniform vec3 light_pos;
 uniform vec3 view_pos;
-uniform vec3 base_color;      // object base color
-uniform float shininess;      // Controls specular sharpness
-uniform float spec_strength;  // Controls specular intensity
+uniform vec3 base_color;    
+uniform float shininess;    
+uniform float spec_strength; 
+uniform bool bypass_shadow_map;
+uniform float shadow_strength;
+uniform bool use_texture;
+uniform float gamma_correction;
+
 uniform sampler2D shadow_map; // depth texture
+uniform sampler2D texture_albedo; // albedo texture
 
 float calculate_shadow(vec4 frag_pos_light_space, vec3 light_dir, vec3 frag_normal)
 {
@@ -289,6 +295,19 @@ float calculate_shadow(vec4 frag_pos_light_space, vec3 light_dir, vec3 frag_norm
 
 void main()
 {
+    vec3 color;
+    if (use_texture)
+        color = texture(texture_albedo, frag_uv).xyz; // TODO alpha channel
+    else
+        color = base_color;
+
+    color.x = pow(color.x, 1.0 / gamma_correction);
+    color.y = pow(color.y, 1.0 / gamma_correction);
+    color.z = pow(color.z, 1.0 / gamma_correction);
+
+    // frag_color = vec4(color, 1.0);
+    // return;
+
     vec3 norm = normalize(frag_normal);
     vec3 light_dir = normalize(light_pos - frag_pos);
     vec3 view_dir = normalize(view_pos - frag_pos);
@@ -301,11 +320,13 @@ void main()
     float spec = spec_strength * pow(max(dot(view_dir, reflect_dir), 0.0), shininess);
 
     // Shadow factor
-    float shadow = calculate_shadow(frag_pos_light_space, light_dir, frag_normal);
+    float shadow = 0.0;
+    if (!bypass_shadow_map)
+        shadow = calculate_shadow(frag_pos_light_space, light_dir, frag_normal);
 
     if (false)
     {
-        // vec3 lighting = (0.2 * base_color) + ((1.0 - shadow) * (diff * base_color + 0.5 * spec * vec3(1.0)));
+        // vec3 lighting = (0.2 * color) + ((1.0 - shadow) * (diff * color + 0.5 * spec * vec3(1.0)));
 
         // vec3 shadow_color = vec3(0.4, 0.4, 0.5); // bluish soft shadow tint (0-1 range)
         // vec3 shadow_color = vec3(0.5, 0.3, 0.2); // warm sunset shadows
@@ -313,10 +334,10 @@ void main()
 
         float shadow_intensity = 1;            // 0 = no shadow, 1 = full shadow
 
-        vec3 base_light = diff * base_color + 0.5 * spec * vec3(1.0);
+        vec3 base_light = diff * color + 0.5 * spec * vec3(1.0);
         vec3 shadow_mix = mix(base_light, base_light * shadow_color, shadow * shadow_intensity);
 
-        vec3 lighting = (0.2 * base_color) + shadow_mix; // ambiant light + shadow
+        vec3 lighting = (0.2 * color) + shadow_mix; // ambiant light + shadow
 
         frag_color = vec4(lighting, 1.0);
     }
@@ -324,13 +345,11 @@ void main()
     if (true)
     {
         float diff_m = min(diff, 1.0 - shadow);
-        
-        float shadow_intensity = 0.8;
-        diff_m = 1.0 - shadow_intensity + shadow_intensity * smoothstep(1.0 - shadow_intensity, 1.0, diff_m);
+        diff_m = 1.0 - shadow_strength + shadow_strength * smoothstep(1.0 - shadow_strength, 1.0, diff_m);
 
-        vec3 diffuse = base_color * diff_m;
+        vec3 diffuse = color * diff_m;
         vec3 specular = spec_strength * spec * vec3(1.0);
-        vec3 ambient = 0.2 * base_color;
+        vec3 ambient = 0.2 * color;
         vec3 result = ambient + diffuse + specular;
 
         frag_color = vec4(result, 1.0);

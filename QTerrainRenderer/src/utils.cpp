@@ -12,6 +12,33 @@
 namespace qtr
 {
 
+std::vector<uint8_t> load_png_as_8bit_rgba(const std::string &path,
+                                           int               &width,
+                                           int               &height)
+{
+  QImage img(path.c_str());
+  if (img.isNull())
+  {
+    throw std::runtime_error("Failed to load image: " + path);
+  }
+
+  // Ensure format is RGB888
+  if (img.format() != QImage::Format_RGBA8888)
+  {
+    img = img.convertToFormat(QImage::Format_RGBA8888);
+  }
+
+  width = img.width();
+  height = img.height();
+  const int    channel_count = 4; // R, G, B, A
+  const size_t total_bytes = static_cast<size_t>(width) * height * channel_count;
+
+  std::vector<uint8_t> data(total_bytes);
+  std::memcpy(data.data(), img.constBits(), total_bytes);
+
+  return data; // RVO handles return efficiently, no need for std::move
+}
+
 std::vector<float> load_png_as_grayscale(const std::string &path, int &width, int &height)
 {
   QImage img(path.c_str());

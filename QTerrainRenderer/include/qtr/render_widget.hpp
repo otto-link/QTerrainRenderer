@@ -81,6 +81,11 @@ private:
   float near_plane = 0.1f;
   float far_plane = 100.f;
 
+  float gamma_correction = 2.f;
+  bool  bypass_hmap_texture = false;
+  bool  bypass_shadow_map = false;
+  float shadow_strength = 0.9f;
+
   // OpenGL
   std::unique_ptr<ShaderManager> sp_shader_manager;
   GLuint                         fbo;
@@ -93,7 +98,8 @@ private:
   Mesh    plane;
   Mesh    hmap;
   Mesh    points_mesh;
-  Texture shadow_depth_texture, tex;
+  Texture shadow_depth_texture;
+  Texture hmap_texture;
 };
 
 // some helpers

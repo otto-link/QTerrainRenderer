@@ -92,21 +92,30 @@ void RenderWidget::initializeGL()
 
   generate_downward_triangles(points_mesh, points, 0.1f, 0.01f);
 
-  int                width, height;
-  std::vector<float> data = load_png_as_grayscale("hmap.png", width, height);
-  generate_heightmap(this->hmap,
-                     data,
-                     width,
-                     height,
-                     0.f,
-                     0.f,
-                     0.05f,
-                     2.f,
-                     2.f,
-                     1.f,
-                     true,
-                     0.f);
-  //
+  {
+    int                width, height;
+    std::vector<float> data = load_png_as_grayscale("hmap.png", width, height);
+    generate_heightmap(this->hmap,
+                       data,
+                       width,
+                       height,
+                       0.f,
+                       0.f,
+                       0.2f,
+                       2.f,
+                       2.f,
+                       1.f,
+                       true,
+                       0.f);
+  }
+
+  {
+    int                  width, height;
+    std::vector<uint8_t> data = load_png_as_8bit_rgba("texture.png", width, height);
+    this->hmap_texture.from_image_8bit_rgba(data, width);
+  }
+
+  // shadow map texture and buffer
   int shadow_map_res = 2048;
   this->shadow_depth_texture.generate_depth_texture(shadow_map_res, shadow_map_res);
 
@@ -323,18 +332,30 @@ void RenderWidget::paintGL()
       p_shader->setUniformValue("light_pos", toQVec(this->light.position));
       p_shader->setUniformValue("view_pos", toQVec(this->camera.position));
       p_shader->setUniformValue("shininess", 32.f);
-      p_shader->setUniformValue("spec_strength", 1.f);
+      p_shader->setUniformValue("spec_strength", 0.f);
+      p_shader->setUniformValue("bypass_shadow_map", this->bypass_shadow_map);
+      p_shader->setUniformValue("shadow_strength", this->shadow_strength);
+      p_shader->setUniformValue("use_texture", false);
+      p_shader->setUniformValue("gamma_correction", this->gamma_correction);
+
+      p_shader->setUniformValue("shadow_map", 0);
+      p_shader->setUniformValue("texture_albedo", 1);
 
       this->shadow_depth_texture.bind(0);
+      this->hmap_texture.bind(1);
 
       p_shader->setUniformValue("base_color", QVector3D(0.5f, 0.5f, 0.5f));
       plane.draw();
 
+      p_shader->setUniformValue("base_color", QVector3D(0.f, 1.f, 0.f));
+      points_mesh.draw();
+
+      p_shader->setUniformValue("use_texture", true && !this->bypass_hmap_texture);
       p_shader->setUniformValue("base_color", QVector3D(0.7f, 0.7f, 0.7f));
       hmap.draw();
 
-      p_shader->setUniformValue("base_color", QVector3D(0.f, 1.f, 0.f));
-      points_mesh.draw();
+      this->shadow_depth_texture.unbind();
+      this->hmap_texture.unbind();
 
       p_shader->release();
     }
@@ -376,6 +397,8 @@ void RenderWidget::paintGL()
   ImGui::Text("Light");
   ret |= ImGui::SliderAngle("Azimuth", &this->light_phi, -180.f, 180.f);
   ret |= ImGui::SliderAngle("Zenith", &this->light_theta, 0.f, 90.f);
+  ret |= ImGui::SliderFloat("Shadow strength", &this->shadow_strength, 0.f, 1.f);
+  ret |= ImGui::Checkbox("Bypass shadow map", &this->bypass_shadow_map);
 
   ImGui::Checkbox("auto_rotate_light", &this->auto_rotate_light);
 
@@ -390,6 +413,10 @@ void RenderWidget::paintGL()
     this->reset_camera_position();
     this->need_update = true;
   }
+
+  ImGui::Text("Albedo");
+  ret |= ImGui::SliderFloat("Gamma correction", &this->gamma_correction, 0.01f, 4.f);
+  ret |= ImGui::Checkbox("Bypass albedo texture", &this->bypass_hmap_texture);
 
   this->need_update |= ret;
 
