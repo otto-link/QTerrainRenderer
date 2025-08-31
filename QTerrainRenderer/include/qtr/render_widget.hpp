@@ -90,9 +90,9 @@ private:
   Camera camera;
   Light  light;
 
-  Mesh    cube;
   Mesh    plane;
   Mesh    hmap;
+  Mesh    points_mesh;
   Texture shadow_depth_texture, tex;
 };
 

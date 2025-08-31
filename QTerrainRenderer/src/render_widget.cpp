@@ -84,8 +84,13 @@ void RenderWidget::initializeGL()
                                                 shadow_map_lit_pass_vertex,
                                                 shadow_map_lit_pass_frag);
 
-  generate_cube(this->cube, 0.f, 0.5, 0.0f, 1.f, 1.f, 1.f);
   generate_plane(this->plane, 0.f, 0.f, 0.f, 4.f, 4.f);
+
+  std::vector<glm::vec3> points = {{0.0f, 0.5f, 0.0f},
+                                   {0.2f, 0.6f, 0.2f},
+                                   {-0.3f, 0.4f, 0.1f}};
+
+  generate_downward_triangles(points_mesh, points, 0.1f, 0.01f);
 
   int                width, height;
   std::vector<float> data = load_png_as_grayscale("hmap.png", width, height);
@@ -233,7 +238,7 @@ void RenderWidget::paintGL()
 
       plane.draw();
       hmap.draw();
-      // cube.draw();
+      points_mesh.draw();
 
       p_shader->release();
 
@@ -300,7 +305,6 @@ void RenderWidget::paintGL()
     //   // p_shader->setUniformValue("spec_strength", 0.5f);
 
     //   plane.draw();
-    //   cube.draw();
 
     //   p_shader->release();
     // }
@@ -326,11 +330,11 @@ void RenderWidget::paintGL()
       p_shader->setUniformValue("base_color", QVector3D(0.5f, 0.5f, 0.5f));
       plane.draw();
 
-      p_shader->setUniformValue("base_color", QVector3D(1.f, 1.f, 1.f));
+      p_shader->setUniformValue("base_color", QVector3D(0.7f, 0.7f, 0.7f));
       hmap.draw();
 
-      // p_shader->setUniformValue("base_color", QVector3D(0.8f, 0.3f, 0.2f));
-      // cube.draw();
+      p_shader->setUniformValue("base_color", QVector3D(0.f, 1.f, 0.f));
+      points_mesh.draw();
 
       p_shader->release();
     }
@@ -445,7 +449,7 @@ void RenderWidget::reset_camera_position()
   this->fov = 45.f / 180.f * 3.14f;
 
   this->light_phi = -45.f / 180.f * 3.14f;
-  this->light_theta = 45.f / 180.f * 3.14f;
+  this->light_theta = 30.f / 180.f * 3.14f;
 
   // this->light_phi = -3.f / 180.f * 3.14f;
   // this->light_theta = 10.f / 180.f * 3.14f;

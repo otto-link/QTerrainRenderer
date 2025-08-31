@@ -1,5 +1,7 @@
 /* Copyright (c) 2025 Otto Link. Distributed under the terms of the GNU General Public
    License. The full license is in the file LICENSE, distributed with this software. */
+#include <glm/gtc/constants.hpp>
+
 #include "qtr/mesh.hpp"
 
 namespace qtr
@@ -218,6 +220,128 @@ void generate_plane(Mesh &mesh, float x, float y, float z, float lx, float ly)
   // indices for two triangles
   indices = {0, 1, 2, 2, 3, 0};
 
+  mesh.create(vertices, indices);
+}
+
+void generate_downward_triangles(Mesh                         &mesh,
+                                 const std::vector<glm::vec3> &points,
+                                 float                         height_offset,
+                                 float                         radius)
+{
+  std::vector<Vertex> vertices;
+  std::vector<uint>   indices;
+
+  vertices.reserve(points.size() * 4);
+  indices.reserve(points.size() * 6);
+
+  for (size_t i = 0; i < points.size(); ++i)
+  {
+    const glm::vec3 &tip = points[i];
+
+    // Tip of triangle (at reference point)
+    glm::vec3 apex = tip;
+
+    // Base center is slightly above along +Y
+    glm::vec3 base_center = tip + glm::vec3(0.0f, height_offset, 0.0f);
+
+    // Base vertices in XZ plane rotated at 120° intervals
+    glm::vec3 v0 = base_center + glm::vec3(radius, 0.0f, 0.0f);
+    glm::vec3 v1 = base_center +
+                   glm::vec3(radius * -0.5f, 0.0f, radius * glm::sqrt(3.0f) / 2.0f);
+    glm::vec3 v2 = base_center +
+                   glm::vec3(radius * -0.5f, 0.0f, radius * -glm::sqrt(3.0f) / 2.0f);
+
+    uint start_index = static_cast<uint>(vertices.size());
+
+    // Add vertices (temporary normals = up)
+    vertices.push_back({apex, glm::vec3(0, 1, 0), glm::vec2(0.5f, 1.0f)});
+    vertices.push_back({v0, glm::vec3(0, 1, 0), glm::vec2(0.0f, 0.0f)});
+    vertices.push_back({v1, glm::vec3(0, 1, 0), glm::vec2(1.0f, 0.0f)});
+    vertices.push_back({v2, glm::vec3(0, 1, 0), glm::vec2(0.5f, 0.0f)});
+
+    // Side faces
+    indices.push_back(start_index + 0);
+    indices.push_back(start_index + 1);
+    indices.push_back(start_index + 2);
+
+    indices.push_back(start_index + 0);
+    indices.push_back(start_index + 2);
+    indices.push_back(start_index + 3);
+
+    // Base cap (optional, to close bottom)
+    indices.push_back(start_index + 1);
+    indices.push_back(start_index + 3);
+    indices.push_back(start_index + 2);
+  }
+
+  // Recompute normals
+  for (size_t i = 0; i < indices.size(); i += 3)
+  {
+    Vertex &v0 = vertices[indices[i + 0]];
+    Vertex &v1 = vertices[indices[i + 1]];
+    Vertex &v2 = vertices[indices[i + 2]];
+
+    glm::vec3 edge1 = v1.position - v0.position;
+    glm::vec3 edge2 = v2.position - v0.position;
+    glm::vec3 normal = glm::normalize(glm::cross(edge1, edge2));
+
+    v0.normal += normal;
+    v1.normal += normal;
+    v2.normal += normal;
+  }
+
+  for (auto &v : vertices)
+    v.normal = glm::normalize(v.normal);
+
+  // Create mesh
+  mesh.create(vertices, indices);
+}
+
+void generate_rectangle_mesh(Mesh            &mesh,
+                             const glm::vec3 &p1,
+                             const glm::vec3 &p2,
+                             float            height)
+{
+  std::vector<Vertex> vertices;
+  std::vector<uint>   indices;
+
+  // Direction from one edge center to opposite edge center
+  glm::vec3 width_dir = glm::normalize(p2 - p1);
+  float     width = glm::length(p2 - p1);
+
+  // Find perpendicular direction for height
+  glm::vec3 up;
+  if (fabs(width_dir.y) < 0.99f)
+    up = glm::normalize(glm::cross(width_dir, glm::vec3(0, 1, 0)));
+  else
+    up = glm::normalize(glm::cross(width_dir, glm::vec3(1, 0, 0)));
+
+  glm::vec3 offset = up * (height * 0.5f);
+
+  // Generate 4 vertices
+  glm::vec3 v0 = p1 - offset;
+  glm::vec3 v1 = p1 + offset;
+  glm::vec3 v2 = p2 + offset;
+  glm::vec3 v3 = p2 - offset;
+
+  // Simple upward normal (works if rectangle lies horizontally)
+  glm::vec3 normal = glm::normalize(glm::cross(width_dir, up));
+
+  // UVs for basic mapping
+  glm::vec2 uv0(0.0f, 0.0f);
+  glm::vec2 uv1(0.0f, 1.0f);
+  glm::vec2 uv2(1.0f, 1.0f);
+  glm::vec2 uv3(1.0f, 0.0f);
+
+  vertices.emplace_back(v0, normal, uv0);
+  vertices.emplace_back(v1, normal, uv1);
+  vertices.emplace_back(v2, normal, uv2);
+  vertices.emplace_back(v3, normal, uv3);
+
+  // Two triangles forming the rectangle
+  indices = {0, 1, 2, 0, 2, 3};
+
+  // Build the mesh
   mesh.create(vertices, indices);
 }
 

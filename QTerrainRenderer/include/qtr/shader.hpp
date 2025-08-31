@@ -221,8 +221,8 @@ out vec4 frag_color;
 uniform vec3 light_pos;
 uniform vec3 view_pos;
 uniform vec3 base_color;      // object base color
-uniform float shininess;   // Controls specular sharpness
-uniform float spec_strength; // Controls specular intensity
+uniform float shininess;      // Controls specular sharpness
+uniform float spec_strength;  // Controls specular intensity
 uniform sampler2D shadow_map; // depth texture
 
 float calculate_shadow(vec4 frag_pos_light_space, vec3 light_dir, vec3 frag_normal)
@@ -324,6 +324,10 @@ void main()
     if (true)
     {
         float diff_m = min(diff, 1.0 - shadow);
+        
+        float shadow_intensity = 0.8;
+        diff_m = 1.0 - shadow_intensity + shadow_intensity * smoothstep(1.0 - shadow_intensity, 1.0, diff_m);
+
         vec3 diffuse = base_color * diff_m;
         vec3 specular = spec_strength * spec * vec3(1.0);
         vec3 ambient = 0.2 * base_color;

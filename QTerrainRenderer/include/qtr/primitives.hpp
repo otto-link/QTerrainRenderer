@@ -23,4 +23,15 @@ void generate_heightmap(Mesh                     &mesh,
 
 void generate_plane(Mesh &mesh, float x, float y, float z, float lx, float ly);
 
+void generate_downward_triangles(Mesh                         &mesh,
+                                 const std::vector<glm::vec3> &points,
+                                 float                         height_offset = 0.1f,
+                                 float                         radius = 0.01f);
+
+// center of one edge -> center of opposite edge
+void generate_rectangle(Mesh            &mesh,
+                        const glm::vec3 &p1,
+                        const glm::vec3 &p2,
+                        float            height);
+
 } // namespace qtr
