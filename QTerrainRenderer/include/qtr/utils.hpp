@@ -7,6 +7,14 @@
 namespace qtr
 {
 
+std::vector<uint16_t> load_png_as_16bit_rgba(const std::string &path,
+                                             int               &width,
+                                             int               &height);
+
+std::vector<uint16_t> load_png_as_16bit_grayscale(const std::string &path,
+                                                  int               &width,
+                                                  int               &height);
+
 std::vector<uint8_t> load_png_as_8bit_rgba(const std::string &path,
                                            int               &width,
                                            int               &height);

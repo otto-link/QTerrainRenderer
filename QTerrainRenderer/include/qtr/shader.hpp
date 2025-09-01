@@ -229,12 +229,16 @@ uniform float shininess;
 uniform float spec_strength; 
 uniform bool bypass_shadow_map;
 uniform float shadow_strength;
-uniform bool use_texture;
+uniform bool add_ambiant_occlusion;
+uniform float ambiant_occlusion_strength;
+uniform int ambiant_occlusion_radius;
+uniform bool use_texture_albedo;
 uniform float gamma_correction;
 uniform bool apply_tonemap;
 
-uniform sampler2D shadow_map; // depth texture
-uniform sampler2D texture_albedo; // albedo texture
+uniform sampler2D texture_albedo; 
+uniform sampler2D texture_hmap;
+uniform sampler2D texture_shadow_map; 
 
 float calculate_shadow(vec4 frag_pos_light_space, vec3 light_dir, vec3 frag_normal)
 {
@@ -248,7 +252,7 @@ float calculate_shadow(vec4 frag_pos_light_space, vec3 light_dir, vec3 frag_norm
 
     if (false)
     {
-        float closest_depth = texture(shadow_map, proj_coords.xy).r;
+        float closest_depth = texture(texture_shadow_map, proj_coords.xy).r;
         float current_depth = proj_coords.z;
 
         // Bias to prevent shadow acne
@@ -269,14 +273,14 @@ float calculate_shadow(vec4 frag_pos_light_space, vec3 light_dir, vec3 frag_norm
         float bias = mix(bias_max, bias_min, bias_t);
 
         float shadow = 0.0;
-        vec2 texel_size = 1.0 / textureSize(shadow_map, 0);
+        vec2 texel_size = 1.0 / textureSize(texture_shadow_map, 0);
         
         float sum = 0;
         int ir = 2;
         for(int x = -ir; x <= ir; ++x)
             for(int y = -ir; y <= ir; ++y)
             {
-                float pcf_depth = texture(shadow_map, proj_coords.xy + vec2(x, y) * texel_size).r; 
+                float pcf_depth = texture(texture_shadow_map, proj_coords.xy + vec2(x, y) * texel_size).r; 
                 float weight = 1.0 - length(vec2(x, y)) / (ir + 1);
                 shadow += weight * (current_depth - bias > pcf_depth ? 1.0 : 0.0);
                 sum += weight;
@@ -337,6 +341,30 @@ float phase_rayleigh(float cos_theta)
     return 3.0 / (16.0 * 3.1415926535) * (1.0 + cos_theta * cos_theta);
 }
 
+float compute_AO(vec2 uv, sampler2D hmap, int radius, float strength)
+{
+    vec2 texel_size = 1.0 / textureSize(hmap, 0);
+    float h = texture(hmap, uv).r;
+    float occ = 0.0;
+    int count = 0;
+    
+    for (int x = -radius; x <= radius; x++)
+        for (int y = -radius; y <= radius; y++)
+        {
+            if (x == 0 && y == 0) continue;
+            
+            float neighbor = texture(hmap, uv + vec2(x, y) * texel_size).r;
+            if (neighbor > h) occ += neighbor - h;
+            count++;
+        }
+   
+    occ = occ / float(count) * 2.0; // in [0 ,1]
+    occ *= strength;
+    occ = clamp(1.0 - occ, 0.0, 1.0);
+    
+    return occ;
+}
+
 // https://www.shadertoy.com/view/WdjSW3
 vec3 tonemap_ACES(vec3 x)
 {
@@ -352,7 +380,7 @@ vec3 tonemap_ACES(vec3 x)
 void main()
 {
     vec3 color;
-    if (use_texture)
+    if (use_texture_albedo)
         color = texture(texture_albedo, frag_uv).xyz; // TODO alpha channel
     else
         color = base_color;
@@ -389,6 +417,13 @@ void main()
         vec3 diffuse = color * diff_m;
         vec3 specular = spec_strength * spec * vec3(1.0);
         vec3 ambient = 0.2 * color;
+
+        if (add_ambiant_occlusion)
+        {
+            float ao = compute_AO(frag_uv, texture_hmap, ambiant_occlusion_radius, ambiant_occlusion_strength);
+            ambient *= ao;
+        }
+
         vec3 result = ambient + diffuse + specular;
 
         frag_color = vec4(result, 1.0);

@@ -82,9 +82,12 @@ private:
   float far_plane = 100.f;
 
   float gamma_correction = 2.f;
-  bool  bypass_hmap_texture = false;
+  bool  bypass_texture_albedo = false;
   bool  bypass_shadow_map = false;
   float shadow_strength = 0.9f;
+  bool  add_ambiant_occlusion = false;
+  float ambiant_occlusion_strength = 5.f;
+  int   ambiant_occlusion_radius = 3;
 
   bool apply_tonemap = false;
 
@@ -100,8 +103,9 @@ private:
   Mesh    plane;
   Mesh    hmap;
   Mesh    points_mesh;
-  Texture shadow_depth_texture;
-  Texture hmap_texture;
+  Texture texture_albedo;
+  Texture texture_hmap;
+  Texture texture_shadow_map;
 };
 
 // some helpers

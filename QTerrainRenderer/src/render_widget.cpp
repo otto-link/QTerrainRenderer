@@ -112,12 +112,18 @@ void RenderWidget::initializeGL()
   {
     int                  width, height;
     std::vector<uint8_t> data = load_png_as_8bit_rgba("texture.png", width, height);
-    this->hmap_texture.from_image_8bit_rgba(data, width);
+    this->texture_albedo.from_image_8bit_rgba(data, width);
+  }
+
+  {
+    int                   width, height;
+    std::vector<uint16_t> data = load_png_as_16bit_grayscale("hmap.png", width, height);
+    this->texture_hmap.from_image_16bit_grayscale(data, width);
   }
 
   // shadow map texture and buffer
   int shadow_map_res = 2048;
-  this->shadow_depth_texture.generate_depth_texture(shadow_map_res, shadow_map_res);
+  this->texture_shadow_map.generate_depth_texture(shadow_map_res, shadow_map_res);
 
   // Create framebuffer for shadow depth
   {
@@ -126,7 +132,7 @@ void RenderWidget::initializeGL()
     glFramebufferTexture2D(GL_FRAMEBUFFER,
                            GL_DEPTH_ATTACHMENT,
                            GL_TEXTURE_2D,
-                           this->shadow_depth_texture.get_id(),
+                           this->texture_shadow_map.get_id(),
                            0);
     glDrawBuffer(GL_NONE);
     glReadBuffer(GL_NONE);
@@ -233,8 +239,8 @@ void RenderWidget::paintGL()
 
       glViewport(0,
                  0,
-                 this->shadow_depth_texture.get_width(),
-                 this->shadow_depth_texture.get_height());
+                 this->texture_shadow_map.get_width(),
+                 this->texture_shadow_map.get_height());
       glBindFramebuffer(GL_FRAMEBUFFER, this->fbo);
 
       glClear(GL_DEPTH_BUFFER_BIT);
@@ -339,28 +345,40 @@ void RenderWidget::paintGL()
       p_shader->setUniformValue("spec_strength", 0.f);
       p_shader->setUniformValue("bypass_shadow_map", this->bypass_shadow_map);
       p_shader->setUniformValue("shadow_strength", this->shadow_strength);
-      p_shader->setUniformValue("use_texture", false);
+      p_shader->setUniformValue("add_ambiant_occlusion", this->add_ambiant_occlusion);
+      p_shader->setUniformValue("ambiant_occlusion_strength",
+                                this->ambiant_occlusion_strength);
+      p_shader->setUniformValue("ambiant_occlusion_radius",
+                                this->ambiant_occlusion_radius);
+      p_shader->setUniformValue("use_texture_albedo", false);
       p_shader->setUniformValue("gamma_correction", this->gamma_correction);
       p_shader->setUniformValue("apply_tonemap", this->apply_tonemap);
 
-      p_shader->setUniformValue("shadow_map", 0);
-      p_shader->setUniformValue("texture_albedo", 1);
+      p_shader->setUniformValue("texture_albedo", 0);
+      p_shader->setUniformValue("texture_hmap", 1);
+      p_shader->setUniformValue("texture_shadow_map", 2);
 
-      this->shadow_depth_texture.bind(0);
-      this->hmap_texture.bind(1);
+      this->texture_albedo.bind(0);
+      this->texture_hmap.bind(1);
+      this->texture_shadow_map.bind(2);
 
       p_shader->setUniformValue("base_color", QVector3D(0.5f, 0.5f, 0.5f));
+      p_shader->setUniformValue("add_ambiant_occlusion", false);
       plane.draw();
 
       p_shader->setUniformValue("base_color", QVector3D(0.f, 1.f, 0.f));
+      p_shader->setUniformValue("add_ambiant_occlusion", false);
       points_mesh.draw();
 
-      p_shader->setUniformValue("use_texture", true && !this->bypass_hmap_texture);
+      p_shader->setUniformValue("use_texture_albedo",
+                                true && !this->bypass_texture_albedo);
+      p_shader->setUniformValue("add_ambiant_occlusion", this->add_ambiant_occlusion);
+
       p_shader->setUniformValue("base_color", QVector3D(0.7f, 0.7f, 0.7f));
       hmap.draw();
 
-      this->shadow_depth_texture.unbind();
-      this->hmap_texture.unbind();
+      this->texture_shadow_map.unbind();
+      this->texture_albedo.unbind();
 
       p_shader->release();
     }
@@ -402,10 +420,22 @@ void RenderWidget::paintGL()
   ImGui::Text("Light");
   ret |= ImGui::SliderAngle("Azimuth", &this->light_phi, -180.f, 180.f);
   ret |= ImGui::SliderAngle("Zenith", &this->light_theta, 0.f, 90.f);
+  ImGui::Checkbox("Auto rotate light", &this->auto_rotate_light);
+
+  ImGui::Text("Shadow map");
   ret |= ImGui::SliderFloat("Shadow strength", &this->shadow_strength, 0.f, 1.f);
   ret |= ImGui::Checkbox("Bypass shadow map", &this->bypass_shadow_map);
 
-  ImGui::Checkbox("Auto rotate light", &this->auto_rotate_light);
+  ImGui::Text("Ambiant occlusion");
+  ret |= ImGui::SliderFloat("Ambiant occlusion strength",
+                            &this->ambiant_occlusion_strength,
+                            0.f,
+                            1000.f);
+  ret |= ImGui::SliderInt("Ambiant occlusion radius",
+                          &this->ambiant_occlusion_radius,
+                          0,
+                          32);
+  ret |= ImGui::Checkbox("Add ambiant occlusion", &this->add_ambiant_occlusion);
 
   if (this->auto_rotate_light)
   {
@@ -421,7 +451,7 @@ void RenderWidget::paintGL()
 
   ImGui::Text("Albedo");
   ret |= ImGui::SliderFloat("Gamma correction", &this->gamma_correction, 0.01f, 4.f);
-  ret |= ImGui::Checkbox("Bypass albedo texture", &this->bypass_hmap_texture);
+  ret |= ImGui::Checkbox("Bypass albedo texture", &this->bypass_texture_albedo);
   ret |= ImGui::Checkbox("Apply tonemap", &this->apply_tonemap);
 
   this->need_update |= ret;
