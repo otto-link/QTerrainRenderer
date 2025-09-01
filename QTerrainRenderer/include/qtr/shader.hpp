@@ -218,7 +218,11 @@ in vec4 frag_pos_light_space;
 
 out vec4 frag_color;
 
+uniform mat4 view;
+uniform mat4 projection;
+uniform vec2 screen_size;
 uniform vec3 light_pos;
+uniform vec3 camera_pos;
 uniform vec3 view_pos;
 uniform vec3 base_color;    
 uniform float shininess;    
@@ -283,6 +287,56 @@ float calculate_shadow(vec4 frag_pos_light_space, vec3 light_dir, vec3 frag_norm
     }
 }
 
+// Compute normalized ray direction for current pixel in world space
+vec3 compute_ray_direction(vec2 frag_coord)
+{
+    // convert pixel to Normalized Device Coordinates (NDC) [-1, 1]
+    vec2 ndc = (frag_coord / screen_size) * 2.0 - 1.0;
+    ndc.y = -ndc.y; // Flip Y (OpenGL screen space vs texture space)
+
+    // transform from clip space to eye space
+    vec4 ray_clip = vec4(ndc, -1.0, 1.0);           // z = -1 for forward direction
+    vec4 ray_eye = inverse(projection) * ray_clip;
+    ray_eye = vec4(ray_eye.xy, -1.0, 0.0);           // direction in eye space
+
+    // transform from eye space to world space
+    vec3 ray_world = normalize((inverse(view) * ray_eye).xyz);
+
+    return ray_world;
+}
+
+// https://iquilezles.org/articles/intersectors
+vec2 boxIntersection(in vec3 ro, in vec3 rd, vec3 boxSize, out vec3 outNormal) 
+{
+    // ro: ray origin (e.g. camera position)
+    // rd: ray direction (e.g. direction from camera to current pixel)
+
+    vec3 m = 1.0/rd; // can precompute if traversing a set of aligned boxes
+    vec3 n = m*ro;   // can precompute if traversing a set of aligned boxes
+    vec3 k = abs(m)*boxSize;
+    vec3 t1 = -n - k;
+    vec3 t2 = -n + k;
+    float tN = max( max( t1.x, t1.y ), t1.z );
+    float tF = min( min( t2.x, t2.y ), t2.z );
+    if( tN>tF || tF<0.0) return vec2(-1.0); // no intersection
+    outNormal = -sign(rd)*step(t1.yzx,t1.xyz)*step(t1.zxy,t1.xyz);
+
+    // returns entry / exit distances from ro
+    return vec2( tN, tF );
+}
+
+// g controls forward/backward scattering: 0 = isotropic, 0.6 = forward-scattering
+float phase_mie(float cos_theta, float g)
+{
+    float g2 = g * g;
+    return (1.0 - g2) / pow(1.0 + g2 - 2.0 * g * cos_theta, 1.5);
+}
+
+float phase_rayleigh(float cos_theta)
+{
+    return 3.0 / (16.0 * 3.1415926535) * (1.0 + cos_theta * cos_theta);
+}
+
 // https://www.shadertoy.com/view/WdjSW3
 vec3 tonemap_ACES(vec3 x)
 {
@@ -326,24 +380,7 @@ void main()
     if (!bypass_shadow_map)
         shadow = calculate_shadow(frag_pos_light_space, light_dir, frag_normal);
 
-    if (false)
-    {
-        // vec3 lighting = (0.2 * color) + ((1.0 - shadow) * (diff * color + 0.5 * spec * vec3(1.0)));
-
-        // vec3 shadow_color = vec3(0.4, 0.4, 0.5); // bluish soft shadow tint (0-1 range)
-        // vec3 shadow_color = vec3(0.5, 0.3, 0.2); // warm sunset shadows
-        vec3 shadow_color = vec3(0., 0., 0.); // dark night
-
-        float shadow_intensity = 1;            // 0 = no shadow, 1 = full shadow
-
-        vec3 base_light = diff * color + 0.5 * spec * vec3(1.0);
-        vec3 shadow_mix = mix(base_light, base_light * shadow_color, shadow * shadow_intensity);
-
-        vec3 lighting = (0.2 * color) + shadow_mix; // ambiant light + shadow
-
-        frag_color = vec4(lighting, 1.0);
-    }
-
+    // apply shadow
     if (true)
     {
         float diff_m = min(diff, 1.0 - shadow);
@@ -357,6 +394,59 @@ void main()
         frag_color = vec4(result, 1.0);
     }
     
+    // volumetric fog
+    if (false)
+    {
+        vec3 box_normal;
+        vec3 ray_origin = camera_pos;
+        vec3 ray_dir = compute_ray_direction(gl_FragCoord.xy);
+        vec2 box = boxIntersection(camera_pos, ray_dir, vec3(4.0, 0.2, 4.0), box_normal);
+
+        // frag_color = vec4(normalize(ray_dir) * 0.5 + 0.5, 1.0);
+        // return;
+
+            // ---- 2. Setup fog integration ----
+        float step_size = 1.0;            // step length along the ray
+        float max_distance = 100.0;
+        int steps = int(max_distance / step_size);
+        float transmittance = 1.0;        // starts fully transparent
+        vec3 fog_color = vec3(0.0);       // accumulated fog
+        float fog_height = 0.1;
+        float fog_density = 0.1;
+        vec3 light_color = vec3(0.0, 0.0, 1.0);
+
+        for (int i = 0; i < steps; i++)
+        {
+            float t = float(i) * step_size;
+            vec3 p = ray_origin + ray_dir * t;         // point along the ray
+
+            if (p.y > 0.0)
+            {
+                // ---- 3. Density based on height ----
+                float height_factor = clamp(exp(-p.y * fog_height), 0.0, 1.0);
+                float density = fog_density * height_factor;
+
+                // ---- 4. Light scattering ----
+                float scatter = max(dot(ray_dir, light_dir), 0.0);
+
+                // ---- 5. Attenuation and accumulation ----
+                float absorption = exp(-density * step_size);
+                transmittance *= absorption;
+
+                float cos_theta = dot(ray_dir, light_dir);
+                float scatter_phase = 
+                    phase_rayleigh(cos_theta) * 0.5 + // mix rayleigh for softness
+                    phase_mie(cos_theta, 0.2) * 0.5;  // and mie for forward bias
+
+                fog_color += transmittance * density * scatter_phase * light_color * step_size;
+            }
+        }
+
+        frag_color.xyz = frag_color.xyz * transmittance + fog_color;
+
+        // frag_color.x = ray_length;
+    }
+
     if (apply_tonemap)
         frag_color = vec4(tonemap_ACES(frag_color.xyz), 1.0);
 }

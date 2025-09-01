@@ -86,9 +86,9 @@ void RenderWidget::initializeGL()
 
   generate_plane(this->plane, 0.f, 0.f, 0.f, 4.f, 4.f);
 
-  std::vector<glm::vec3> points = {{0.0f, 0.5f, 0.0f},
-                                   {0.2f, 0.6f, 0.2f},
-                                   {-0.3f, 0.4f, 0.1f}};
+  std::vector<glm::vec3> points = {{0.0f, 0.6f, 0.0f},
+                                   {0.2f, 0.7f, 0.2f},
+                                   {-0.3f, 0.8f, 0.1f}};
 
   generate_downward_triangles(points_mesh, points, 0.1f, 0.01f);
 
@@ -324,11 +324,15 @@ void RenderWidget::paintGL()
     if (p_shader)
     {
       p_shader->bind();
+      p_shader->setUniformValue("screen_size",
+                                toQVec(glm::vec2(this->width(), this->height())));
+
       p_shader->setUniformValue("model", toQMat(model));
       p_shader->setUniformValue("view", toQMat(camera.get_view_matrix()));
       p_shader->setUniformValue("projection", toQMat(projection));
-      p_shader->setUniformValue("light_space_matrix", toQMat(light_space_matrix));
 
+      p_shader->setUniformValue("camera_pos", toQVec(this->camera.position));
+      p_shader->setUniformValue("light_space_matrix", toQMat(light_space_matrix));
       p_shader->setUniformValue("light_pos", toQVec(this->light.position));
       p_shader->setUniformValue("view_pos", toQVec(this->camera.position));
       p_shader->setUniformValue("shininess", 32.f);
@@ -401,7 +405,7 @@ void RenderWidget::paintGL()
   ret |= ImGui::SliderFloat("Shadow strength", &this->shadow_strength, 0.f, 1.f);
   ret |= ImGui::Checkbox("Bypass shadow map", &this->bypass_shadow_map);
 
-  ImGui::Checkbox("auto_rotate_light", &this->auto_rotate_light);
+  ImGui::Checkbox("Auto rotate light", &this->auto_rotate_light);
 
   if (this->auto_rotate_light)
   {
@@ -433,12 +437,8 @@ void RenderWidget::paintGL()
       this->alpha_x += io.MouseDelta.y * 0.005f; // vertically
 
       this->alpha_x = glm::clamp(this->alpha_x,
-                                 -glm::half_pi<float>(),
-                                 glm::half_pi<float>());
-
-      // this->alpha_y = glm::clamp(this->alpha_y,
-      //                            -2.f * glm::half_pi<float>(),
-      //                            2.f * glm::half_pi<float>());
+                                 -0.99f * glm::half_pi<float>(),
+                                 0.99f * glm::half_pi<float>());
     }
 
     if (ImGui::IsMouseDown(ImGuiMouseButton_Right))

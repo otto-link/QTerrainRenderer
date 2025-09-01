@@ -111,5 +111,6 @@ inline QMatrix4x4 toQMat(const glm::mat4 &m)
 }
 
 inline QVector3D toQVec(const glm::vec3 &v) { return QVector3D(v.x, v.y, v.z); }
+inline QVector2D toQVec(const glm::vec2 &v) { return QVector2D(v.x, v.y); }
 
 } // namespace qtr
