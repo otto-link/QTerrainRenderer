@@ -8,7 +8,7 @@
 namespace qtr
 {
 
-glm::vec3 Light::get_dir() const { return normalize(this->position - this->target); }
+glm::vec3 Light::get_dir() const { return normalize(this->target - this->position); }
 
 void Light::set_position_spherical(float distance, float theta, float phi)
 {

@@ -18,7 +18,7 @@ uniform float spec_strength; // Controls specular intensity
 void main()
 {
   vec3 norm = normalize(frag_normal);
-  vec3 light = normalize(light_dir);
+  vec3 light = normalize(-light_dir);
   vec3 view_dir = normalize(view_pos - frag_pos);
 
   // --- Diffuse ---
