@@ -162,6 +162,33 @@ float compute_AO(vec2 uv, sampler2D hmap, int radius, float strength)
   return occ;
 }
 
+// horizonn-based ambiant occlusion
+float compute_hbao(vec2 uv, sampler2D hmap, float scale, int dir_count, int step_count)
+{
+  float h0 = texture(hmap, uv).r;
+  float occ = 0.0;
+
+  for (int d = 0; d < dir_count; d++)
+  {
+    float angle = 2.0 * 3.14159265 * float(d) / float(dir_count);
+    vec2  dir = vec2(cos(angle), sin(angle));
+
+    float horizon = -1e6;
+
+    for (int s = 1; s <= step_count; s++)
+    {
+      vec2  suv = uv + dir * (float(s) / float(step_count)) * scale;
+      float hs = texture(hmap, suv).r;
+      float slope = (hs - h0) / float(s);
+      horizon = max(horizon, slope);
+    }
+
+    occ += max(0.0, horizon);
+  }
+
+  return clamp(1.0 - occ / float(dir_count), 0.0, 1.0);
+}
+
 // https://www.shadertoy.com/view/WdjSW3
 vec3 tonemap_ACES(vec3 x)
 {
@@ -215,17 +242,19 @@ void main()
     vec3 diffuse = color * diff_m;
     vec3 specular = spec_strength * spec * vec3(1.0);
     vec3 ambient = 0.2 * color;
+    vec3 result = ambient + diffuse + specular;
 
     if (add_ambiant_occlusion)
     {
-      float ao = compute_AO(frag_uv,
-                            texture_hmap,
-                            ambiant_occlusion_radius,
-                            ambiant_occlusion_strength);
-      ambient *= ao;
-    }
+      // float ao = compute_AO(frag_uv,
+      //                       texture_hmap,
+      //                       ambiant_occlusion_radius,
+      //                       ambiant_occlusion_strength);
+      // ambient *= ao;
 
-    vec3 result = ambient + diffuse + specular;
+      float ao = compute_hbao(frag_uv, texture_hmap, 1.0, 8, 8);
+      result *= ao;
+    }
 
     frag_color = vec4(result, 1.0);
   }
