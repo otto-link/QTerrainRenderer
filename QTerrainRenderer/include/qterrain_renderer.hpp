@@ -5,6 +5,7 @@
 #include "qtr/camera.hpp"
 #include "qtr/config.hpp"
 #include "qtr/gl_errors.hpp"
+#include "qtr/imgui_widgets.hpp"
 #include "qtr/logger.hpp"
 #include "qtr/mesh.hpp"
 #include "qtr/primitives.hpp"
@@ -12,3 +13,4 @@
 #include "qtr/shader.hpp"
 #include "qtr/texture.hpp"
 #include "qtr/utils.hpp"
+#include "qtr/water_colors.hpp"

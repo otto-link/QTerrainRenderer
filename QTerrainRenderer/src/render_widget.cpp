@@ -7,13 +7,12 @@
 
 #include "qtr/config.hpp"
 #include "qtr/gl_errors.hpp"
+#include "qtr/imgui_widgets.hpp"
 #include "qtr/logger.hpp"
 #include "qtr/mesh.hpp"
 #include "qtr/primitives.hpp"
 #include "qtr/render_widget.hpp"
 #include "qtr/utils.hpp"
-
-// TODO tmp
 
 namespace qtr
 {
@@ -371,25 +370,9 @@ void RenderWidget::paintGL()
 
         p_shader->setUniformValue("use_water_colors", true);
 
-        // tropical
-        p_shader->setUniformValue("color_shallow_water", QVector3D(0.25, 0.85, 0.80));
-        p_shader->setUniformValue("color_deep_water", QVector3D(0.0, 0.15, 0.35));
-
-        // ocean
-        // p_shader->setUniformValue("color_shallow_water", QVector3D(0.2, 0.6, 0.6));
-        // p_shader->setUniformValue("color_deep_water", QVector3D(0.0, 0.1, 0.25));
-
-        // lake
-        // p_shader->setUniformValue("color_shallow_water", QVector3D(0.3, 0.5, 0.35));
-        // p_shader->setUniformValue("color_deep_water", QVector3D(0.05, 0.15, 0.1));
-
-        // swamp
-        // p_shader->setUniformValue("color_shallow_water", QVector3D(0.4, 0.35, 0.2));
-        // p_shader->setUniformValue("color_deep_water", QVector3D(0.10, 0.12, 0.05));
-
-        // arctic
-        // p_shader->setUniformValue("color_shallow_water", QVector3D(0.35, 0.70, 0.85));
-        // p_shader->setUniformValue("color_deep_water", QVector3D(0.02, 0.10, 0.25));
+        p_shader->setUniformValue("color_shallow_water",
+                                  toQVec(this->color_shallow_water));
+        p_shader->setUniformValue("color_deep_water", toQVec(this->color_deep_water));
 
         p_shader->setUniformValue("water_color_depth", this->water_color_depth);
 
@@ -506,6 +489,9 @@ void RenderWidget::paintGL()
     }
 
     ret |= ImGui::SliderFloat("Water color depth", &this->water_color_depth, 0.f, 0.2f);
+
+    ret |= imgui_show_water_preset_selector(this->color_shallow_water,
+                                            this->color_deep_water);
 
     ret |= ImGui::Checkbox("Add foam", &this->add_water_foam);
     ret |= ImGui::SliderFloat("Foam depth", &this->foam_depth, 0.f, 0.1f);
