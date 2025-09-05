@@ -10,6 +10,7 @@ in vec4 frag_pos_light_space;
 
 out vec4 frag_color;
 
+uniform float time;
 uniform mat4  view;
 uniform mat4  projection;
 uniform vec2  screen_size;
@@ -25,6 +26,22 @@ uniform bool  add_ambiant_occlusion;
 uniform float ambiant_occlusion_strength;
 uniform int   ambiant_occlusion_radius;
 uniform bool  use_texture_albedo;
+
+uniform bool  use_water_colors;
+uniform vec3  color_shallow_water;
+uniform vec3  color_deep_water;
+uniform float water_color_depth;
+uniform bool  add_water_foam;
+uniform vec3  foam_color;
+uniform float foam_depth;
+uniform bool  add_water_waves;
+uniform float angle_spread_ratio;
+uniform float waves_alpha;
+uniform float waves_kw;
+uniform float waves_amplitude;
+uniform float waves_normal_amplitude;
+uniform float waves_speed;
+
 uniform float gamma_correction;
 uniform bool  apply_tonemap;
 
@@ -201,22 +218,151 @@ vec3 tonemap_ACES(vec3 x)
   return (x * (a * x + b)) / (x * (c * x + d) + e);
 }
 
+float sigmoid(float x, float width, float x0)
+{
+  float v = 1.f / (1.f + exp(-(x - x0) / width));
+  return v;
+}
+
+// ------------------------------------------------------------
+// 2D -> 2D hash (deterministic, cheap, no trig)
+// Adapted from Dave Hoskins' "hash without sine" style hashes.
+// 'seed' lets you decorrelate multiple fields.
+// ------------------------------------------------------------
+vec2 hash22f(vec2 p, float seed)
+{
+  // fold the seed in; any small non-zero scaling works
+  p += seed;
+
+  // magic constants picked for good bit diffusion
+  const vec3 k = vec3(0.1031, 0.11369, 0.13787);
+
+  vec3 q = fract(vec3(p.x, p.y, p.x) * k);
+  q += dot(q, q.yzx + 19.19);
+
+  // return two reasonably independent components in [0,1)
+  return fract(vec2(q.x * q.y, q.z * q.x));
+}
+
+// ------------------------------------------------------------
+// Gabor-like wavelet sum (scalar output)
+// p  : sample position (world or texture space)
+// dir: preferred direction (need not be normalized; we normalize inside)
+// angle_spread_ratio: how much directions vary per-cell around 'dir'
+// fseed: randomization seed
+// ------------------------------------------------------------
+float gabor_wave_scalar(vec2 p, vec2 dir, float angle_spread_ratio, float fseed)
+{
+  vec2 ip = floor(p);
+  vec2 fp = p - ip; // fractional part of p
+
+  const float fr = 6.28318530718; // 2*pi
+  const float fa = 4.0;           // gaussian falloff factor
+
+  float av = 0.0;
+  float at = 0.0;
+
+  // 5x5 neighborhood
+  for (int j = -2; j <= 2; ++j)
+    for (int i = -2; i <= 2; ++i)
+    {
+      vec2 o = vec2(i, j);
+
+      // jitter the feature point inside the cell
+      vec2 h = hash22f(ip + o, fseed);
+      vec2 r = fp - (o + h);
+
+      // vary direction per-cell around 'dir'
+      vec2 k = normalize(dir + angle_spread_ratio * (2.0 * hash22f(ip + o, fseed) - 1.0));
+
+      float d = dot(r, r);
+      float l = dot(r, k);
+      float w = exp(-fa * d); // gaussian window
+      float cs = cos(fr * l); // carrier
+
+      av += w * cs;
+      at += w;
+    }
+
+  return av / max(at, 1e-6); // safe normalize
+}
+
 void main()
 {
-  vec3 color;
-  if (use_texture_albedo)
-    color = texture(texture_albedo, frag_uv).xyz; // TODO alpha channel
+  vec3  color;
+  float alpha = 1.0;
+  vec3  normal = frag_normal;
+
+  if (use_water_colors)
+  {
+    float h = texture(texture_hmap, frag_uv).r;
+    float depth = frag_pos.y / 0.4 - 0.2 - h; // TODO fix scaling
+
+    if (add_water_waves)
+    {
+      vec2 dir = vec2(cos(waves_alpha), sin(waves_alpha));
+
+      // TODO use normal map
+      float eps = 0.001;
+      float dhdx = (texture(texture_hmap, frag_uv + vec2(eps, 0.0)).r - h) / eps;
+      float dhdy = (texture(texture_hmap, frag_uv + vec2(0.0, eps)).r - h) / eps;
+      vec2  dir_slope = normalize(vec2(dhdx, dhdy));
+
+      float attenuation = exp(-depth / (2.0 * water_color_depth));
+      dir = mix(dir, dir_slope, attenuation);
+
+      // float waves_kw = 128.0;
+      float fseed = 0.f;
+
+      // change color only on the shore
+      float gw = gabor_wave_scalar(waves_kw * frag_uv - waves_speed * time * dir,
+                                   dir,
+                                   angle_spread_ratio,
+                                   fseed);
+      depth += waves_amplitude * (0.5 * gw + 0.5) * attenuation;
+
+      normal.xz += waves_normal_amplitude * gw * dir * (1.0 - attenuation);
+    }
+
+    if (depth > 0.f)
+    {
+
+      float transparency = exp(-depth / water_color_depth);
+      color = mix(color_shallow_water, color_deep_water, 1.0 - transparency);
+      alpha = 1.0 - transparency;
+
+      // add foam
+      if (add_water_foam)
+      {
+        // float foam_mask = exp(-depth / foam_depth);
+        float foam_mask = 1.0 - sigmoid(depth, 0.5f * foam_depth, foam_depth);
+
+        if (foam_mask > alpha)
+        {
+          color = mix(color, foam_color, foam_mask);
+          alpha = pow(foam_mask, 0.7);
+        }
+      }
+    }
+    else
+    {
+      // ground above water
+      alpha = 0.0;
+    }
+  }
   else
-    color = base_color;
+  {
+    if (use_texture_albedo)
+      color = texture(texture_albedo, frag_uv).xyz; // TODO alpha channel
+    else
+      color = base_color;
+  }
 
   color.x = pow(color.x, 1.0 / gamma_correction);
   color.y = pow(color.y, 1.0 / gamma_correction);
   color.z = pow(color.z, 1.0 / gamma_correction);
 
-  // frag_color = vec4(color, 1.0);
-  // return;
-
-  vec3 norm = normalize(frag_normal);
+  vec3 norm = normalize(normal);
   vec3 light_dir = normalize(light_pos - frag_pos);
   vec3 view_dir = normalize(view_pos - frag_pos);
 
@@ -230,7 +376,7 @@ void main()
   // Shadow factor
   float shadow = 0.0;
   if (!bypass_shadow_map)
-    shadow = calculate_shadow(frag_pos_light_space, light_dir, frag_normal);
+    shadow = calculate_shadow(frag_pos_light_space, light_dir, normal);
 
   // apply shadow
   if (true)
@@ -256,63 +402,10 @@ void main()
       result *= ao;
     }
 
-    frag_color = vec4(result, 1.0);
-  }
-
-  // volumetric fog // TODO not working
-  if (false)
-  {
-    vec3 box_normal;
-    vec3 ray_origin = camera_pos;
-    vec3 ray_dir = compute_ray_direction(gl_FragCoord.xy);
-    vec2 box = boxIntersection(camera_pos, ray_dir, vec3(4.0, 0.2, 4.0), box_normal);
-
-    // frag_color = vec4(normalize(ray_dir) * 0.5 + 0.5, 1.0);
-    // return;
-
-    // ---- 2. Setup fog integration ----
-    float step_size = 1.0; // step length along the ray
-    float max_distance = 100.0;
-    int   steps = int(max_distance / step_size);
-    float transmittance = 1.0;   // starts fully transparent
-    vec3  fog_color = vec3(0.0); // accumulated fog
-    float fog_height = 0.1;
-    float fog_density = 0.1;
-    vec3  light_color = vec3(0.0, 0.0, 1.0);
-
-    for (int i = 0; i < steps; i++)
-    {
-      float t = float(i) * step_size;
-      vec3  p = ray_origin + ray_dir * t; // point along the ray
-
-      if (p.y > 0.0)
-      {
-        // ---- 3. Density based on height ----
-        float height_factor = clamp(exp(-p.y * fog_height), 0.0, 1.0);
-        float density = fog_density * height_factor;
-
-        // ---- 4. Light scattering ----
-        float scatter = max(dot(ray_dir, light_dir), 0.0);
-
-        // ---- 5. Attenuation and accumulation ----
-        float absorption = exp(-density * step_size);
-        transmittance *= absorption;
-
-        float cos_theta = dot(ray_dir, light_dir);
-        // mix rayleigh for softness and mie for forward bias
-        float scatter_phase = phase_rayleigh(cos_theta) * 0.5 +
-                              phase_mie(cos_theta, 0.2) * 0.5;
-
-        fog_color += transmittance * density * scatter_phase * light_color * step_size;
-      }
-    }
-
-    frag_color.xyz = frag_color.xyz * transmittance + fog_color;
-
-    // frag_color.x = ray_length;
+    frag_color = vec4(result, alpha);
   }
 
   if (apply_tonemap)
-    frag_color = vec4(tonemap_ACES(frag_color.xyz), 1.0);
+    frag_color = vec4(tonemap_ACES(frag_color.xyz), alpha);
 }
 )""

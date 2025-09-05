@@ -56,11 +56,13 @@ private:
 
   // GUI
   QTimer               frame_timer;
-  QElapsedTimer        timer;
   bool                 need_update = false;
   bool                 rotating = false;
   bool                 panning = false;
   std::array<float, 2> last_mouse_pos;
+
+  QElapsedTimer timer;
+  float         time = 0.f;
 
   // user parameters
   bool wireframe_mode = false;
@@ -78,7 +80,7 @@ private:
   float     light_distance = 10.f;
 
   float scale_h = 0.4f;
-  float near_plane = 0.1f;
+  float near_plane = 0.f;
   float far_plane = 100.f;
 
   float gamma_correction = 2.f;
@@ -91,6 +93,26 @@ private:
 
   bool apply_tonemap = false;
 
+  // water
+  bool      add_water = true;
+  float     water_elevation = 0.1f;
+  glm::vec3 color_shallow_water;
+  glm::vec3 color_deep_water;
+  float     water_color_depth = 0.015f;
+
+  bool      add_water_foam = true;
+  glm::vec3 foam_color = glm::vec3(1.f, 1.f, 1.f);
+  float     foam_depth = 0.005f;
+
+  bool  add_water_waves = true;
+  float angle_spread_ratio = 0.f;
+  float waves_alpha = 30.f / 180.f * 3.14f;
+  float waves_kw = 256.f;
+  float waves_amplitude = 0.005f;
+  float waves_normal_amplitude = 0.02f;
+  bool  animate_waves = false;
+  float waves_speed = 0.2f;
+
   // OpenGL
   std::unique_ptr<ShaderManager> sp_shader_manager;
   GLuint                         fbo;
@@ -102,6 +124,7 @@ private:
 
   Mesh    plane;
   Mesh    hmap;
+  Mesh    water_plane;
   Mesh    points_mesh;
   Texture texture_albedo;
   Texture texture_hmap;

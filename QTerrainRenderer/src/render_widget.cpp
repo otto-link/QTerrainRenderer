@@ -86,6 +86,8 @@ void RenderWidget::initializeGL()
 
   generate_plane(this->plane, 0.f, 0.f, 0.f, 4.f, 4.f);
 
+  generate_plane(this->water_plane, 0.f, 0.2f + this->water_elevation, 0.f, 2.f, 2.f);
+
   std::vector<glm::vec3> points = {{0.0f, 0.6f, 0.0f},
                                    {0.2f, 0.7f, 0.2f},
                                    {-0.3f, 0.8f, 0.1f}};
@@ -110,7 +112,9 @@ void RenderWidget::initializeGL()
   }
 
   {
-    int                  width, height;
+    int width, height;
+    // std::vector<uint8_t> data = load_png_as_8bit_rgba("texture_white.png", width,
+    // height);
     std::vector<uint8_t> data = load_png_as_8bit_rgba("texture.png", width, height);
     this->texture_albedo.from_image_8bit_rgba(data, width);
   }
@@ -203,6 +207,7 @@ void RenderWidget::paintGL()
 {
   // calculate dt (in seconds)
   float dt = static_cast<float>(timer.restart()) / 1000.0f;
+  this->time += dt;
 
   // --- FIRST - OpenGL scene rendering
 
@@ -220,7 +225,7 @@ void RenderWidget::paintGL()
   this->camera_shadow_pass.near_plane = 0.f;
   this->camera_shadow_pass.far_plane = 100.f;
 
-  float     ortho_size = 1.5f;
+  float     ortho_size = 1.5f; // TODO hardcoded
   glm::mat4 light_projection = this->camera_shadow_pass.get_projection_matrix_ortho(
       ortho_size);
   glm::mat4 light_view = this->camera_shadow_pass.get_view_matrix();
@@ -253,6 +258,7 @@ void RenderWidget::paintGL()
 
       plane.draw();
       hmap.draw();
+      // water_plane.draw();
       points_mesh.draw();
 
       p_shader->release();
@@ -302,28 +308,6 @@ void RenderWidget::paintGL()
     else
       glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-    // QOpenGLShaderProgram *p_shader =
-    // this->sp_shader_manager->get("diffuse_basic")->get();
-
-    // if (p_shader)
-    // {
-    //   p_shader->bind();
-    //   p_shader->setUniformValue("model", toQMat(model));
-    //   p_shader->setUniformValue("view", toQMat(view));
-    //   p_shader->setUniformValue("projection", toQMat(projection));
-
-    //   p_shader->setUniformValue("color", QVector3D(0.8f, 0.3f, 0.2f)); // object color
-    //   p_shader->setUniformValue("light_dir", toQVec(light.get_dir()));
-
-    //   // p_shader->setUniformValue("view_pos", toQVec(camera_pos));
-    //   // p_shader->setUniformValue("shininess", 32.0f);
-    //   // p_shader->setUniformValue("spec_strength", 0.5f);
-
-    //   plane.draw();
-
-    //   p_shader->release();
-    // }
-
     QOpenGLShaderProgram *p_shader = this->sp_shader_manager->get("shadow_map_lit_pass")
                                          ->get();
 
@@ -332,6 +316,7 @@ void RenderWidget::paintGL()
       p_shader->bind();
       p_shader->setUniformValue("screen_size",
                                 toQVec(glm::vec2(this->width(), this->height())));
+      p_shader->setUniformValue("time", this->time);
 
       p_shader->setUniformValue("model", toQMat(model));
       p_shader->setUniformValue("view", toQMat(camera.get_view_matrix()));
@@ -351,6 +336,7 @@ void RenderWidget::paintGL()
       p_shader->setUniformValue("ambiant_occlusion_radius",
                                 this->ambiant_occlusion_radius);
       p_shader->setUniformValue("use_texture_albedo", false);
+      p_shader->setUniformValue("use_water_colors", false);
       p_shader->setUniformValue("gamma_correction", this->gamma_correction);
       p_shader->setUniformValue("apply_tonemap", this->apply_tonemap);
 
@@ -370,12 +356,61 @@ void RenderWidget::paintGL()
       p_shader->setUniformValue("add_ambiant_occlusion", false);
       points_mesh.draw();
 
+      p_shader->setUniformValue("base_color", QVector3D(0.7f, 0.7f, 0.7f));
       p_shader->setUniformValue("use_texture_albedo",
                                 true && !this->bypass_texture_albedo);
       p_shader->setUniformValue("add_ambiant_occlusion", this->add_ambiant_occlusion);
-
-      p_shader->setUniformValue("base_color", QVector3D(0.7f, 0.7f, 0.7f));
       hmap.draw();
+
+      if (this->add_water)
+      {
+        p_shader->setUniformValue("spec_strength", 1.f);
+
+        p_shader->setUniformValue("add_ambiant_occlusion", false);
+        p_shader->setUniformValue("use_texture_albedo", false);
+
+        p_shader->setUniformValue("use_water_colors", true);
+
+        // tropical
+        p_shader->setUniformValue("color_shallow_water", QVector3D(0.25, 0.85, 0.80));
+        p_shader->setUniformValue("color_deep_water", QVector3D(0.0, 0.15, 0.35));
+
+        // ocean
+        // p_shader->setUniformValue("color_shallow_water", QVector3D(0.2, 0.6, 0.6));
+        // p_shader->setUniformValue("color_deep_water", QVector3D(0.0, 0.1, 0.25));
+
+        // lake
+        // p_shader->setUniformValue("color_shallow_water", QVector3D(0.3, 0.5, 0.35));
+        // p_shader->setUniformValue("color_deep_water", QVector3D(0.05, 0.15, 0.1));
+
+        // swamp
+        // p_shader->setUniformValue("color_shallow_water", QVector3D(0.4, 0.35, 0.2));
+        // p_shader->setUniformValue("color_deep_water", QVector3D(0.10, 0.12, 0.05));
+
+        // arctic
+        // p_shader->setUniformValue("color_shallow_water", QVector3D(0.35, 0.70, 0.85));
+        // p_shader->setUniformValue("color_deep_water", QVector3D(0.02, 0.10, 0.25));
+
+        p_shader->setUniformValue("water_color_depth", this->water_color_depth);
+
+        p_shader->setUniformValue("add_water_foam", this->add_water_foam);
+        p_shader->setUniformValue("foam_color", toQVec(this->foam_color));
+        p_shader->setUniformValue("foam_depth", this->foam_depth);
+
+        p_shader->setUniformValue("add_water_waves", this->add_water_waves);
+        p_shader->setUniformValue("angle_spread_ratio", this->angle_spread_ratio);
+        p_shader->setUniformValue("waves_alpha", this->waves_alpha);
+        p_shader->setUniformValue("waves_kw", this->waves_kw);
+        p_shader->setUniformValue("waves_amplitude", this->waves_amplitude);
+        p_shader->setUniformValue("waves_normal_amplitude", this->waves_normal_amplitude);
+
+        if (this->animate_waves)
+          p_shader->setUniformValue("waves_speed", this->waves_speed);
+        else
+          p_shader->setUniformValue("waves_speed", 0.f);
+
+        water_plane.draw();
+      }
 
       this->texture_shadow_map.unbind();
       this->texture_albedo.unbind();
@@ -423,10 +458,11 @@ void RenderWidget::paintGL()
   ImGui::Checkbox("Auto rotate light", &this->auto_rotate_light);
 
   ImGui::Text("Shadow map");
-  ret |= ImGui::SliderFloat("Shadow strength", &this->shadow_strength, 0.f, 1.f);
   ret |= ImGui::Checkbox("Bypass shadow map", &this->bypass_shadow_map);
+  ret |= ImGui::SliderFloat("Shadow strength", &this->shadow_strength, 0.f, 1.f);
 
   ImGui::Text("Ambiant occlusion");
+  ret |= ImGui::Checkbox("Add ambiant occlusion", &this->add_ambiant_occlusion);
   ret |= ImGui::SliderFloat("Ambiant occlusion strength",
                             &this->ambiant_occlusion_strength,
                             0.f,
@@ -435,7 +471,6 @@ void RenderWidget::paintGL()
                           &this->ambiant_occlusion_radius,
                           0,
                           32);
-  ret |= ImGui::Checkbox("Add ambiant occlusion", &this->add_ambiant_occlusion);
 
   if (this->auto_rotate_light)
   {
@@ -453,6 +488,62 @@ void RenderWidget::paintGL()
   ret |= ImGui::SliderFloat("Gamma correction", &this->gamma_correction, 0.01f, 4.f);
   ret |= ImGui::Checkbox("Bypass albedo texture", &this->bypass_texture_albedo);
   ret |= ImGui::Checkbox("Apply tonemap", &this->apply_tonemap);
+
+  ImGui::SeparatorText("Water");
+
+  ImGui::Text("Water");
+  {
+    ret |= ImGui::Checkbox("Add water", &this->add_water);
+    if (ImGui::SliderFloat("Water elevation", &this->water_elevation, 0.f, 1.f))
+    {
+      ret = true;
+      generate_plane(this->water_plane,
+                     0.f,
+                     0.2f + this->water_elevation,
+                     0.f,
+                     2.f,
+                     2.f); // TODO hardcoded
+    }
+
+    ret |= ImGui::SliderFloat("Water color depth", &this->water_color_depth, 0.f, 0.2f);
+
+    ret |= ImGui::Checkbox("Add foam", &this->add_water_foam);
+    ret |= ImGui::SliderFloat("Foam depth", &this->foam_depth, 0.f, 0.1f);
+
+    ret |= ImGui::Checkbox("Add waves", &this->add_water_waves);
+    ret |= ImGui::SliderFloat("Waves wavenumber", &this->waves_kw, 0.f, 2048.f);
+    ret |= ImGui::SliderFloat("Waves amplitude", &this->waves_amplitude, 0.f, 0.1f);
+    ret |= ImGui::SliderFloat("Waves normal amplitude",
+                              &this->waves_normal_amplitude,
+                              0.f,
+                              0.1f);
+    ret |= ImGui::SliderAngle("Waves angle", &this->waves_alpha, -180.f, 180.f);
+    ret |= ImGui::SliderFloat("angle_spread_ratio", &this->angle_spread_ratio, 0.f, 0.1f);
+
+    ret |= ImGui::Checkbox("Animate waves", &this->animate_waves);
+    ret |= ImGui::SliderFloat("Waves speed", &this->waves_speed, 0.f, 1.f);
+    // force update if animation requested
+    if (this->animate_waves)
+      this->need_update = true;
+
+    // const char *items[] = {"AAAA",
+    //                        "BBBB",
+    //                        "CCCC",
+    //                        "DDDD",
+    //                        "EEEE",
+    //                        "FFFF",
+    //                        "GGGG",
+    //                        "HHHH",
+    //                        "IIIIIII",
+    //                        "JJJJ",
+    //                        "KKKKKKK"};
+    // static int  item_current = 0;
+    // if (ImGui::Combo("combo", &item_current, items, IM_ARRAYSIZE(items)))
+    // {
+    //   ret = true;
+    //   QTR_LOG->trace("{}", item_current);
+    // }
+  }
 
   this->need_update |= ret;
 
