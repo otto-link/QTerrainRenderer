@@ -124,7 +124,9 @@ bool Texture::from_image_16bit_grayscale(const std::vector<uint16_t> &img, int n
   return true;
 }
 
-void Texture::generate_depth_texture(int new_width, int new_height)
+void Texture::generate_depth_texture(int  new_width,
+                                     int  new_height,
+                                     bool force_border_color)
 {
   QOpenGLFunctions_3_3_Core::initializeOpenGLFunctions();
   this->destroy();
@@ -139,7 +141,7 @@ void Texture::generate_depth_texture(int new_width, int new_height)
 
   glTexImage2D(GL_TEXTURE_2D,
                0,
-               GL_DEPTH_COMPONENT,
+               GL_DEPTH_COMPONENT32F,
                this->width,
                this->height,
                0,
@@ -152,8 +154,11 @@ void Texture::generate_depth_texture(int new_width, int new_height)
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 
-  float border_color[] = {1.0f, 1.0f, 1.0f, 1.0f};
-  glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border_color);
+  if (force_border_color)
+  {
+    float border_color[] = {1.0f, 1.0f, 1.0f, 1.0f};
+    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border_color);
+  }
 
   glBindTexture(GL_TEXTURE_2D, 0);
 }

@@ -36,9 +36,15 @@ public:
 
 protected:
   void initializeGL() override;
-  void paintGL() override;
   void resizeEvent(QResizeEvent *event) override;
   void resizeGL(int w, int h) override;
+
+  // --- OpenGL rendering
+  void paintGL() override;
+  void render_shadow_map(const glm::mat4 &model,
+                         const glm::mat4 &view,
+                         const glm::mat4 &projection);
+  void render_shadow_map(const glm::mat4 &model, glm::mat4 &light_space_matrix);
 
   // --- Input forwarding to ImGui
   void mousePressEvent(QMouseEvent *e) override;
@@ -80,7 +86,7 @@ private:
   float     light_distance = 10.f;
 
   float scale_h = 0.4f;
-  float near_plane = 0.f;
+  float near_plane = 0.1f;
   float far_plane = 100.f;
 
   float gamma_correction = 2.f;
@@ -99,6 +105,7 @@ private:
   glm::vec3 color_shallow_water;
   glm::vec3 color_deep_water;
   float     water_color_depth = 0.015f;
+  float     water_spec_strength = 0.5f;
 
   bool      add_water_foam = true;
   glm::vec3 foam_color = glm::vec3(1.f, 1.f, 1.f);
@@ -113,9 +120,16 @@ private:
   bool  animate_waves = false;
   float waves_speed = 0.2f;
 
+  // --- Fog
+  bool add_fog = false;
+
+  // --- Atmospheric scattering
+  bool add_atmospheric_scattering = false;
+
   // OpenGL
   std::unique_ptr<ShaderManager> sp_shader_manager;
   GLuint                         fbo;
+  GLuint                         fbo_depth;
 
   // TODO clean-up
   Camera camera_shadow_pass;
@@ -129,6 +143,7 @@ private:
   Texture texture_albedo;
   Texture texture_hmap;
   Texture texture_shadow_map;
+  Texture texture_depth;
 };
 
 // some helpers

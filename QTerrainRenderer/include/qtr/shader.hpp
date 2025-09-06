@@ -42,6 +42,14 @@ static const std::string diffuse_blinn_phong_frag =
 #include "shaders/diffuse_blinn_phong.frag"
     ;
 
+static const std::string depth_map_vertex =
+#include "shaders/depth_map.vert"
+    ;
+
+static const std::string depth_map_frag =
+#include "shaders/depth_map.frag"
+    ;
+
 static const std::string shadow_map_depth_pass_vertex =
 #include "shaders/shadow_map_depth_pass.vert"
     ;

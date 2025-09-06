@@ -10,11 +10,16 @@ in vec4 frag_pos_light_space;
 
 out vec4 frag_color;
 
+uniform vec2  screen_size;
 uniform float time;
+uniform float near_plane;
+uniform float far_plane;
+uniform float scale_h;
+
 uniform mat4  view;
 uniform mat4  projection;
-uniform vec2  screen_size;
 uniform vec3  light_pos;
+uniform mat4  light_space_matrix;
 uniform vec3  camera_pos;
 uniform vec3  view_pos;
 uniform vec3  base_color;
@@ -42,14 +47,22 @@ uniform float waves_amplitude;
 uniform float waves_normal_amplitude;
 uniform float waves_speed;
 
+uniform bool add_fog;
+
+uniform bool add_atmospheric_scattering;
+
 uniform float gamma_correction;
 uniform bool  apply_tonemap;
 
 uniform sampler2D texture_albedo;
 uniform sampler2D texture_hmap;
 uniform sampler2D texture_shadow_map;
+uniform sampler2D texture_depth;
 
-float calculate_shadow(vec4 frag_pos_light_space, vec3 light_dir, vec3 frag_normal)
+float calculate_shadow(vec4 frag_pos_light_space,
+                       vec3 light_dir,
+                       vec3 frag_normal,
+                       bool use_pcf)
 {
   // Perspective divide
   vec3 proj_coords = frag_pos_light_space.xyz / frag_pos_light_space.w;
@@ -59,7 +72,7 @@ float calculate_shadow(vec4 frag_pos_light_space, vec3 light_dir, vec3 frag_norm
   if (proj_coords.z > 1.0)
     return 0.0;
 
-  if (false)
+  if (!use_pcf)
   {
     float closest_depth = texture(texture_shadow_map, proj_coords.xy).r;
     float current_depth = proj_coords.z;
@@ -70,8 +83,7 @@ float calculate_shadow(vec4 frag_pos_light_space, vec3 light_dir, vec3 frag_norm
     // Simple shadow (0 or 1)
     return current_depth - bias > closest_depth ? 1.0 : 0.0;
   }
-
-  if (true) // PCF
+  else // PCF
   {
     float current_depth = proj_coords.z;
 
@@ -100,45 +112,6 @@ float calculate_shadow(vec4 frag_pos_light_space, vec3 light_dir, vec3 frag_norm
 
     return shadow;
   }
-}
-
-// Compute normalized ray direction for current pixel in world space
-vec3 compute_ray_direction(vec2 frag_coord)
-{
-  // convert pixel to Normalized Device Coordinates (NDC) [-1, 1]
-  vec2 ndc = (frag_coord / screen_size) * 2.0 - 1.0;
-  ndc.y = -ndc.y; // Flip Y (OpenGL screen space vs texture space)
-
-  // transform from clip space to eye space
-  vec4 ray_clip = vec4(ndc, -1.0, 1.0); // z = -1 for forward direction
-  vec4 ray_eye = inverse(projection) * ray_clip;
-  ray_eye = vec4(ray_eye.xy, -1.0, 0.0); // direction in eye space
-
-  // transform from eye space to world space
-  vec3 ray_world = normalize((inverse(view) * ray_eye).xyz);
-
-  return ray_world;
-}
-
-// https://iquilezles.org/articles/intersectors
-vec2 boxIntersection(in vec3 ro, in vec3 rd, vec3 boxSize, out vec3 outNormal)
-{
-  // ro: ray origin (e.g. camera position)
-  // rd: ray direction (e.g. direction from camera to current pixel)
-
-  vec3  m = 1.0 / rd; // can precompute if traversing a set of aligned boxes
-  vec3  n = m * ro;   // can precompute if traversing a set of aligned boxes
-  vec3  k = abs(m) * boxSize;
-  vec3  t1 = -n - k;
-  vec3  t2 = -n + k;
-  float tN = max(max(t1.x, t1.y), t1.z);
-  float tF = min(min(t2.x, t2.y), t2.z);
-  if (tN > tF || tF < 0.0)
-    return vec2(-1.0); // no intersection
-  outNormal = -sign(rd) * step(t1.yzx, t1.xyz) * step(t1.zxy, t1.xyz);
-
-  // returns entry / exit distances from ro
-  return vec2(tN, tF);
 }
 
 // g controls forward/backward scattering: 0 = isotropic, 0.6 = forward-scattering
@@ -224,6 +197,8 @@ float sigmoid(float x, float width, float x0)
   return v;
 }
 
+float hash(vec3 p) { return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453); }
+
 // ------------------------------------------------------------
 // 2D -> 2D hash (deterministic, cheap, no trig)
 // Adapted from Dave Hoskins' "hash without sine" style hashes.
@@ -285,6 +260,18 @@ float gabor_wave_scalar(vec2 p, vec2 dir, float angle_spread_ratio, float fseed)
     }
 
   return av / max(at, 1e-6); // safe normalize
+}
+
+float linearize_depth(float depth_sample)
+{
+  float z = depth_sample * 2.0 - 1.0;
+  return (2.0 * near_plane) / (far_plane + near_plane - z * (far_plane - near_plane));
+}
+
+float phase_hg(float cos_theta, float g)
+{
+  float denom = 1.0 + g * g - 2.0 * g * cos_theta;
+  return (1.0 - g * g) / (4.0 * 3.14159265 * pow(denom, 1.5));
 }
 
 void main()
@@ -376,7 +363,9 @@ void main()
   // Shadow factor
   float shadow = 0.0;
   if (!bypass_shadow_map)
-    shadow = calculate_shadow(frag_pos_light_space, light_dir, normal);
+    shadow = calculate_shadow(frag_pos_light_space, light_dir, normal, true);
+
+  spec *= (1.0 - shadow);
 
   // apply shadow
   if (true)
@@ -403,6 +392,108 @@ void main()
     }
 
     frag_color = vec4(result, alpha);
+  }
+
+  // --- FOG
+
+  float h_floor = 0.2 * scale_h; // TODO hardcoded
+
+  if (add_fog)
+  {
+    float fog_density = 50.0;
+    vec3  fog_color = vec3(1.0, 1.0, 1.0);
+    float fog_height = 0.4 * scale_h;
+
+    if (frag_pos.y > h_floor)
+    {
+      // fetch depth
+      float depth_sample = texture(texture_depth, gl_FragCoord.xy / screen_size).r;
+
+      // convert to view-space depth
+      float view_depth = linearize_depth(depth_sample);
+      float fog_factor = 1.0 - exp(-view_depth * fog_density);
+
+      fog_factor *= exp(-(frag_pos.y - h_floor) / fog_height);
+      fog_factor = clamp(fog_factor, 0.0, 1.0);
+
+      frag_color.xyz = mix(frag_color.xyz, fog_color, fog_factor);
+    }
+  }
+
+  // --- ATMOSPHERIC SCATTERING
+
+  if (add_atmospheric_scattering)
+  {
+    float fog_density = 0.2;
+    int   num_steps = 32;
+    vec3  fog_color = vec3(1.0, 1.0, 1.0);
+    vec3  light_color = vec3(1.0, 1.0, 1.0);
+    float hg_g = 0.7;
+    float rayleigh_height = 0.8;
+    float mie_height = 0.4;
+    vec3  rayleigh_color = vec3(0.5, 0.7, 1.0); // bluish
+    vec3  mie_color = vec3(1.0, 0.9, 0.8);      // whitish/yellowish
+
+    float fog_strength = 0.5;
+    float fog_scattering_ratio = 0.7;
+
+    // Ray direction (from camera to fragment)
+    vec3  ray_dir = normalize(frag_pos - camera_pos);
+    float ray_length = length(frag_pos - camera_pos);
+
+    // Ray-march from camera → fragment
+    float step_size = ray_length / float(num_steps);
+    vec3  step_vec = ray_dir * step_size;
+
+    vec3 sample_pos = camera_pos;
+    vec3 scattering = vec3(0.0);
+
+    for (int i = 0; i < num_steps; i++)
+    {
+      sample_pos += step_vec;
+
+      if (sample_pos.y < h_floor) // TODO hardcoded
+        continue;
+
+      // simple exponential fog
+      float dist = length(sample_pos - camera_pos);
+      float density = exp(-fog_density * dist) * step_size;
+      density *= (0.8 + 0.2 * hash(sample_pos * 0.1));
+
+      // Shadow test
+      vec4  light_space_pos = light_space_matrix * vec4(sample_pos, 1.0);
+      float lit = calculate_shadow(light_space_pos, light_dir, normal, false);
+
+      // In-scattering from directional light
+      float cos_theta = dot(normalize(-light_dir), -ray_dir);
+      float phase = phase_hg(cos_theta, hg_g);
+
+      // TODO hardcoded
+      float rayleigh_factor = exp(-(sample_pos.y - h_floor) / rayleigh_height);
+      float mie_factor = exp(-(sample_pos.y - h_floor) / mie_height);
+
+      float pr = phase_rayleigh(cos_theta);
+      float pm = phase_mie(cos_theta, hg_g);
+
+      // soft cap for Mie scattering
+      pm = pm / (1.0 + pm);
+
+      // pr *= rayleigh_factor;
+      // pm *= mie_factor;
+
+      // scale by densities (tweak or make altitude-dependent)
+      vec3 phase_color = rayleigh_color * pr + mie_color * pm;
+
+      // float phase = max(dot(normalize(light_dir), -ray_dir), 0.0); // simple isotropic
+      scattering += density * light_color * phase_color * (1.0 - lit);
+    }
+
+    // fog color with scattering
+    vec3 fogged = mix(fog_color, scattering, fog_scattering_ratio);
+
+    frag_color.xyz = mix(frag_color.xyz,
+                         fogged,
+                         clamp(fog_density * ray_length, 0.0, fog_strength));
   }
 
   if (apply_tonemap)

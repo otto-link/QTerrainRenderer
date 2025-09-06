@@ -75,6 +75,10 @@ void RenderWidget::initializeGL()
                                                 diffuse_basic_vertex,
                                                 diffuse_blinn_phong_frag);
 
+  this->sp_shader_manager->add_shader_from_code("depth_map",
+                                                depth_map_vertex,
+                                                depth_map_frag);
+
   this->sp_shader_manager->add_shader_from_code("shadow_map_depth_pass",
                                                 shadow_map_depth_pass_vertex,
                                                 shadow_map_depth_pass_frag);
@@ -124,9 +128,30 @@ void RenderWidget::initializeGL()
     this->texture_hmap.from_image_16bit_grayscale(data, width);
   }
 
+  // depth buffer
+  int depth_map_res = 1024;
+  this->texture_depth.generate_depth_texture(depth_map_res, depth_map_res, false);
+
+  // Create framebuffer for depth map
+  {
+    glGenFramebuffers(1, &this->fbo_depth);
+    glBindFramebuffer(GL_FRAMEBUFFER, this->fbo_depth);
+    glFramebufferTexture2D(GL_FRAMEBUFFER,
+                           GL_DEPTH_ATTACHMENT,
+                           GL_TEXTURE_2D,
+                           this->texture_depth.get_id(),
+                           0);
+    glDrawBuffer(GL_NONE);
+    glReadBuffer(GL_NONE);
+
+    check_gl_error("Texture::initializeGL: attach FBO");
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  }
+
   // shadow map texture and buffer
   int shadow_map_res = 2048;
-  this->texture_shadow_map.generate_depth_texture(shadow_map_res, shadow_map_res);
+  this->texture_shadow_map.generate_depth_texture(shadow_map_res, shadow_map_res, true);
 
   // Create framebuffer for shadow depth
   {
@@ -219,58 +244,8 @@ void RenderWidget::paintGL()
                                      this->light_theta,
                                      this->light_phi);
 
-  // shadow depth pass, camera at the light position
-  this->camera_shadow_pass.position = this->light.position;
-  this->camera_shadow_pass.near_plane = 0.f;
-  this->camera_shadow_pass.far_plane = 100.f;
-
-  float     ortho_size = 1.5f; // TODO hardcoded
-  glm::mat4 light_projection = this->camera_shadow_pass.get_projection_matrix_ortho(
-      ortho_size);
-  glm::mat4 light_view = this->camera_shadow_pass.get_view_matrix();
-  glm::mat4 light_space_matrix = light_projection * light_view;
-
-  {
-    QOpenGLShaderProgram *p_shader = this->sp_shader_manager->get("shadow_map_depth_pass")
-                                         ->get();
-
-    if (p_shader)
-    {
-      // backup FBO state to avoid messing up with others FBO (ImGUI
-      // for instance...)
-      GLint previous_fbo;
-      glGetIntegerv(GL_FRAMEBUFFER_BINDING, &previous_fbo);
-
-      glViewport(0,
-                 0,
-                 this->texture_shadow_map.get_width(),
-                 this->texture_shadow_map.get_height());
-      glBindFramebuffer(GL_FRAMEBUFFER, this->fbo);
-
-      glClear(GL_DEPTH_BUFFER_BIT);
-      glEnable(GL_DEPTH_TEST);
-      glCullFace(GL_FRONT);
-
-      p_shader->bind();
-      p_shader->setUniformValue("light_space_matrix", toQMat(light_space_matrix));
-      p_shader->setUniformValue("model", toQMat(model));
-
-      plane.draw();
-      hmap.draw();
-      // water_plane.draw();
-      points_mesh.draw();
-
-      p_shader->release();
-
-      glCullFace(GL_BACK);
-      glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-      check_gl_error("Texture::paintGL: render shadow pass");
-
-      // set previous FBO back
-      glBindFramebuffer(GL_FRAMEBUFFER, previous_fbo);
-    }
-  }
+  glm::mat4 light_space_matrix;
+  this->render_shadow_map(model, light_space_matrix);
 
   {
     // transformation matrices
@@ -291,6 +266,8 @@ void RenderWidget::paintGL()
                          static_cast<float>(this->height());
 
     glm::mat4 projection = this->camera.get_projection_matrix_perspective(aspect_ratio);
+
+    this->render_shadow_map(model, this->camera.get_view_matrix(), projection);
 
     // DRAW CALL
     glViewport(0, 0, this->width(), this->height());
@@ -316,9 +293,12 @@ void RenderWidget::paintGL()
       p_shader->setUniformValue("screen_size",
                                 toQVec(glm::vec2(this->width(), this->height())));
       p_shader->setUniformValue("time", this->time);
+      p_shader->setUniformValue("near_plane", this->camera.near_plane);
+      p_shader->setUniformValue("far_plane", this->camera.far_plane);
+      p_shader->setUniformValue("scale_h", this->scale_h);
 
       p_shader->setUniformValue("model", toQMat(model));
-      p_shader->setUniformValue("view", toQMat(camera.get_view_matrix()));
+      p_shader->setUniformValue("view", toQMat(this->camera.get_view_matrix()));
       p_shader->setUniformValue("projection", toQMat(projection));
 
       p_shader->setUniformValue("camera_pos", toQVec(this->camera.position));
@@ -339,13 +319,20 @@ void RenderWidget::paintGL()
       p_shader->setUniformValue("gamma_correction", this->gamma_correction);
       p_shader->setUniformValue("apply_tonemap", this->apply_tonemap);
 
+      p_shader->setUniformValue("add_fog", this->add_fog);
+
+      p_shader->setUniformValue("add_atmospheric_scattering",
+                                this->add_atmospheric_scattering);
+
       p_shader->setUniformValue("texture_albedo", 0);
       p_shader->setUniformValue("texture_hmap", 1);
       p_shader->setUniformValue("texture_shadow_map", 2);
+      p_shader->setUniformValue("texture_depth", 3);
 
       this->texture_albedo.bind(0);
       this->texture_hmap.bind(1);
       this->texture_shadow_map.bind(2);
+      this->texture_depth.bind(3);
 
       p_shader->setUniformValue("base_color", QVector3D(0.5f, 0.5f, 0.5f));
       p_shader->setUniformValue("add_ambiant_occlusion", false);
@@ -363,7 +350,7 @@ void RenderWidget::paintGL()
 
       if (this->add_water)
       {
-        p_shader->setUniformValue("spec_strength", 1.f);
+        p_shader->setUniformValue("spec_strength", this->water_spec_strength);
 
         p_shader->setUniformValue("add_ambiant_occlusion", false);
         p_shader->setUniformValue("use_texture_albedo", false);
@@ -395,8 +382,10 @@ void RenderWidget::paintGL()
         water_plane.draw();
       }
 
-      this->texture_shadow_map.unbind();
       this->texture_albedo.unbind();
+      this->texture_hmap.unbind();
+      this->texture_shadow_map.unbind();
+      this->texture_depth.unbind();
 
       p_shader->release();
     }
@@ -474,9 +463,9 @@ void RenderWidget::paintGL()
 
   ImGui::SeparatorText("Water");
 
-  ImGui::Text("Water");
   {
     ret |= ImGui::Checkbox("Add water", &this->add_water);
+
     if (ImGui::SliderFloat("Water elevation", &this->water_elevation, 0.f, 1.f))
     {
       ret = true;
@@ -489,6 +478,7 @@ void RenderWidget::paintGL()
     }
 
     ret |= ImGui::SliderFloat("Water color depth", &this->water_color_depth, 0.f, 0.2f);
+    ret |= ImGui::SliderFloat("Water specularity", &this->water_spec_strength, 0.f, 1.f);
 
     ret |= imgui_show_water_preset_selector(this->color_shallow_water,
                                             this->color_deep_water);
@@ -508,27 +498,22 @@ void RenderWidget::paintGL()
 
     ret |= ImGui::Checkbox("Animate waves", &this->animate_waves);
     ret |= ImGui::SliderFloat("Waves speed", &this->waves_speed, 0.f, 1.f);
+
     // force update if animation requested
     if (this->animate_waves)
       this->need_update = true;
+  }
 
-    // const char *items[] = {"AAAA",
-    //                        "BBBB",
-    //                        "CCCC",
-    //                        "DDDD",
-    //                        "EEEE",
-    //                        "FFFF",
-    //                        "GGGG",
-    //                        "HHHH",
-    //                        "IIIIIII",
-    //                        "JJJJ",
-    //                        "KKKKKKK"};
-    // static int  item_current = 0;
-    // if (ImGui::Combo("combo", &item_current, items, IM_ARRAYSIZE(items)))
-    // {
-    //   ret = true;
-    //   QTR_LOG->trace("{}", item_current);
-    // }
+  ImGui::SeparatorText("Fog##sep");
+
+  {
+    ret |= ImGui::Checkbox("Fog", &this->add_fog);
+  }
+
+  ImGui::SeparatorText("Atmospheric scattering##sep");
+
+  {
+    ret |= ImGui::Checkbox("Atmospheric scattering", &this->add_atmospheric_scattering);
   }
 
   this->need_update |= ret;
