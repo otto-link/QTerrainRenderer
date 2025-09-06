@@ -606,8 +606,8 @@ void RenderWidget::set_heightmap_geometry(const std::vector<float> &data,
                      0.f,
                      0.f,
                      2.f,
-                     2.f,
                      0.4f, // TODO hardcoded
+                     2.f,
                      add_skirt,
                      0.f);
 

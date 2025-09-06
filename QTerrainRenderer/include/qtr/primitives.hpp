@@ -5,6 +5,10 @@
 
 namespace qtr
 {
+/* OpenGL convention for all coordinates
+   X → horizontal span (lx)
+   Y → height (ly, modified by the heightmap data)
+   Z → depth span (lz) */
 
 void generate_cube(Mesh &mesh, float x, float y, float z, float lx, float ly, float lz);
 

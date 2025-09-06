@@ -86,11 +86,11 @@ void generate_heightmap(Mesh                     &mesh,
   vertices.reserve(width * height);
   indices.reserve((width - 1) * (height - 1) * 6);
 
-  float hx = lx * 0.5f;
-  float hy = ly * 0.5f;
+  float hx = lx * 0.5f; // half span in X
+  float hz = lz * 0.5f; // half span in Z
 
-  float dx = lx / (width - 1);
-  float dy = ly / (height - 1);
+  float dx = lx / (width - 1);  // X step
+  float dz = lz / (height - 1); // Z step
 
   // ---- Generate main surface vertices ----
   for (int j = 0; j < height; ++j)
@@ -99,7 +99,11 @@ void generate_heightmap(Mesh                     &mesh,
     {
       int idx = j * width + i;
 
-      glm::vec3 position(x - hx + i * dx, z + data[idx] * lz, y - hy + j * dy);
+      glm::vec3 position(x - hx + i * dx,    // X
+                         y + data[idx] * ly, // Y (heightmap modifies Y)
+                         z - hz + j * dz     // Z
+      );
+
       glm::vec3 normal(0.0f, 1.0f, 0.0f); // placeholder normal
       glm::vec2 uv(static_cast<float>(i) / (width - 1),
                    static_cast<float>(j) / (height - 1));
@@ -137,11 +141,10 @@ void generate_heightmap(Mesh                     &mesh,
       {
         int baseIdx = static_cast<int>(vertices.size());
 
-        // Original top vertex
         int top0 = getIndex(k);
         int top1 = getIndex(k + 1);
 
-        // Bottom skirt vertices
+        // Bottom skirt vertices (lower in Y)
         glm::vec3 bottomPos0 = vertices[top0].position;
         bottomPos0.y = add_level;
         glm::vec3 bottomPos1 = vertices[top1].position;
@@ -153,7 +156,6 @@ void generate_heightmap(Mesh                     &mesh,
         int bottom0 = baseIdx;
         int bottom1 = baseIdx + 1;
 
-        // Two triangles per quad
         indices.push_back(top0);
         indices.push_back(bottom0);
         indices.push_back(top1);
@@ -170,10 +172,10 @@ void generate_heightmap(Mesh                     &mesh,
     // Right edge (x-max)
     add_skirt_edge([&](int j) { return j * width + (width - 1); }, height);
 
-    // Bottom edge (y-min)
+    // Bottom edge (z-min)
     add_skirt_edge([&](int i) { return i; }, width);
 
-    // Top edge (y-max)
+    // Top edge (z-max)
     add_skirt_edge([&](int i) { return (height - 1) * width + i; }, width);
   }
 
@@ -307,7 +309,6 @@ void generate_rectangle_mesh(Mesh            &mesh,
 
   // Direction from one edge center to opposite edge center
   glm::vec3 width_dir = glm::normalize(p2 - p1);
-  float     width = glm::length(p2 - p1);
 
   // Find perpendicular direction for height
   glm::vec3 up;
