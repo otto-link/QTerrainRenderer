@@ -99,4 +99,6 @@ void Mesh::destroy()
   this->has_indices = false;
 }
 
+bool Mesh::is_active() const { return (this->vbo); }
+
 } // namespace qtr

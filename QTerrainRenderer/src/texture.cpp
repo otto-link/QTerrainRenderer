@@ -254,7 +254,7 @@ int Texture::get_width() const { return this->width; }
 
 int Texture::get_height() const { return this->height; }
 
-bool Texture::is_active() { return (this->id != 0); }
+bool Texture::is_active() const { return (this->id != 0); }
 
 void Texture::unbind()
 {

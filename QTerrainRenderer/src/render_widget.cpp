@@ -1,5 +1,7 @@
 /* Copyright (c) 2025 Otto Link. Distributed under the terms of the GNU General Public
    License. The full license is in the file LICENSE, distributed with this software. */
+#include <stdexcept>
+
 #include <QOpenGLFunctions>
 
 #include <backends/imgui_impl_opengl3.h>
@@ -90,12 +92,6 @@ void RenderWidget::initializeGL()
   generate_plane(this->plane, 0.f, 0.f, 0.f, 4.f, 4.f);
 
   generate_plane(this->water_plane, 0.f, this->water_elevation, 0.f, 2.f, 2.f);
-
-  std::vector<glm::vec3> points = {{0.0f, 0.3f, 0.0f},
-                                   {0.2f, 0.35f, 0.2f},
-                                   {-0.3f, 0.4f, 0.1f}};
-
-  generate_downward_triangles(points_mesh, points, 0.1f, 0.01f);
 
   // {
   //   int width, height;
@@ -314,9 +310,12 @@ void RenderWidget::paintGL()
       p_shader->setUniformValue("add_ambiant_occlusion", false);
       plane.draw();
 
-      p_shader->setUniformValue("base_color", QVector3D(0.f, 1.f, 0.f));
-      p_shader->setUniformValue("add_ambiant_occlusion", false);
-      points_mesh.draw();
+      // points
+      {
+        p_shader->setUniformValue("base_color", QVector3D(0.f, 1.f, 0.f));
+        p_shader->setUniformValue("add_ambiant_occlusion", false);
+        points_mesh.draw();
+      }
 
       // heightmap
       {
@@ -603,11 +602,11 @@ void RenderWidget::set_heightmap_geometry(const std::vector<float> &data,
                      width,
                      height,
                      0.f,
+                     this->hmap_h0,
                      0.f,
-                     0.f,
-                     2.f,
-                     0.4f, // TODO hardcoded
-                     2.f,
+                     this->hmap_w,
+                     this->hmap_h,
+                     this->hmap_w,
                      add_skirt,
                      0.f);
 
@@ -615,6 +614,31 @@ void RenderWidget::set_heightmap_geometry(const std::vector<float> &data,
 
   // also generate the heightmap texture
   this->texture_hmap.from_float_vector(data, width);
+}
+
+void RenderWidget::set_points(const std::vector<float> &x,
+                              const std::vector<float> &y,
+                              const std::vector<float> &h)
+{
+  QTR_LOG->trace("RenderWidget::set_points");
+
+  if (x.size() != y.size() || x.size() != h.size())
+    throw std::invalid_argument("RenderWidget::set_points: vector sizes does not match");
+
+  std::vector<glm::vec3> points;
+  for (size_t k = 0; k < x.size(); ++k)
+  {
+    // rescale to render size
+    float xs = 0.5f * this->hmap_w * (2.f * x[k] - 1.f);
+    float hs = this->hmap_h0 + this->hmap_h * h[k];
+    float ys = 0.5f * this->hmap_w * (2.f * y[k] - 1.f);
+
+    points.push_back(glm::vec3(xs, hs, ys));
+  }
+
+  // TODO scale with point value
+
+  generate_downward_triangles(points_mesh, points, 0.05f, 0.01f);
 }
 
 void RenderWidget::set_texture_albedo(const std::vector<uint8_t> &data, int width)

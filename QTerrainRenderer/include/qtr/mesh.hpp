@@ -27,6 +27,7 @@ public:
   void create(const std::vector<Vertex> &vertices, const std::vector<uint> &indices = {});
   void destroy();
   void draw();
+  bool is_active() const;
   void update_vertices(const std::vector<Vertex> &vertices);
 
 private:

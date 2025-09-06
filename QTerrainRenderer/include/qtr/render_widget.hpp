@@ -48,6 +48,11 @@ public:
   void set_texture_normal(const std::vector<uint8_t> &data, int width);
   void reset_texture_normal();
 
+  // "classical" coordinates (not OpenGL convention)
+  void set_points(const std::vector<float> &x,
+                  const std::vector<float> &y,
+                  const std::vector<float> &h);
+
 protected:
   void initializeGL() override;
   void resizeEvent(QResizeEvent *event) override;
@@ -102,6 +107,9 @@ private:
   float scale_h = 1.0f;
   float near_plane = 0.1f;
   float far_plane = 100.f;
+  float hmap_h0 = 0.f;
+  float hmap_w = 2.f;  // width of sides
+  float hmap_h = 0.4f; // elevations
 
   bool normal_visualization = false;
 

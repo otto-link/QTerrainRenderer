@@ -39,5 +39,14 @@ int main(int argc, char *argv[])
     renderer->reset_texture_normal();
   }
 
+  {
+    std::vector<float> x, y, h;
+    x = {0.1f, 0.1f, 0.2f, 0.7f, 0.8f};
+    y = {0.2f, 0.2f, 0.4f, 0.7f, 0.8f};
+    h = {0.8f, 0.2f, 1.f, 0.5f, 0.7f};
+
+    renderer->set_points(x, y, h);
+  }
+
   return app.exec();
 }

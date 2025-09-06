@@ -31,7 +31,7 @@ public:
   void bind_and_set(QOpenGLShaderProgram &shader, const std::string &text_id, int unit);
   void unbind();
   void destroy();
-  bool is_active();
+  bool is_active() const;
 
 private:
   GLuint id;
