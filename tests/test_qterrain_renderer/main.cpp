@@ -46,6 +46,7 @@ int main(int argc, char *argv[])
     h = {0.8f, 0.2f, 1.f, 0.5f, 0.7f};
 
     renderer->set_points(x, y, h);
+    renderer->reset_points();
   }
 
   return app.exec();

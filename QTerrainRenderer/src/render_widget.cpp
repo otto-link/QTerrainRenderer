@@ -575,6 +575,8 @@ void RenderWidget::reset_texture_albedo() { this->texture_albedo.destroy(); }
 
 void RenderWidget::reset_texture_normal() { this->texture_normal.destroy(); }
 
+void RenderWidget::reset_points() { this->points_mesh.destroy(); }
+
 void RenderWidget::resizeEvent(QResizeEvent *event)
 {
   QOpenGLWidget::resizeEvent(event);

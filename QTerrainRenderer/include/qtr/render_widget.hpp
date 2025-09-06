@@ -52,6 +52,7 @@ public:
   void set_points(const std::vector<float> &x,
                   const std::vector<float> &y,
                   const std::vector<float> &h);
+  void reset_points();
 
 protected:
   void initializeGL() override;
@@ -166,6 +167,7 @@ private:
   Mesh hmap;
   Mesh water_plane;
   Mesh points_mesh;
+  Mesh path_mesh;
 
   Texture texture_albedo;
   Texture texture_hmap;
