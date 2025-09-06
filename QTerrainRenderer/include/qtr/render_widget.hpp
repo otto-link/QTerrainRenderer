@@ -34,6 +34,16 @@ public:
 
   QSize sizeHint() const override;
 
+  void set_heightmap_geometry(const std::vector<float> &data,
+                              int                       width,
+                              int                       height,
+                              bool                      add_skirt = true);
+  void reset_heightmap_geometry();
+
+  // RGBA 8bit
+  void set_texture_albedo(const std::vector<uint8_t> &data, int width);
+  void reset_texture_albedo();
+
 protected:
   void initializeGL() override;
   void resizeEvent(QResizeEvent *event) override;
@@ -85,7 +95,7 @@ private:
   float     light_theta; // zenith
   float     light_distance = 10.f;
 
-  float scale_h = 0.4f;
+  float scale_h = 1.0f;
   float near_plane = 0.1f;
   float far_plane = 100.f;
 
@@ -101,7 +111,7 @@ private:
 
   // water
   bool      add_water = true;
-  float     water_elevation = 0.1f;
+  float     water_elevation = 0.05f;
   glm::vec3 color_shallow_water;
   glm::vec3 color_deep_water;
   float     water_color_depth = 0.015f;

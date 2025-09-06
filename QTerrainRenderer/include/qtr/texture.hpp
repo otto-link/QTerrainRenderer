@@ -5,6 +5,8 @@
 
 #include <QOpenGLFunctions_3_3_Core>
 
+#include "qtr/shader.hpp"
+
 namespace qtr
 {
 
@@ -14,6 +16,7 @@ public:
   Texture();
   ~Texture();
 
+  bool from_float_vector(const std::vector<float> &data, int new_width);
   bool from_image_8bit_grayscale(const std::vector<uint8_t> &img, int new_width);
   bool from_image_8bit_rgba(const std::vector<uint8_t> &img, int new_width);
   bool from_image_16bit_grayscale(const std::vector<uint16_t> &img, int new_width);
@@ -24,8 +27,10 @@ public:
   int    get_height() const;
 
   void bind(int unit = 0);
+  void bind_and_set(QOpenGLShaderProgram &shader, const std::string &text_id, int unit);
   void unbind();
   void destroy();
+  bool is_active();
 
 private:
   GLuint id;

@@ -13,17 +13,66 @@ Texture::~Texture() { this->destroy(); }
 
 void Texture::bind(int unit)
 {
-  glActiveTexture(GL_TEXTURE0 + unit);
-  glBindTexture(GL_TEXTURE_2D, this->id);
+  if (this->is_active())
+  {
+    glActiveTexture(GL_TEXTURE0 + unit);
+    glBindTexture(GL_TEXTURE_2D, this->id);
+  }
+}
+
+void Texture::bind_and_set(QOpenGLShaderProgram &shader,
+                           const std::string    &text_id,
+                           int                   unit)
+{
+  if (this->is_active())
+  {
+    this->bind(unit);
+    shader.setUniformValue(text_id.c_str(), unit);
+  }
 }
 
 void Texture::destroy()
 {
-  if (this->id != 0)
+  if (this->is_active())
   {
     glDeleteTextures(1, &this->id);
     this->id = 0;
   }
+}
+
+bool Texture::from_float_vector(const std::vector<float> &data, int new_width)
+{
+  QOpenGLFunctions_3_3_Core::initializeOpenGLFunctions();
+  this->destroy();
+
+  this->width = new_width;
+  this->height = data.size() / this->width;
+
+  glGenTextures(1, &this->id);
+  glBindTexture(GL_TEXTURE_2D, this->id);
+
+  check_gl_error("Texture::from_float_vector: gen/bind");
+
+  glTexImage2D(GL_TEXTURE_2D,
+               0,
+               GL_R32F, // internal format (1 float channel)
+               this->width,
+               this->height,
+               0,
+               GL_RED,
+               GL_FLOAT,
+               data.data());
+
+  check_gl_error("Texture::from_float_vector: data");
+
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+  glBindTexture(GL_TEXTURE_2D, 0);
+
+  return true;
 }
 
 bool Texture::from_image_8bit_grayscale(const std::vector<uint8_t> &img, int new_width)
@@ -68,7 +117,7 @@ bool Texture::from_image_8bit_rgba(const std::vector<uint8_t> &img, int new_widt
   glGenTextures(1, &this->id);
   glBindTexture(GL_TEXTURE_2D, this->id);
 
-  QTR_LOG->trace("Texture::from_image_8bit_rgba: id = {}, width x height = {} x {}",
+  QTR_LOG->trace("Texture::from_image_8bit_rgba: id = {}, w x h = {} x {}",
                  this->id,
                  this->width,
                  this->height);
@@ -169,6 +218,12 @@ int Texture::get_width() const { return this->width; }
 
 int Texture::get_height() const { return this->height; }
 
-void Texture::unbind() { glBindTexture(GL_TEXTURE_2D, 0); }
+bool Texture::is_active() { return (this->id != 0); }
+
+void Texture::unbind()
+{
+  if (this->is_active())
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
 
 } // namespace qtr

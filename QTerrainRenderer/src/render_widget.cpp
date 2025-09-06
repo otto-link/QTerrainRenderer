@@ -89,44 +89,21 @@ void RenderWidget::initializeGL()
 
   generate_plane(this->plane, 0.f, 0.f, 0.f, 4.f, 4.f);
 
-  generate_plane(this->water_plane, 0.f, 0.2f + this->water_elevation, 0.f, 2.f, 2.f);
+  generate_plane(this->water_plane, 0.f, this->water_elevation, 0.f, 2.f, 2.f);
 
-  std::vector<glm::vec3> points = {{0.0f, 0.6f, 0.0f},
-                                   {0.2f, 0.7f, 0.2f},
-                                   {-0.3f, 0.8f, 0.1f}};
+  std::vector<glm::vec3> points = {{0.0f, 0.3f, 0.0f},
+                                   {0.2f, 0.35f, 0.2f},
+                                   {-0.3f, 0.4f, 0.1f}};
 
   generate_downward_triangles(points_mesh, points, 0.1f, 0.01f);
 
-  {
-    int                width, height;
-    std::vector<float> data = load_png_as_grayscale("hmap.png", width, height);
-    generate_heightmap(this->hmap,
-                       data,
-                       width,
-                       height,
-                       0.f,
-                       0.f,
-                       0.2f,
-                       2.f,
-                       2.f,
-                       1.f,
-                       true,
-                       0.f);
-  }
-
-  {
-    int width, height;
-    // std::vector<uint8_t> data = load_png_as_8bit_rgba("texture_white.png", width,
-    // height);
-    std::vector<uint8_t> data = load_png_as_8bit_rgba("texture.png", width, height);
-    this->texture_albedo.from_image_8bit_rgba(data, width);
-  }
-
-  {
-    int                   width, height;
-    std::vector<uint16_t> data = load_png_as_16bit_grayscale("hmap.png", width, height);
-    this->texture_hmap.from_image_16bit_grayscale(data, width);
-  }
+  // {
+  //   int width, height;
+  //   // std::vector<uint8_t> data = load_png_as_8bit_rgba("texture_white.png", width,
+  //   // height);
+  //   std::vector<uint8_t> data = load_png_as_8bit_rgba("texture.png", width, height);
+  //   this->texture_albedo.from_image_8bit_rgba(data, width);
+  // }
 
   // depth buffer
   int depth_map_res = 1024;
@@ -324,15 +301,10 @@ void RenderWidget::paintGL()
       p_shader->setUniformValue("add_atmospheric_scattering",
                                 this->add_atmospheric_scattering);
 
-      p_shader->setUniformValue("texture_albedo", 0);
-      p_shader->setUniformValue("texture_hmap", 1);
-      p_shader->setUniformValue("texture_shadow_map", 2);
-      p_shader->setUniformValue("texture_depth", 3);
-
-      this->texture_albedo.bind(0);
-      this->texture_hmap.bind(1);
-      this->texture_shadow_map.bind(2);
-      this->texture_depth.bind(3);
+      this->texture_albedo.bind_and_set(*p_shader, "texture_albedo", 0);
+      this->texture_hmap.bind_and_set(*p_shader, "texture_hmap", 1);
+      this->texture_shadow_map.bind_and_set(*p_shader, "texture_shadow_map", 2);
+      this->texture_depth.bind_and_set(*p_shader, "texture_depth", 3);
 
       p_shader->setUniformValue("base_color", QVector3D(0.5f, 0.5f, 0.5f));
       p_shader->setUniformValue("add_ambiant_occlusion", false);
@@ -344,7 +316,8 @@ void RenderWidget::paintGL()
 
       p_shader->setUniformValue("base_color", QVector3D(0.7f, 0.7f, 0.7f));
       p_shader->setUniformValue("use_texture_albedo",
-                                true && !this->bypass_texture_albedo);
+                                true && !this->bypass_texture_albedo &&
+                                    this->texture_albedo.is_active());
       p_shader->setUniformValue("add_ambiant_occlusion", this->add_ambiant_occlusion);
       hmap.draw();
 
@@ -421,7 +394,7 @@ void RenderWidget::paintGL()
   bool ret = false;
 
   ret |= ImGui::Checkbox("Wireframe mode", &this->wireframe_mode);
-  ret |= ImGui::SliderFloat("scale_h", &this->scale_h, 0.f, 1.f);
+  ret |= ImGui::SliderFloat("scale_h", &this->scale_h, 0.f, 2.f);
   ret |= ImGui::SliderAngle("FOV", &this->fov, 10.f, 180.f);
 
   ImGui::Text("Light");
@@ -471,7 +444,7 @@ void RenderWidget::paintGL()
       ret = true;
       generate_plane(this->water_plane,
                      0.f,
-                     0.2f + this->water_elevation,
+                     this->water_elevation,
                      0.f,
                      2.f,
                      2.f); // TODO hardcoded
@@ -576,6 +549,14 @@ void RenderWidget::reset_camera_position()
   // this->light_theta = 10.f / 180.f * 3.14f;
 }
 
+void RenderWidget::reset_heightmap_geometry()
+{
+  this->hmap.destroy();
+  this->texture_hmap.destroy();
+}
+
+void RenderWidget::reset_texture_albedo() { this->texture_albedo.destroy(); }
+
 void RenderWidget::resizeEvent(QResizeEvent *event)
 {
   QOpenGLWidget::resizeEvent(event);
@@ -589,6 +570,39 @@ void RenderWidget::resizeGL(int w, int h)
   this->glViewport(0, 0, w, h);
   ImGui::GetIO().DisplaySize = ImVec2(float(w), float(h));
   this->repaint();
+}
+
+void RenderWidget::set_heightmap_geometry(const std::vector<float> &data,
+                                          int                       width,
+                                          int                       height,
+                                          bool                      add_skirt)
+{
+  QTR_LOG->trace("RenderWidget::set_heightmap_geometry");
+
+  generate_heightmap(this->hmap,
+                     data,
+                     width,
+                     height,
+                     0.f,
+                     0.f,
+                     0.f,
+                     2.f,
+                     2.f,
+                     0.4f, // TODO hardcoded
+                     add_skirt,
+                     0.f);
+
+  QTR_LOG->trace("RenderWidget::set_heightmap_geometry: w x h = {} x {}", width, height);
+
+  // also generate the heightmap texture
+  this->texture_hmap.from_float_vector(data, width);
+}
+
+void RenderWidget::set_texture_albedo(const std::vector<uint8_t> &data, int width)
+{
+  QTR_LOG->trace("RenderWidget::set_texture_albedo");
+
+  this->texture_albedo.from_image_8bit_rgba(data, width);
 }
 
 QSize RenderWidget::sizeHint() const { return QSize(QTR_CONFIG->widget.size_hint); }

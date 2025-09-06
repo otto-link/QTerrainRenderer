@@ -67,6 +67,9 @@ void Mesh::update_vertices(const std::vector<Vertex> &vertices)
 
 void Mesh::draw()
 {
+  if (!this->vbo)
+    return;
+
   glBindVertexArray(this->vao);
   if (this->has_indices)
     glDrawElements(GL_TRIANGLES,

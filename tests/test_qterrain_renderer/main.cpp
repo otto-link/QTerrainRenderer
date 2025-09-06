@@ -12,7 +12,24 @@ int main(int argc, char *argv[])
   QApplication app(argc, argv);
 
   qtr::RenderWidget *renderer = new qtr::RenderWidget("Test widget");
+
   renderer->show();
+
+  // set the heightmap data
+  {
+    int                width, height;
+    std::vector<float> data = qtr::load_png_as_grayscale("hmap.png", width, height);
+
+    renderer->set_heightmap_geometry(data, width, height);
+  }
+
+  {
+    int                  width, height;
+    std::vector<uint8_t> data = qtr::load_png_as_8bit_rgba("texture.png", width, height);
+
+    renderer->set_texture_albedo(data, width);
+    // renderer->reset_texture_albedo();
+  }
 
   return app.exec();
 }

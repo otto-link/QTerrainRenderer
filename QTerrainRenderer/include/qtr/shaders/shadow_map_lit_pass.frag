@@ -283,7 +283,7 @@ void main()
   if (use_water_colors)
   {
     float h = texture(texture_hmap, frag_uv).r;
-    float depth = frag_pos.y / 0.4 - 0.2 - h; // TODO fix scaling
+    float depth = frag_pos.y / 0.4 - h; // TODO fix scaling
 
     if (add_water_waves)
     {
@@ -396,15 +396,13 @@ void main()
 
   // --- FOG
 
-  float h_floor = 0.2 * scale_h; // TODO hardcoded
-
   if (add_fog)
   {
     float fog_density = 50.0;
     vec3  fog_color = vec3(1.0, 1.0, 1.0);
-    float fog_height = 0.4 * scale_h;
+    float fog_height = 0.1;
 
-    if (frag_pos.y > h_floor)
+    if (frag_pos.y > 0.0)
     {
       // fetch depth
       float depth_sample = texture(texture_depth, gl_FragCoord.xy / screen_size).r;
@@ -413,7 +411,7 @@ void main()
       float view_depth = linearize_depth(depth_sample);
       float fog_factor = 1.0 - exp(-view_depth * fog_density);
 
-      fog_factor *= exp(-(frag_pos.y - h_floor) / fog_height);
+      fog_factor *= exp(-frag_pos.y / fog_height);
       fog_factor = clamp(fog_factor, 0.0, 1.0);
 
       frag_color.xyz = mix(frag_color.xyz, fog_color, fog_factor);
@@ -452,7 +450,7 @@ void main()
     {
       sample_pos += step_vec;
 
-      if (sample_pos.y < h_floor) // TODO hardcoded
+      if (sample_pos.y < 0.0)
         continue;
 
       // simple exponential fog
@@ -468,9 +466,8 @@ void main()
       float cos_theta = dot(normalize(-light_dir), -ray_dir);
       float phase = phase_hg(cos_theta, hg_g);
 
-      // TODO hardcoded
-      float rayleigh_factor = exp(-(sample_pos.y - h_floor) / rayleigh_height);
-      float mie_factor = exp(-(sample_pos.y - h_floor) / mie_height);
+      float rayleigh_factor = exp(-sample_pos.y / rayleigh_height);
+      float mie_factor = exp(-sample_pos.y / mie_height);
 
       float pr = phase_rayleigh(cos_theta);
       float pm = phase_mie(cos_theta, hg_g);
