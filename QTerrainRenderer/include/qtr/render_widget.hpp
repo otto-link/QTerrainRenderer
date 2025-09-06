@@ -138,6 +138,12 @@ private:
 
   // --- Rendering parameters
 
+  // Scene components visibility
+  bool render_plane = true;
+  bool render_points = true;
+  bool render_path = true;
+  bool render_hmap = true;
+
   // Normals
   bool  normal_visualization = false;
   float normal_map_scaling = 1.f;

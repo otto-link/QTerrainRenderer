@@ -47,8 +47,8 @@ void RenderWidget::render_shadow_map(const glm::mat4 &model,
     plane.draw();
     hmap.draw();
     // water_plane.draw();
-    points_mesh.draw();
-    path_mesh.draw();
+    // points_mesh.draw();
+    // path_mesh.draw();
 
     p_shader->release();
 

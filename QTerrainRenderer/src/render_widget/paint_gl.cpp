@@ -70,6 +70,7 @@ void RenderWidget::render_scene()
                               light_space_matrix);
 
     // base plane
+    if (this->render_plane)
     {
       p_shader->setUniformValue("base_color", QVector3D(0.5f, 0.5f, 0.5f));
       p_shader->setUniformValue("add_ambiant_occlusion", false);
@@ -77,6 +78,7 @@ void RenderWidget::render_scene()
     }
 
     // points
+    if (this->render_points)
     {
       p_shader->setUniformValue("base_color", QVector3D(0.f, 1.f, 0.f));
       p_shader->setUniformValue("add_ambiant_occlusion", false);
@@ -84,6 +86,7 @@ void RenderWidget::render_scene()
     }
 
     // path
+    if (this->render_path)
     {
       p_shader->setUniformValue("base_color", QVector3D(1.f, 0.f, 1.f));
       p_shader->setUniformValue("add_ambiant_occlusion", false);
@@ -91,8 +94,9 @@ void RenderWidget::render_scene()
     }
 
     // heightmap
+    if (this->render_hmap)
     {
-      p_shader->setUniformValue("base_color", QVector3D(0.7f, 0.7f, 0.7f));
+      p_shader->setUniformValue("base_color", QVector3D(0.8f, 0.8f, 0.8f));
       p_shader->setUniformValue("use_texture_albedo",
                                 true && !this->bypass_texture_albedo &&
                                     this->texture_albedo.is_active());
@@ -180,6 +184,10 @@ void RenderWidget::render_ui()
   bool ret = false;
 
   ret |= ImGui::Checkbox("Normal visualization", &this->normal_visualization);
+  ret |= ImGui::Checkbox("Render plane", &this->render_plane);
+  ret |= ImGui::Checkbox("Render points", &this->render_points);
+  ret |= ImGui::Checkbox("Render path", &this->render_path);
+  ret |= ImGui::Checkbox("Render terrain", &this->render_hmap);
   ret |= ImGui::Checkbox("Wireframe mode", &this->wireframe_mode);
   ret |= ImGui::SliderFloat("scale_h", &this->scale_h, 0.f, 2.f);
   ret |= ImGui::SliderAngle("FOV", &this->fov, 10.f, 180.f);
