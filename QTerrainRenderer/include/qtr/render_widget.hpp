@@ -99,6 +99,8 @@ private:
   float near_plane = 0.1f;
   float far_plane = 100.f;
 
+  bool normal_visualization = false;
+
   float gamma_correction = 2.f;
   bool  bypass_texture_albedo = false;
   bool  bypass_shadow_map = false;

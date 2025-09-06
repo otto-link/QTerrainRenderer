@@ -16,6 +16,8 @@ uniform float near_plane;
 uniform float far_plane;
 uniform float scale_h;
 
+uniform bool normal_visualization;
+
 uniform mat4  view;
 uniform mat4  projection;
 uniform vec3  light_pos;
@@ -279,6 +281,15 @@ void main()
   vec3  color;
   float alpha = 1.0;
   vec3  normal = frag_normal;
+
+  if (normal_visualization)
+  {
+    vec3 n = normalize(normal);
+    // Remap from [-1,1] to [0,1]
+    n = n * 0.5 + 0.5;
+    frag_color = vec4(vec3(n.x, n.z, n.y), 1.0);
+    return;
+  }
 
   if (use_water_colors)
   {

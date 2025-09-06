@@ -274,6 +274,8 @@ void RenderWidget::paintGL()
       p_shader->setUniformValue("far_plane", this->camera.far_plane);
       p_shader->setUniformValue("scale_h", this->scale_h);
 
+      p_shader->setUniformValue("normal_visualization", this->normal_visualization);
+
       p_shader->setUniformValue("model", toQMat(model));
       p_shader->setUniformValue("view", toQMat(this->camera.get_view_matrix()));
       p_shader->setUniformValue("projection", toQMat(projection));
@@ -393,6 +395,7 @@ void RenderWidget::paintGL()
 
   bool ret = false;
 
+  ret |= ImGui::Checkbox("Normal visualization", &this->normal_visualization);
   ret |= ImGui::Checkbox("Wireframe mode", &this->wireframe_mode);
   ret |= ImGui::SliderFloat("scale_h", &this->scale_h, 0.f, 2.f);
   ret |= ImGui::SliderAngle("FOV", &this->fov, 10.f, 180.f);
