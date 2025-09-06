@@ -18,6 +18,7 @@ public:
 
   bool from_float_vector(const std::vector<float> &data, int new_width);
   bool from_image_8bit_grayscale(const std::vector<uint8_t> &img, int new_width);
+  bool from_image_8bit_rgb(const std::vector<uint8_t> &img, int new_width);
   bool from_image_8bit_rgba(const std::vector<uint8_t> &img, int new_width);
   bool from_image_16bit_grayscale(const std::vector<uint16_t> &img, int new_width);
   void generate_depth_texture(int new_width, int new_height, bool force_border_color);

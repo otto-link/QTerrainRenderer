@@ -44,6 +44,10 @@ public:
   void set_texture_albedo(const std::vector<uint8_t> &data, int width);
   void reset_texture_albedo();
 
+  // RGB 8bit
+  void set_texture_normal(const std::vector<uint8_t> &data, int width);
+  void reset_texture_normal();
+
 protected:
   void initializeGL() override;
   void resizeEvent(QResizeEvent *event) override;
@@ -101,6 +105,8 @@ private:
 
   bool normal_visualization = false;
 
+  float normal_map_scaling = 1.f;
+
   float gamma_correction = 2.f;
   bool  bypass_texture_albedo = false;
   bool  bypass_shadow_map = false;
@@ -148,12 +154,14 @@ private:
   Camera camera;
   Light  light;
 
-  Mesh    plane;
-  Mesh    hmap;
-  Mesh    water_plane;
-  Mesh    points_mesh;
+  Mesh plane;
+  Mesh hmap;
+  Mesh water_plane;
+  Mesh points_mesh;
+
   Texture texture_albedo;
   Texture texture_hmap;
+  Texture texture_normal; // for details
   Texture texture_shadow_map;
   Texture texture_depth;
 };

@@ -75,6 +75,33 @@ std::vector<uint16_t> load_png_as_16bit_rgba(const std::string &path,
   return data; // RVO handles return efficiently, no need for std::move
 }
 
+std::vector<uint8_t> load_png_as_8bit_rgb(const std::string &path,
+                                          int               &width,
+                                          int               &height)
+{
+  QImage img(path.c_str());
+  if (img.isNull())
+  {
+    throw std::runtime_error("Failed to load image: " + path);
+  }
+
+  // Ensure format is RGB888
+  if (img.format() != QImage::Format_RGB888)
+  {
+    img = img.convertToFormat(QImage::Format_RGB888);
+  }
+
+  width = img.width();
+  height = img.height();
+  const int    channel_count = 3; // R, G, B
+  const size_t total_bytes = static_cast<size_t>(width) * height * channel_count;
+
+  std::vector<uint8_t> data(total_bytes);
+  std::memcpy(data.data(), img.constBits(), total_bytes);
+
+  return data; // RVO handles return efficiently, no need for std::move
+}
+
 std::vector<uint8_t> load_png_as_8bit_rgba(const std::string &path,
                                            int               &width,
                                            int               &height)

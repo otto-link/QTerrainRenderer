@@ -275,6 +275,7 @@ void RenderWidget::paintGL()
       p_shader->setUniformValue("scale_h", this->scale_h);
 
       p_shader->setUniformValue("normal_visualization", this->normal_visualization);
+      p_shader->setUniformValue("normal_map_scaling", 0.f); // only for heightmap
 
       p_shader->setUniformValue("model", toQMat(model));
       p_shader->setUniformValue("view", toQMat(this->camera.get_view_matrix()));
@@ -305,8 +306,9 @@ void RenderWidget::paintGL()
 
       this->texture_albedo.bind_and_set(*p_shader, "texture_albedo", 0);
       this->texture_hmap.bind_and_set(*p_shader, "texture_hmap", 1);
-      this->texture_shadow_map.bind_and_set(*p_shader, "texture_shadow_map", 2);
-      this->texture_depth.bind_and_set(*p_shader, "texture_depth", 3);
+      this->texture_normal.bind_and_set(*p_shader, "texture_normal", 2);
+      this->texture_shadow_map.bind_and_set(*p_shader, "texture_shadow_map", 3);
+      this->texture_depth.bind_and_set(*p_shader, "texture_depth", 4);
 
       p_shader->setUniformValue("base_color", QVector3D(0.5f, 0.5f, 0.5f));
       p_shader->setUniformValue("add_ambiant_occlusion", false);
@@ -316,12 +318,21 @@ void RenderWidget::paintGL()
       p_shader->setUniformValue("add_ambiant_occlusion", false);
       points_mesh.draw();
 
-      p_shader->setUniformValue("base_color", QVector3D(0.7f, 0.7f, 0.7f));
-      p_shader->setUniformValue("use_texture_albedo",
-                                true && !this->bypass_texture_albedo &&
-                                    this->texture_albedo.is_active());
-      p_shader->setUniformValue("add_ambiant_occlusion", this->add_ambiant_occlusion);
-      hmap.draw();
+      // heightmap
+      {
+        p_shader->setUniformValue("base_color", QVector3D(0.7f, 0.7f, 0.7f));
+        p_shader->setUniformValue("use_texture_albedo",
+                                  true && !this->bypass_texture_albedo &&
+                                      this->texture_albedo.is_active());
+
+        if (this->texture_normal.is_active())
+          p_shader->setUniformValue("normal_map_scaling", this->normal_map_scaling);
+
+        p_shader->setUniformValue("add_ambiant_occlusion", this->add_ambiant_occlusion);
+        hmap.draw();
+
+        p_shader->setUniformValue("normal_map_scaling", 0.f);
+      }
 
       if (this->add_water)
       {
@@ -399,6 +410,9 @@ void RenderWidget::paintGL()
   ret |= ImGui::Checkbox("Wireframe mode", &this->wireframe_mode);
   ret |= ImGui::SliderFloat("scale_h", &this->scale_h, 0.f, 2.f);
   ret |= ImGui::SliderAngle("FOV", &this->fov, 10.f, 180.f);
+
+  ImGui::Text("Normal map");
+  ret |= ImGui::SliderFloat("Normal map scaling", &this->normal_map_scaling, 0.f, 2.f);
 
   ImGui::Text("Light");
   ret |= ImGui::SliderAngle("Azimuth", &this->light_phi, -180.f, 180.f);
@@ -560,6 +574,8 @@ void RenderWidget::reset_heightmap_geometry()
 
 void RenderWidget::reset_texture_albedo() { this->texture_albedo.destroy(); }
 
+void RenderWidget::reset_texture_normal() { this->texture_normal.destroy(); }
+
 void RenderWidget::resizeEvent(QResizeEvent *event)
 {
   QOpenGLWidget::resizeEvent(event);
@@ -606,6 +622,13 @@ void RenderWidget::set_texture_albedo(const std::vector<uint8_t> &data, int widt
   QTR_LOG->trace("RenderWidget::set_texture_albedo");
 
   this->texture_albedo.from_image_8bit_rgba(data, width);
+}
+
+void RenderWidget::set_texture_normal(const std::vector<uint8_t> &data, int width)
+{
+  QTR_LOG->trace("RenderWidget::set_texture_normal");
+
+  this->texture_normal.from_image_8bit_rgb(data, width);
 }
 
 QSize RenderWidget::sizeHint() const { return QSize(QTR_CONFIG->widget.size_hint); }

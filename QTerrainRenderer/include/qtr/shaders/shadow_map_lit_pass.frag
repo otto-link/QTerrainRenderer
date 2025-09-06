@@ -16,7 +16,8 @@ uniform float near_plane;
 uniform float far_plane;
 uniform float scale_h;
 
-uniform bool normal_visualization;
+uniform bool  normal_visualization;
+uniform float normal_map_scaling;
 
 uniform mat4  view;
 uniform mat4  projection;
@@ -58,6 +59,7 @@ uniform bool  apply_tonemap;
 
 uniform sampler2D texture_albedo;
 uniform sampler2D texture_hmap;
+uniform sampler2D texture_normal;
 uniform sampler2D texture_shadow_map;
 uniform sampler2D texture_depth;
 
@@ -282,6 +284,15 @@ void main()
   float alpha = 1.0;
   vec3  normal = frag_normal;
 
+  // add details normal map
+  if (normal_map_scaling > 0.0)
+  {
+    vec3 normal_details = texture(texture_normal, frag_uv).xyz;
+    normal_details = vec3(normal_details.x, normal_details.z, normal_details.y);
+    normal += normal_map_scaling * normal_details;
+    normal = normalize(normal);
+  }
+
   if (normal_visualization)
   {
     vec3 n = normalize(normal);
@@ -392,12 +403,6 @@ void main()
 
     if (add_ambiant_occlusion)
     {
-      // float ao = compute_AO(frag_uv,
-      //                       texture_hmap,
-      //                       ambiant_occlusion_radius,
-      //                       ambiant_occlusion_strength);
-      // ambient *= ao;
-
       float ao = compute_hbao(frag_uv, texture_hmap, 1.0, 8, 8);
       result *= ao;
     }

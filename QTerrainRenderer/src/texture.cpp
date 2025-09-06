@@ -106,6 +106,42 @@ bool Texture::from_image_8bit_grayscale(const std::vector<uint8_t> &img, int new
   return true;
 }
 
+bool Texture::from_image_8bit_rgb(const std::vector<uint8_t> &img, int new_width)
+{
+  QOpenGLFunctions_3_3_Core::initializeOpenGLFunctions();
+  this->destroy();
+
+  this->width = new_width;
+  this->height = img.size() / 3 / this->width;
+
+  glGenTextures(1, &this->id);
+  glBindTexture(GL_TEXTURE_2D, this->id);
+
+  QTR_LOG->trace("Texture::from_image_8bit_rgb: id = {}, w x h = {} x {}",
+                 this->id,
+                 this->width,
+                 this->height);
+
+  glTexImage2D(GL_TEXTURE_2D,
+               0,
+               GL_RGB,
+               this->width,
+               this->height,
+               0,
+               GL_RGB,
+               GL_UNSIGNED_BYTE, // uint8_t
+               img.data());
+
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+  glBindTexture(GL_TEXTURE_2D, 0);
+
+  return true;
+}
+
 bool Texture::from_image_8bit_rgba(const std::vector<uint8_t> &img, int new_width)
 {
   QOpenGLFunctions_3_3_Core::initializeOpenGLFunctions();
