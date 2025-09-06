@@ -25,6 +25,8 @@ void generate_heightmap(Mesh                     &mesh,
                         bool                      add_skirt = false,
                         float                     add_level = 0.f);
 
+void generate_path(Mesh &mesh, const std::vector<glm::vec3> &points, float width);
+
 void generate_plane(Mesh &mesh, float x, float y, float z, float lx, float ly);
 
 void generate_downward_triangles(Mesh                         &mesh,

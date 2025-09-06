@@ -317,6 +317,13 @@ void RenderWidget::paintGL()
         points_mesh.draw();
       }
 
+      // path
+      {
+        p_shader->setUniformValue("base_color", QVector3D(1.f, 0.f, 1.f));
+        p_shader->setUniformValue("add_ambiant_occlusion", false);
+        path_mesh.draw();
+      }
+
       // heightmap
       {
         p_shader->setUniformValue("base_color", QVector3D(0.7f, 0.7f, 0.7f));
@@ -575,6 +582,8 @@ void RenderWidget::reset_texture_albedo() { this->texture_albedo.destroy(); }
 
 void RenderWidget::reset_texture_normal() { this->texture_normal.destroy(); }
 
+void RenderWidget::reset_path() { this->path_mesh.destroy(); }
+
 void RenderWidget::reset_points() { this->points_mesh.destroy(); }
 
 void RenderWidget::resizeEvent(QResizeEvent *event)
@@ -616,6 +625,31 @@ void RenderWidget::set_heightmap_geometry(const std::vector<float> &data,
 
   // also generate the heightmap texture
   this->texture_hmap.from_float_vector(data, width);
+}
+
+void RenderWidget::set_path(const std::vector<float> &x,
+                            const std::vector<float> &y,
+                            const std::vector<float> &h)
+{
+  QTR_LOG->trace("RenderWidget::set_path");
+
+  if (x.size() != y.size() || x.size() != h.size())
+    throw std::invalid_argument("RenderWidget::set_path: vector sizes does not match");
+
+  std::vector<glm::vec3> points;
+  for (size_t k = 0; k < x.size(); ++k)
+  {
+    // rescale to render size
+    float xs = 0.5f * this->hmap_w * (2.f * x[k] - 1.f);
+    float hs = this->hmap_h0 + this->hmap_h * h[k];
+    float ys = 0.5f * this->hmap_w * (2.f * y[k] - 1.f);
+
+    points.push_back(glm::vec3(xs, hs, ys));
+  }
+
+  // TODO scale with point value
+
+  generate_path(path_mesh, points, 0.01f);
 }
 
 void RenderWidget::set_points(const std::vector<float> &x,

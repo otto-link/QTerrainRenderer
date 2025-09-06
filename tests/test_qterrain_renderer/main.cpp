@@ -41,12 +41,22 @@ int main(int argc, char *argv[])
 
   {
     std::vector<float> x, y, h;
-    x = {0.1f, 0.1f, 0.2f, 0.7f, 0.8f};
+    x = {0.05f, 0.1f, 0.2f, 0.7f, 0.8f};
     y = {0.2f, 0.2f, 0.4f, 0.7f, 0.8f};
     h = {0.8f, 0.2f, 1.f, 0.5f, 0.7f};
 
     renderer->set_points(x, y, h);
-    renderer->reset_points();
+    // renderer->reset_points();
+  }
+
+  {
+    std::vector<float> x, y, h;
+    x = {0.05f, 0.1f, 0.2f, 0.7f, 0.8f};
+    y = {0.2f, 0.2f, 0.4f, 0.7f, 0.8f};
+    h = {0.8f, 0.2f, 1.f, 0.5f, 0.7f};
+
+    renderer->set_path(x, y, h);
+    // renderer->reset_points();
   }
 
   return app.exec();

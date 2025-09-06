@@ -54,6 +54,11 @@ public:
                   const std::vector<float> &h);
   void reset_points();
 
+  void set_path(const std::vector<float> &x,
+                const std::vector<float> &y,
+                const std::vector<float> &h);
+  void reset_path();
+
 protected:
   void initializeGL() override;
   void resizeEvent(QResizeEvent *event) override;
