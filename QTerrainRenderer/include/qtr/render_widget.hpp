@@ -1,6 +1,7 @@
 /* Copyright (c) 2025 Otto Link. Distributed under the terms of the GNU General Public
    License. The full license is in the file LICENSE, distributed with this software. */
 #pragma once
+
 #include <QElapsedTimer>
 #include <QOpenGLFunctions_3_3_Core>
 #include <QOpenGLWidget>
@@ -29,26 +30,20 @@ public:
   explicit RenderWidget(const std::string &_title = "", QWidget *parent = nullptr);
   ~RenderWidget();
 
+  // --- Serialization
   void           json_from(nlohmann::json const &json);
   nlohmann::json json_to() const;
 
+  // --- QWidget interface
   QSize sizeHint() const override;
 
+  // --- Geometry
   void set_heightmap_geometry(const std::vector<float> &data,
                               int                       width,
                               int                       height,
                               bool                      add_skirt = true);
   void reset_heightmap_geometry();
 
-  // RGBA 8bit
-  void set_texture_albedo(const std::vector<uint8_t> &data, int width);
-  void reset_texture_albedo();
-
-  // RGB 8bit
-  void set_texture_normal(const std::vector<uint8_t> &data, int width);
-  void reset_texture_normal();
-
-  // "classical" coordinates (not OpenGL convention)
   void set_points(const std::vector<float> &x,
                   const std::vector<float> &y,
                   const std::vector<float> &h);
@@ -59,12 +54,20 @@ public:
                 const std::vector<float> &h);
   void reset_path();
 
-protected:
-  void initializeGL() override;
-  void resizeEvent(QResizeEvent *event) override;
-  void resizeGL(int w, int h) override;
+  // --- Textures
+  void set_texture_albedo(const std::vector<uint8_t> &data, int width); // RGBA 8bit
+  void reset_texture_albedo();
 
-  // --- OpenGL rendering
+  void set_texture_normal(const std::vector<uint8_t> &data, int width); // RGB 8bit
+  void reset_texture_normal();
+
+protected:
+  // --- OpenGL lifecycle
+  void initializeGL() override;
+  void resizeGL(int w, int h) override;
+  void resizeEvent(QResizeEvent *event) override;
+
+  // --- Rendering
   void paintGL() override;
   void render_shadow_map(const glm::mat4 &model,
                          const glm::mat4 &view,
@@ -80,26 +83,28 @@ protected:
   void keyReleaseEvent(QKeyEvent *e) override;
 
 private:
+  // --- Helpers
   void reset_camera_position();
 
-  // --- Members
+  // --- General
   std::string title;
 
-  // GUI
+  // --- GUI state
   QTimer               frame_timer;
   bool                 need_update = false;
   bool                 rotating = false;
   bool                 panning = false;
   std::array<float, 2> last_mouse_pos;
 
+  // --- Timing
   QElapsedTimer timer;
   float         time = 0.f;
 
-  // user parameters
+  // --- User parameters
   bool wireframe_mode = false;
   bool auto_rotate_light = false;
 
-  // camera parameters (see reset_camera_position())
+  // --- Camera parameters (see reset_camera_position)
   glm::vec3 target;     // Orbit center
   glm::vec2 pan_offset; // Panning offset
   float     distance;   // Zoom (distance to target)
@@ -110,6 +115,7 @@ private:
   float     light_theta; // zenith
   float     light_distance = 10.f;
 
+  // --- Heightmap
   float scale_h = 1.0f;
   float near_plane = 0.1f;
   float far_plane = 100.f;
@@ -117,21 +123,29 @@ private:
   float hmap_w = 2.f;  // width of sides
   float hmap_h = 0.4f; // elevations
 
-  bool normal_visualization = false;
+  // --- Rendering parameters
 
+  // Normals
+  bool  normal_visualization = false;
   float normal_map_scaling = 1.f;
 
+  // Gamma & tonemap
   float gamma_correction = 2.f;
-  bool  bypass_texture_albedo = false;
+  bool  apply_tonemap = false;
+
+  // Shadows
   bool  bypass_shadow_map = false;
   float shadow_strength = 0.9f;
+
+  // Ambient occlusion
   bool  add_ambiant_occlusion = false;
   float ambiant_occlusion_strength = 5.f;
   int   ambiant_occlusion_radius = 3;
 
-  bool apply_tonemap = false;
+  // Textures control
+  bool bypass_texture_albedo = false;
 
-  // water
+  // --- Water
   bool      add_water = true;
   float     water_elevation = 0.05f;
   glm::vec3 color_shallow_water;
@@ -139,10 +153,12 @@ private:
   float     water_color_depth = 0.015f;
   float     water_spec_strength = 0.5f;
 
+  // Foam
   bool      add_water_foam = true;
   glm::vec3 foam_color = glm::vec3(1.f, 1.f, 1.f);
   float     foam_depth = 0.005f;
 
+  // Waves
   bool  add_water_waves = true;
   float angle_spread_ratio = 0.f;
   float waves_alpha = 30.f / 180.f * 3.14f;
@@ -152,18 +168,16 @@ private:
   bool  animate_waves = false;
   float waves_speed = 0.2f;
 
-  // --- Fog
+  // --- Environmental effects
   bool add_fog = false;
-
-  // --- Atmospheric scattering
   bool add_atmospheric_scattering = false;
 
-  // OpenGL
+  // --- OpenGL resources
   std::unique_ptr<ShaderManager> sp_shader_manager;
   GLuint                         fbo;
   GLuint                         fbo_depth;
 
-  // TODO clean-up
+  // --- Scene components
   Camera camera_shadow_pass;
   Camera camera;
   Light  light;
@@ -181,7 +195,7 @@ private:
   Texture texture_depth;
 };
 
-// some helpers
+// --- Helpers
 inline QMatrix4x4 toQMat(const glm::mat4 &m)
 {
   return QMatrix4x4(glm::value_ptr(glm::transpose(m)));
