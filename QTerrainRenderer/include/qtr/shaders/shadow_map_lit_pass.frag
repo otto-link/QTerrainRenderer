@@ -336,10 +336,11 @@ void main()
 
     if (add_water_waves)
     {
+      // mix between the main uniform direction and the direction given by the local
+      // terrain gradient
       vec2 dir = vec2(cos(waves_alpha), sin(waves_alpha));
 
-      // TODO use normal map
-      float eps = 0.001;
+      float eps = 0.5 / textureSize(texture_hmap, 0).x;
       float dhdx = (texture(texture_hmap, frag_uv + vec2(eps, 0.0)).r - h) / eps;
       float dhdy = (texture(texture_hmap, frag_uv + vec2(0.0, eps)).r - h) / eps;
       vec2  dir_slope = normalize(vec2(dhdx, dhdy));
@@ -347,10 +348,8 @@ void main()
       float attenuation = exp(-depth / (2.0 * water_color_depth));
       dir = mix(dir, dir_slope, attenuation);
 
-      // float waves_kw = 128.0;
-      float fseed = 0.f;
-
       // change color only on the shore
+      float fseed = 0.f;
       float gw = gabor_wave_scalar(waves_kw * frag_uv - waves_speed * time * dir,
                                    dir,
                                    angle_spread_ratio,

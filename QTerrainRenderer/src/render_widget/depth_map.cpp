@@ -6,9 +6,9 @@
 namespace qtr
 {
 
-void RenderWidget::render_shadow_map(const glm::mat4 &model,
-                                     const glm::mat4 &view,
-                                     const glm::mat4 &projection)
+void RenderWidget::render_depth_map(const glm::mat4 &model,
+                                    const glm::mat4 &view,
+                                    const glm::mat4 &projection)
 {
   QOpenGLShaderProgram *p_shader = this->sp_shader_manager->get("depth_map")->get();
 
@@ -42,7 +42,7 @@ void RenderWidget::render_shadow_map(const glm::mat4 &model,
     // glCullFace(GL_BACK);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    check_gl_error("RenderWidget::render_shadow_map: render depth map");
+    check_gl_error("RenderWidget::render_depth_map: render depth map");
 
     // set previous FBO back
     glBindFramebuffer(GL_FRAMEBUFFER, previous_fbo);

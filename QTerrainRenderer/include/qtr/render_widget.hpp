@@ -69,10 +69,22 @@ protected:
 
   // --- Rendering
   void paintGL() override;
-  void render_shadow_map(const glm::mat4 &model,
-                         const glm::mat4 &view,
-                         const glm::mat4 &projection);
+  void render_scene();
+  void render_depth_map(const glm::mat4 &model,
+                        const glm::mat4 &view,
+                        const glm::mat4 &projection);
   void render_shadow_map(const glm::mat4 &model, glm::mat4 &light_space_matrix);
+  void render_ui();
+  void set_common_uniforms(QOpenGLShaderProgram &shader,
+                           const glm::mat4      &model,
+                           const glm::mat4      &projection,
+                           const glm::mat4      &view,
+                           const glm::mat4      &light_space);
+  void setup_gl_state();
+  void unbind_textures();
+  void update_camera();
+  void update_light();
+  void update_time();
 
   // --- Input forwarding to ImGui
   void mousePressEvent(QMouseEvent *e) override;
@@ -99,6 +111,7 @@ private:
   // --- Timing
   QElapsedTimer timer;
   float         time = 0.f;
+  float         dt = 0.f;
 
   // --- User parameters
   bool wireframe_mode = false;
@@ -185,6 +198,7 @@ private:
   Mesh plane;
   Mesh hmap;
   Mesh water_plane;
+  Mesh water_mesh;
   Mesh points_mesh;
   Mesh path_mesh;
 
