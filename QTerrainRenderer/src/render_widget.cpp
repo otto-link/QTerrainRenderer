@@ -93,14 +93,6 @@ void RenderWidget::initializeGL()
 
   generate_plane(this->water_plane, 0.f, this->water_elevation, 0.f, 2.f, 2.f);
 
-  // {
-  //   int width, height;
-  //   // std::vector<uint8_t> data = load_png_as_8bit_rgba("texture_white.png", width,
-  //   // height);
-  //   std::vector<uint8_t> data = load_png_as_8bit_rgba("texture.png", width, height);
-  //   this->texture_albedo.from_image_8bit_rgba(data, width);
-  // }
-
   // depth buffer
   int depth_map_res = 1024;
   this->texture_depth.generate_depth_texture(depth_map_res, depth_map_res, false);
