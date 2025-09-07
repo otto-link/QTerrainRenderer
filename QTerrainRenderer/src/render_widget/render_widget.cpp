@@ -214,6 +214,8 @@ void RenderWidget::reset_heightmap_geometry()
   this->texture_hmap.destroy();
 }
 
+void RenderWidget::reset_water_geometry() { this->water_mesh.destroy(); }
+
 void RenderWidget::reset_texture_albedo() { this->texture_albedo.destroy(); }
 
 void RenderWidget::reset_texture_normal() { this->texture_normal.destroy(); }
@@ -381,6 +383,31 @@ void RenderWidget::set_texture_normal(const std::vector<uint8_t> &data, int widt
   QTR_LOG->trace("RenderWidget::set_texture_normal");
 
   this->texture_normal.from_image_8bit_rgb(data, width);
+}
+
+void RenderWidget::set_water_geometry(const std::vector<float> &data,
+                                      int                       width,
+                                      int                       height,
+                                      float                     exclude_below)
+{
+  QTR_LOG->trace("RenderWidget::set_water_geometry");
+
+  bool  add_skirt = false;
+  float add_level = 0.f;
+
+  generate_heightmap(this->water_mesh,
+                     data,
+                     width,
+                     height,
+                     0.f,
+                     this->hmap_h0,
+                     0.f,
+                     this->hmap_w,
+                     this->hmap_h,
+                     this->hmap_w,
+                     add_skirt,
+                     add_level,
+                     exclude_below);
 }
 
 void RenderWidget::setup_gl_state()

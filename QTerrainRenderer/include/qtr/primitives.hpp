@@ -23,7 +23,8 @@ void generate_heightmap(Mesh                     &mesh,
                         float                     ly,
                         float                     lz,
                         bool                      add_skirt = false,
-                        float                     add_level = 0.f);
+                        float                     add_level = 0.f,
+                        float                     exclude_below = -FLT_MAX);
 
 void generate_path(Mesh &mesh, const std::vector<glm::vec3> &points, float width);
 

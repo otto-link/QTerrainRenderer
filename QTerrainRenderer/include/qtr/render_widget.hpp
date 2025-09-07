@@ -44,6 +44,12 @@ public:
                               bool                      add_skirt = true);
   void reset_heightmap_geometry();
 
+  void set_water_geometry(const std::vector<float> &data,
+                          int                       width,
+                          int                       height,
+                          float                     exclude_below);
+  void reset_water_geometry();
+
   void set_points(const std::vector<float> &x,
                   const std::vector<float> &y,
                   const std::vector<float> &h);
