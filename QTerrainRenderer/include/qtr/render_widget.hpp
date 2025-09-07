@@ -126,20 +126,17 @@ private:
   bool auto_rotate_light = false;
 
   // --- Camera parameters (see reset_camera_position)
-  glm::vec3 target;     // Orbit center
-  glm::vec2 pan_offset; // Panning offset
-  float     distance;   // Zoom (distance to target)
-  float     alpha_x;    // Rotation around X (pitch)
-  float     alpha_y;    // Rotation around Y (yaw)
-  float     fov;
+  glm::vec3 target;      // Orbit center
+  glm::vec2 pan_offset;  // Panning offset
+  float     distance;    // Zoom (distance to target)
+  float     alpha_x;     // Rotation around X (pitch)
+  float     alpha_y;     // Rotation around Y (yaw)
   float     light_phi;   // azimuth
   float     light_theta; // zenith
   float     light_distance = 10.f;
 
   // --- Heightmap
   float scale_h = 1.0f;
-  float near_plane = 0.1f;
-  float far_plane = 100.f;
   float hmap_h0 = 0.f; // hmap bottom level
   float hmap_w = 2.f;  // width of sides
   float hmap_h = 0.4f; // elevations

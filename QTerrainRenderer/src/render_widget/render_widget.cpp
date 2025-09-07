@@ -141,6 +141,7 @@ void RenderWidget::initializeGL()
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
   ImGui::StyleColorsDark();
+  imgui_set_blender_style();
 
   // OpenGL3 backend
   ImGui_ImplOpenGL3_Init("#version 330");
@@ -199,13 +200,9 @@ void RenderWidget::reset_camera_position()
   this->distance = 5.0f;
   this->alpha_x = 35.f / 180.f * 3.14f;
   this->alpha_y = -25.f / 180.f * 3.14f;
-  this->fov = 45.f / 180.f * 3.14f;
 
   this->light_phi = -45.f / 180.f * 3.14f;
   this->light_theta = 30.f / 180.f * 3.14f;
-
-  // this->light_phi = -3.f / 180.f * 3.14f;
-  // this->light_theta = 10.f / 180.f * 3.14f;
 }
 
 void RenderWidget::reset_heightmap_geometry()

@@ -159,8 +159,7 @@ void RenderWidget::render_ui()
   ImGui_ImplOpenGL3_NewFrame();
   ImGui::NewFrame();
 
-  // FPS
-  if (true)
+  // --- Overlay: FPS ---
   {
     ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration |
                              ImGuiWindowFlags_AlwaysAutoResize |
@@ -171,123 +170,130 @@ void RenderWidget::render_ui()
     ImGui::SetNextWindowBgAlpha(0.f);
     ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_Always);
 
-    const std::string str = this->title + " - FPS: %.1f";
-
-    ImGui::Begin("TopLeftText", nullptr, flags);
-    ImGui::Text(str.c_str(), ImGui::GetIO().Framerate);
+    ImGui::Begin("Overlay", nullptr, flags);
+    ImGui::Text("%s - FPS: %.1f", this->title.c_str(), ImGui::GetIO().Framerate);
     ImGui::End();
   }
 
-  ImGui::Begin("Terrain Renderer");
-  ImGui::Text("View");
+  bool changed = false;
 
-  bool ret = false;
+  ImGui::SetNextWindowBgAlpha(0.95f);
+  ImGui::Begin("Render settings");
 
-  ret |= ImGui::Checkbox("Normal visualization", &this->normal_visualization);
-  ret |= ImGui::Checkbox("Render plane", &this->render_plane);
-  ret |= ImGui::Checkbox("Render points", &this->render_points);
-  ret |= ImGui::Checkbox("Render path", &this->render_path);
-  ret |= ImGui::Checkbox("Render terrain", &this->render_hmap);
-  ret |= ImGui::Checkbox("Wireframe mode", &this->wireframe_mode);
-  ret |= ImGui::SliderFloat("scale_h", &this->scale_h, 0.f, 2.f);
-  ret |= ImGui::SliderAngle("FOV", &this->fov, 10.f, 180.f);
+  // --- View & Camera ---
+  ImGui::SeparatorText("View");
+  changed |= ImGui::Checkbox("Normal visualization", &this->normal_visualization);
+  changed |= ImGui::Checkbox("Wireframe", &this->wireframe_mode);
+  changed |= ImGui::SliderFloat("Height scale", &this->scale_h, 0.f, 2.f);
+  changed |= ImGui::SliderAngle("FOV", &this->camera.fov, 10.f, 180.f);
 
-  ImGui::Text("Normal map");
-  ret |= ImGui::SliderFloat("Normal map scaling", &this->normal_map_scaling, 0.f, 2.f);
-
-  ImGui::Text("Light");
-  ret |= ImGui::SliderAngle("Azimuth", &this->light_phi, -180.f, 180.f);
-  ret |= ImGui::SliderAngle("Zenith", &this->light_theta, 0.f, 90.f);
-  ImGui::Checkbox("Auto rotate light", &this->auto_rotate_light);
-
-  ImGui::Text("Shadow map");
-  ret |= ImGui::Checkbox("Bypass shadow map", &this->bypass_shadow_map);
-  ret |= ImGui::SliderFloat("Shadow strength", &this->shadow_strength, 0.f, 1.f);
-
-  ImGui::Text("Ambiant occlusion");
-  ret |= ImGui::Checkbox("Add ambiant occlusion", &this->add_ambiant_occlusion);
-  ret |= ImGui::SliderFloat("Ambiant occlusion strength",
-                            &this->ambiant_occlusion_strength,
-                            0.f,
-                            1000.f);
-  ret |= ImGui::SliderInt("Ambiant occlusion radius",
-                          &this->ambiant_occlusion_radius,
-                          0,
-                          32);
-
-  if (ImGui::Button("Reset view"))
+  if (ImGui::Button("Reset Camera"))
   {
     this->reset_camera_position();
     this->need_update = true;
   }
 
-  ImGui::Text("Albedo");
-  ret |= ImGui::SliderFloat("Gamma correction", &this->gamma_correction, 0.01f, 4.f);
-  ret |= ImGui::Checkbox("Bypass albedo texture", &this->bypass_texture_albedo);
-  ret |= ImGui::Checkbox("Apply tonemap", &this->apply_tonemap);
+  // --- Rendering Toggles ---
+  ImGui::SeparatorText("Render Options");
+  changed |= ImGui::Checkbox("Terrain", &this->render_hmap);
+  changed |= ImGui::Checkbox("Plane", &this->render_plane);
+  changed |= ImGui::Checkbox("Points", &this->render_points);
+  changed |= ImGui::Checkbox("Path", &this->render_path);
 
-  ImGui::SeparatorText("Water");
-
+  // --- Materials ---
+  if (ImGui::CollapsingHeader("Materials", ImGuiTreeNodeFlags_DefaultOpen))
   {
-    ret |= ImGui::Checkbox("Add water", &this->add_water);
+    ImGui::Text("Albedo");
+    changed |= ImGui::SliderFloat("Gamma", &this->gamma_correction, 0.01f, 4.f);
+    changed |= ImGui::Checkbox("Bypass albedo", &this->bypass_texture_albedo);
+    changed |= ImGui::Checkbox("Tonemap", &this->apply_tonemap);
 
-    if (ImGui::SliderFloat("Water elevation", &this->water_elevation, 0.f, 1.f))
+    ImGui::Text("Normal Map");
+    changed |= ImGui::SliderFloat("Scaling", &this->normal_map_scaling, 0.f, 2.f);
+  }
+
+  // --- Lighting ---
+  if (ImGui::CollapsingHeader("Lighting", ImGuiTreeNodeFlags_DefaultOpen))
+  {
+    changed |= ImGui::SliderAngle("Azimuth", &this->light_phi, -180.f, 180.f);
+    changed |= ImGui::SliderAngle("Zenith", &this->light_theta, 0.f, 90.f);
+    changed |= ImGui::Checkbox("Auto rotate", &this->auto_rotate_light);
+
+    ImGui::Text("Shadow Map");
+    changed |= ImGui::Checkbox("Bypass", &this->bypass_shadow_map);
+    changed |= ImGui::SliderFloat("Strength", &this->shadow_strength, 0.f, 1.f);
+
+    if (ImGui::TreeNode("Ambient Occlusion"))
     {
-      ret = true;
+      changed |= ImGui::Checkbox("Enable AO", &this->add_ambiant_occlusion);
+      changed |= ImGui::SliderFloat("Strength",
+                                    &this->ambiant_occlusion_strength,
+                                    0.f,
+                                    1000.f);
+      changed |= ImGui::SliderInt("Radius", &this->ambiant_occlusion_radius, 0, 32);
+      ImGui::TreePop();
+    }
+  }
+
+  // --- Water ---
+  if (ImGui::CollapsingHeader("Water", ImGuiTreeNodeFlags_DefaultOpen))
+  {
+    changed |= ImGui::Checkbox("Enable water", &this->add_water);
+
+    if (ImGui::SliderFloat("Elevation", &this->water_elevation, 0.f, 1.f))
+    {
+      changed = true;
       this->update_water_plane();
     }
 
-    ret |= ImGui::SliderFloat("Water color depth", &this->water_color_depth, 0.f, 0.2f);
-    ret |= ImGui::SliderFloat("Water specularity", &this->water_spec_strength, 0.f, 1.f);
+    changed |= ImGui::SliderFloat("Color depth", &this->water_color_depth, 0.f, 0.2f);
+    changed |= ImGui::SliderFloat("Specularity", &this->water_spec_strength, 0.f, 1.f);
+    changed |= imgui_show_water_preset_selector(this->color_shallow_water,
+                                                this->color_deep_water);
 
-    ret |= imgui_show_water_preset_selector(this->color_shallow_water,
-                                            this->color_deep_water);
+    ImGui::Separator();
 
-    ret |= ImGui::Checkbox("Add foam", &this->add_water_foam);
-    ret |= ImGui::SliderFloat("Foam depth", &this->foam_depth, 0.f, 0.1f);
+    changed |= ImGui::Checkbox("Foam", &this->add_water_foam);
+    if (this->add_water_foam)
+      changed |= ImGui::SliderFloat("Foam depth", &this->foam_depth, 0.f, 0.1f);
 
-    ret |= ImGui::Checkbox("Add waves", &this->add_water_waves);
-    ret |= ImGui::SliderFloat("Waves wavenumber", &this->waves_kw, 0.f, 2048.f);
-    ret |= ImGui::SliderFloat("Waves amplitude", &this->waves_amplitude, 0.f, 0.1f);
-    ret |= ImGui::SliderFloat("Waves normal amplitude",
-                              &this->waves_normal_amplitude,
-                              0.f,
-                              0.1f);
-    ret |= ImGui::SliderAngle("Waves angle", &this->waves_alpha, -180.f, 180.f);
-    ret |= ImGui::SliderFloat("angle_spread_ratio", &this->angle_spread_ratio, 0.f, 0.1f);
-
-    ret |= ImGui::Checkbox("Animate waves", &this->animate_waves);
-    ret |= ImGui::SliderFloat("Waves speed", &this->waves_speed, 0.f, 1.f);
-
-    // force update if animation requested
-    if (this->animate_waves)
-      this->need_update = true;
+    changed |= ImGui::Checkbox("Waves", &this->add_water_waves);
+    if (this->add_water_waves)
+    {
+      changed |= ImGui::SliderFloat("Wavenumber", &this->waves_kw, 0.f, 2048.f);
+      changed |= ImGui::SliderFloat("Amplitude", &this->waves_amplitude, 0.f, 0.1f);
+      changed |= ImGui::SliderFloat("Normal amplitude",
+                                    &this->waves_normal_amplitude,
+                                    0.f,
+                                    0.1f);
+      changed |= ImGui::SliderAngle("Angle", &this->waves_alpha, -180.f, 180.f);
+      changed |= ImGui::SliderFloat("Angle spread", &this->angle_spread_ratio, 0.f, 0.1f);
+      changed |= ImGui::Checkbox("Animate", &this->animate_waves);
+      if (this->animate_waves)
+        changed |= ImGui::SliderFloat("Speed", &this->waves_speed, 0.f, 1.f);
+    }
   }
 
-  ImGui::SeparatorText("Fog##sep");
-
+  // --- Atmosphere ---
+  if (ImGui::CollapsingHeader("Atmosphere", ImGuiTreeNodeFlags_DefaultOpen))
   {
-    ret |= ImGui::Checkbox("Fog", &this->add_fog);
+    changed |= ImGui::Checkbox("Fog", &this->add_fog);
+    changed |= ImGui::Checkbox("Scattering", &this->add_atmospheric_scattering);
   }
 
-  ImGui::SeparatorText("Atmospheric scattering##sep");
+  // --- End main window ---
+  this->need_update |= changed;
+  ImGui::End();
 
+  // --- IO / camera control ---
+  ImGuiIO &io = ImGui::GetIO();
+
+  if (!io.WantCaptureMouse) // only outside the ImGUI window
   {
-    ret |= ImGui::Checkbox("Atmospheric scattering", &this->add_atmospheric_scattering);
-  }
-
-  this->need_update |= ret;
-
-  // ImGUI IO
-  if (!ret) // to prevent capture of widget mouse motions (partially...)
-  {
-    ImGuiIO &io = ImGui::GetIO();
-
     if (ImGui::IsMouseDown(ImGuiMouseButton_Left))
     {
-      this->alpha_y -= io.MouseDelta.x * 0.005f; // horizontally
-      this->alpha_x += io.MouseDelta.y * 0.005f; // vertically
-
+      this->alpha_y -= io.MouseDelta.x * 0.005f;
+      this->alpha_x += io.MouseDelta.y * 0.005f;
       this->alpha_x = glm::clamp(this->alpha_x,
                                  -0.99f * glm::half_pi<float>(),
                                  0.99f * glm::half_pi<float>());
@@ -305,9 +311,15 @@ void RenderWidget::render_ui()
       this->distance = glm::clamp(this->distance, 0.f, 50.0f);
     }
   }
+  else
+  {
+    // to force frame update for ImGUI submenus...
+    if (ImGui::IsMouseReleased(ImGuiMouseButton_Left) ||
+        ImGui::IsMouseReleased(ImGuiMouseButton_Right))
+      this->need_update = true;
+  }
 
-  ImGui::End();
-
+  // --- Render ---
   ImGui::Render();
   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }

@@ -15,4 +15,6 @@ static std::string current_water_preset = "caribbean"; // default
 
 bool imgui_show_water_preset_selector(glm::vec3 &shallow, glm::vec3 &deep);
 
+void imgui_set_blender_style();
+
 } // namespace qtr
