@@ -41,4 +41,10 @@ void generate_rectangle(Mesh            &mesh,
                         const glm::vec3 &p2,
                         float            height);
 
+void generate_tree(Mesh &mesh,
+                   float height,
+                   float radius,
+                   int   segments,
+                   float base_y = 0.0f);
+
 } // namespace qtr
