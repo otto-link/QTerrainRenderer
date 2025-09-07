@@ -278,6 +278,8 @@ void RenderWidget::set_common_uniforms(QOpenGLShaderProgram &shader,
 
   // Rendering settings
   shader.setUniformValue("scale_h", scale_h);
+  shader.setUniformValue("hmap_h0", this->hmap_h0);
+  shader.setUniformValue("hmap_h", this->hmap_h);
   shader.setUniformValue("normal_visualization", normal_visualization);
   shader.setUniformValue("normal_map_scaling", 0.f); // reset by default
   shader.setUniformValue("gamma_correction", gamma_correction);

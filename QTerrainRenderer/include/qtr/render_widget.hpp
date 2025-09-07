@@ -138,7 +138,7 @@ private:
   float scale_h = 1.0f;
   float near_plane = 0.1f;
   float far_plane = 100.f;
-  float hmap_h0 = 0.f;
+  float hmap_h0 = 0.f; // hmap bottom level
   float hmap_w = 2.f;  // width of sides
   float hmap_h = 0.4f; // elevations
 

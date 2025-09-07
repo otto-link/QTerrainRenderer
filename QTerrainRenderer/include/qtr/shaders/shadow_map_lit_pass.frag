@@ -15,6 +15,8 @@ uniform float time;
 uniform float near_plane;
 uniform float far_plane;
 uniform float scale_h;
+uniform float hmap_h0;
+uniform float hmap_h;
 
 uniform bool  normal_visualization;
 uniform float normal_map_scaling;
@@ -62,6 +64,13 @@ uniform sampler2D texture_hmap;
 uniform sampler2D texture_normal;
 uniform sampler2D texture_shadow_map;
 uniform sampler2D texture_depth;
+
+float relative_elevation(float y)
+{
+  // from world OpenGL coordinate to [0, 1] (for texture heighmap
+  // for instance)
+  return (y - hmap_h0) / hmap_h;
+}
 
 float calculate_shadow(vec4 frag_pos_light_space,
                        vec3 light_dir,
@@ -317,7 +326,7 @@ void main()
 
   if (false) // raw elevation
   {
-    float h = clamp(frag_pos.y / 0.4, 0.0, 1.0); // TODO hardcoded scaling
+    float h = clamp(relative_elevation(frag_pos.y), 0.0, 1.0);
     frag_color = vec4(turbo(h), 1.0);
     return;
   }
@@ -332,7 +341,7 @@ void main()
   if (use_water_colors)
   {
     float h = texture(texture_hmap, frag_uv).r;
-    float depth = frag_pos.y / 0.4 - h; // TODO fix scaling
+    float depth = relative_elevation(frag_pos.y) - h;
 
     if (add_water_waves)
     {
