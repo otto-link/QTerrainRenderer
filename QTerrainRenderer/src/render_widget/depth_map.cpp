@@ -36,6 +36,7 @@ void RenderWidget::render_depth_map(const glm::mat4 &model,
     water_plane.draw();
     points_mesh.draw();
     path_mesh.draw();
+    instanced_mesh.draw(p_shader);
 
     p_shader->release();
 

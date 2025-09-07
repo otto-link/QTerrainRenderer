@@ -44,8 +44,9 @@ void RenderWidget::render_shadow_map(const glm::mat4 &model,
     p_shader->setUniformValue("light_space_matrix", toQMat(light_space_matrix));
     p_shader->setUniformValue("model", toQMat(model));
 
-    plane.draw();
-    hmap.draw();
+    this->plane.draw();
+    this->hmap.draw();
+    this->instanced_mesh.draw(p_shader);
     // water_plane.draw();
     // points_mesh.draw();
     // path_mesh.draw();

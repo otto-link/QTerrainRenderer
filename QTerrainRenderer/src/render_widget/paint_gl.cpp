@@ -93,6 +93,8 @@ void RenderWidget::render_scene()
       path_mesh.draw();
     }
 
+    instanced_mesh.draw(p_shader);
+
     // heightmap
     if (this->render_hmap)
     {

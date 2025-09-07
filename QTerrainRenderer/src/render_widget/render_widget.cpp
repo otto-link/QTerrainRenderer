@@ -16,6 +16,9 @@
 #include "qtr/render_widget.hpp"
 #include "qtr/utils.hpp"
 
+// TODO DBG
+#include <cstdlib>
+
 namespace qtr
 {
 
@@ -92,6 +95,27 @@ void RenderWidget::initializeGL()
   generate_plane(this->plane, 0.f, 0.f, 0.f, 4.f, 4.f);
 
   this->update_water_plane();
+
+  // TODO Instance
+
+  {
+    auto tree_mesh = std::make_shared<Mesh>();
+    generate_tree(*tree_mesh.get(), 0.005f, 0.00025f, 8, 0.005f);
+
+    // 2. Fill instances
+    std::vector<BaseInstance> instances;
+    for (int i = 0; i < 50000; ++i)
+    {
+      auto rd = [](float a, float b) { return a + (b - a) * std::rand() / RAND_MAX; };
+
+      instances.push_back({glm::vec3(rd(-1, 1), 0.1f, rd(-1, 1)),
+                           rd(0.5f, 2.0f),
+                           rd(0.0f, glm::two_pi<float>()),
+                           glm::vec3(0.2f, rd(0.f, 1.f), 0.2f)});
+    }
+
+    instanced_mesh.create(tree_mesh, instances);
+  }
 
   // depth buffer
   int depth_map_res = 256;

@@ -3,8 +3,6 @@
 #include "qtr/imgui_widgets.hpp"
 #include "qtr/logger.hpp"
 
-// TODO tmp
-
 namespace qtr
 {
 

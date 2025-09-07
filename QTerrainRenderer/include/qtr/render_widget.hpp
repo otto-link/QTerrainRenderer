@@ -14,6 +14,7 @@
 #include "nlohmann/json.hpp"
 
 #include "qtr/camera.hpp"
+#include "qtr/instanced_mesh.hpp"
 #include "qtr/light.hpp"
 #include "qtr/mesh.hpp"
 #include "qtr/shader_manager.hpp"
@@ -206,12 +207,13 @@ private:
   Camera camera;
   Light  light;
 
-  Mesh plane;
-  Mesh hmap;
-  Mesh water_plane;
-  Mesh water_mesh;
-  Mesh points_mesh;
-  Mesh path_mesh;
+  Mesh                        plane;
+  Mesh                        hmap;
+  Mesh                        water_plane;
+  Mesh                        water_mesh;
+  Mesh                        points_mesh;
+  Mesh                        path_mesh;
+  InstancedMesh<BaseInstance> instanced_mesh;
 
   Texture texture_albedo;
   Texture texture_hmap;

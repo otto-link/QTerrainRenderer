@@ -56,15 +56,6 @@ void Mesh::create(const std::vector<Vertex> &vertices, const std::vector<uint> &
   glBindVertexArray(0);
 }
 
-void Mesh::update_vertices(const std::vector<Vertex> &vertices)
-{
-  if (!this->vbo)
-    return;
-  glBindBuffer(GL_ARRAY_BUFFER, this->vbo);
-  glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.size() * sizeof(Vertex), vertices.data());
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
-}
-
 void Mesh::draw()
 {
   if (!this->vbo)
@@ -100,5 +91,14 @@ void Mesh::destroy()
 }
 
 bool Mesh::is_active() const { return (this->vbo); }
+
+void Mesh::update_vertices(const std::vector<Vertex> &vertices)
+{
+  if (!this->vbo)
+    return;
+  glBindBuffer(GL_ARRAY_BUFFER, this->vbo);
+  glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.size() * sizeof(Vertex), vertices.data());
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
 
 } // namespace qtr

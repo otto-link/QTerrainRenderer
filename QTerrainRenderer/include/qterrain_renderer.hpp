@@ -6,6 +6,7 @@
 #include "qtr/config.hpp"
 #include "qtr/gl_errors.hpp"
 #include "qtr/imgui_widgets.hpp"
+#include "qtr/instanced_mesh.hpp"
 #include "qtr/logger.hpp"
 #include "qtr/mesh.hpp"
 #include "qtr/primitives.hpp"
