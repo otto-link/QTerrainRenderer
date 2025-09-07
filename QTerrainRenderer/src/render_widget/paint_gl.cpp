@@ -234,12 +234,7 @@ void RenderWidget::render_ui()
     if (ImGui::SliderFloat("Water elevation", &this->water_elevation, 0.f, 1.f))
     {
       ret = true;
-      generate_plane(this->water_plane,
-                     0.f,
-                     this->water_elevation,
-                     0.f,
-                     2.f,
-                     2.f); // TODO hardcoded
+      this->update_water_plane();
     }
 
     ret |= ImGui::SliderFloat("Water color depth", &this->water_color_depth, 0.f, 0.2f);

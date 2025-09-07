@@ -91,7 +91,7 @@ void RenderWidget::initializeGL()
 
   generate_plane(this->plane, 0.f, 0.f, 0.f, 4.f, 4.f);
 
-  generate_plane(this->water_plane, 0.f, this->water_elevation, 0.f, 2.f, 2.f);
+  this->update_water_plane();
 
   // depth buffer
   int depth_map_res = 256;
@@ -454,6 +454,11 @@ void RenderWidget::update_light()
   this->light.set_position_spherical(this->light_distance,
                                      this->light_theta,
                                      this->light_phi);
+
+  // actually works with a fixed sun: compensate for the elevation
+  // scaling
+  this->light.position.y /= this->scale_h;
+
   if (this->auto_rotate_light)
   {
     this->light_phi += 0.5f * this->dt;
@@ -465,6 +470,16 @@ void RenderWidget::update_time()
 {
   this->dt = static_cast<float>(this->timer.restart()) / 1000.0f;
   this->time += this->dt;
+}
+
+void RenderWidget::update_water_plane()
+{
+  generate_plane(this->water_plane,
+                 0.f,
+                 this->hmap_h0 + this->hmap_h * this->water_elevation,
+                 0.f,
+                 2.f,
+                 2.f);
 }
 
 } // namespace qtr

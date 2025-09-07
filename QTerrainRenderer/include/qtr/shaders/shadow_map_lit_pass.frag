@@ -69,7 +69,7 @@ float relative_elevation(float y)
 {
   // from world OpenGL coordinate to [0, 1] (for texture heighmap
   // for instance)
-  return (y - hmap_h0) / hmap_h;
+  return (y / scale_h - hmap_h0) / hmap_h;
 }
 
 float calculate_shadow(vec4 frag_pos_light_space,

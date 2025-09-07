@@ -60,6 +60,8 @@ public:
                 const std::vector<float> &h);
   void reset_path();
 
+  void update_water_plane();
+
   // --- Textures
   void set_texture_albedo(const std::vector<uint8_t> &data, int width); // RGBA 8bit
   void reset_texture_albedo();
@@ -172,7 +174,7 @@ private:
 
   // --- Water
   bool      add_water = true;
-  float     water_elevation = 0.05f;
+  float     water_elevation = 0.1f;
   glm::vec3 color_shallow_water;
   glm::vec3 color_deep_water;
   float     water_color_depth = 0.015f;
