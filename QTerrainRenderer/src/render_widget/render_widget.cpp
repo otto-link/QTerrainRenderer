@@ -16,9 +16,6 @@
 #include "qtr/render_widget.hpp"
 #include "qtr/utils.hpp"
 
-// TODO DBG
-#include <cstdlib>
-
 namespace qtr
 {
 
@@ -47,8 +44,6 @@ RenderWidget::RenderWidget(const std::string &_title, QWidget *parent)
   // init.
   this->timer.start(); // global timer
   this->reset_camera_position();
-
-  QTR_LOG->trace("\n{}", this->camera.json_to().dump(4));
 }
 
 RenderWidget::~RenderWidget()
@@ -186,54 +181,9 @@ void RenderWidget::initializeGL()
   ImGui_ImplOpenGL3_Init("#version 330");
 }
 
-void RenderWidget::json_from(nlohmann::json const &json)
-{
-  QTR_LOG->trace("RenderWidget::json_from");
-
-  // geometry
-  if (json.contains("x") && json.contains("y") && json.contains("width") &&
-      json.contains("height"))
-  {
-    int x = json["x"];
-    int y = json["y"];
-    int w = json["width"];
-    int h = json["height"];
-
-    this->setGeometry(x, y, w, h);
-  }
-  else
-  {
-    QTR_LOG->error("RenderWidget::json_from: could not parse the widget geometry data");
-  }
-
-  // data
-  if (json.contains("title"))
-    this->title = json["title"];
-  else
-    QTR_LOG->error("RenderWidget::json_from: could not parse the widget title data");
-}
-
-nlohmann::json RenderWidget::json_to() const
-{
-  QTR_LOG->trace("RenderWidget::json_to");
-
-  nlohmann::json json;
-
-  // geometry
-  QRect geom = this->geometry();
-  json["x"] = geom.x();
-  json["y"] = geom.y();
-  json["width"] = geom.width();
-  json["height"] = geom.height();
-
-  // data
-  json["title"] = this->title;
-
-  return json;
-}
-
 void RenderWidget::reset_camera_position()
 {
+  // TODO use json
   this->target = glm::vec3(0.0f, 0.0f, 0.0f);
   this->pan_offset = glm::vec2(0.0f, 0.0f);
   this->distance = 5.0f;
