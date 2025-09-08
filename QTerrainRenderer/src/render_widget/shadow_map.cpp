@@ -46,7 +46,9 @@ void RenderWidget::render_shadow_map(const glm::mat4 &model,
 
     this->plane.draw();
     this->hmap.draw();
-    this->instanced_mesh.draw(p_shader);
+    this->rocks_instanced_mesh.draw(p_shader);
+    this->trees_instanced_mesh.draw(p_shader);
+
     // water_plane.draw();
     // points_mesh.draw();
     // path_mesh.draw();

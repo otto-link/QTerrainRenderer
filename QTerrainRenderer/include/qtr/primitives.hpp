@@ -41,11 +41,11 @@ void generate_rectangle(Mesh            &mesh,
                         const glm::vec3 &p2,
                         float            height);
 
-void generate_rock_mesh(Mesh &mesh,
-                        float radius,
-                        float roughness, // e.g. 0.3f
-                        uint  seed,
-                        int   subdivisions = 1);
+void generate_rock(Mesh &mesh,
+                   float radius,
+                   float roughness, // e.g. 0.3f
+                   uint  seed,
+                   int   subdivisions = 1);
 
 void generate_sphere(Mesh &mesh,
                      float radius,

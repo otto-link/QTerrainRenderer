@@ -11,11 +11,11 @@ namespace qtr
 
 #include <random>
 
-void generate_rock_mesh(Mesh &mesh,
-                        float radius,
-                        float roughness,
-                        uint  seed,
-                        int   subdivisions = 1)
+void generate_rock(Mesh &mesh,
+                   float radius,
+                   float roughness,
+                   uint  seed,
+                   int   subdivisions = 1)
 {
   std::vector<Vertex> vertices;
   std::vector<uint>   indices;

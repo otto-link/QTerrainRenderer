@@ -24,23 +24,20 @@ void RenderWidget::render_depth_map(const glm::mat4 &model,
 
     glClear(GL_DEPTH_BUFFER_BIT);
     glEnable(GL_DEPTH_TEST);
-    // glCullFace(GL_FRONT);
 
     p_shader->bind();
     p_shader->setUniformValue("model", toQMat(model));
     p_shader->setUniformValue("view", toQMat(view));
     p_shader->setUniformValue("projection", toQMat(projection));
 
-    plane.draw();
-    hmap.draw();
-    water_plane.draw();
-    points_mesh.draw();
-    path_mesh.draw();
-    instanced_mesh.draw(p_shader);
+    this->plane.draw();
+    this->hmap.draw();
+    this->rocks_instanced_mesh.draw(p_shader);
+    this->trees_instanced_mesh.draw(p_shader);
+    this->water_plane.draw();
 
     p_shader->release();
 
-    // glCullFace(GL_BACK);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     check_gl_error("RenderWidget::render_depth_map: render depth map");

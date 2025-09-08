@@ -74,15 +74,14 @@ void RenderWidget::render_scene()
     {
       p_shader->setUniformValue("base_color", QVector3D(0.5f, 0.5f, 0.5f));
       p_shader->setUniformValue("add_ambiant_occlusion", false);
-      plane.draw();
+      this->plane.draw();
     }
 
     // points
     if (this->render_points)
     {
-      p_shader->setUniformValue("base_color", QVector3D(0.f, 1.f, 0.f));
       p_shader->setUniformValue("add_ambiant_occlusion", false);
-      points_mesh.draw();
+      this->points_instanced_mesh.draw(p_shader);
     }
 
     // path
@@ -90,10 +89,8 @@ void RenderWidget::render_scene()
     {
       p_shader->setUniformValue("base_color", QVector3D(1.f, 0.f, 1.f));
       p_shader->setUniformValue("add_ambiant_occlusion", false);
-      path_mesh.draw();
+      this->path_mesh.draw();
     }
-
-    instanced_mesh.draw(p_shader);
 
     // heightmap
     if (this->render_hmap)
@@ -107,12 +104,22 @@ void RenderWidget::render_scene()
         p_shader->setUniformValue("normal_map_scaling", this->normal_map_scaling);
 
       p_shader->setUniformValue("add_ambiant_occlusion", this->add_ambiant_occlusion);
-      hmap.draw();
+      this->hmap.draw();
 
       p_shader->setUniformValue("normal_map_scaling", 0.f);
     }
 
-    if (this->add_water)
+    if (this->render_rocks)
+    {
+      this->rocks_instanced_mesh.draw(p_shader);
+    }
+
+    if (this->render_trees)
+    {
+      this->trees_instanced_mesh.draw(p_shader);
+    }
+
+    if (this->render_water)
     {
       p_shader->setUniformValue("spec_strength", this->water_spec_strength);
 
@@ -201,6 +208,9 @@ void RenderWidget::render_ui()
   changed |= ImGui::Checkbox("Plane", &this->render_plane);
   changed |= ImGui::Checkbox("Points", &this->render_points);
   changed |= ImGui::Checkbox("Path", &this->render_path);
+  changed |= ImGui::Checkbox("Water", &this->render_rocks);
+  changed |= ImGui::Checkbox("Water", &this->render_trees);
+  changed |= ImGui::Checkbox("Water", &this->render_water);
 
   // --- Materials ---
   if (ImGui::CollapsingHeader("Materials", ImGuiTreeNodeFlags_DefaultOpen))
@@ -240,7 +250,6 @@ void RenderWidget::render_ui()
   // --- Water ---
   if (ImGui::CollapsingHeader("Water", ImGuiTreeNodeFlags_DefaultOpen))
   {
-    changed |= ImGui::Checkbox("Enable water", &this->add_water);
 
     if (ImGui::SliderFloat("Elevation", &this->water_elevation, 0.f, 1.f))
     {

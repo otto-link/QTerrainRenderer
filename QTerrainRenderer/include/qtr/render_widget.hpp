@@ -61,6 +61,18 @@ public:
                 const std::vector<float> &h);
   void reset_path();
 
+  void set_rocks(const std::vector<float> &x,
+                 const std::vector<float> &y,
+                 const std::vector<float> &h,
+                 const std::vector<float> &radius);
+  void reset_rocks();
+
+  void set_trees(const std::vector<float> &x,
+                 const std::vector<float> &y,
+                 const std::vector<float> &h,
+                 const std::vector<float> &radius);
+  void reset_trees();
+
   void update_water_plane();
 
   // --- Textures
@@ -149,6 +161,9 @@ private:
   bool render_points = true;
   bool render_path = true;
   bool render_hmap = true;
+  bool render_rocks = true;
+  bool render_trees = true;
+  bool render_water = true;
 
   // Normals
   bool  normal_visualization = false;
@@ -171,7 +186,6 @@ private:
   bool bypass_texture_albedo = false;
 
   // --- Water
-  bool      add_water = true;
   float     water_elevation = 0.1f;
   glm::vec3 color_shallow_water;
   glm::vec3 color_deep_water;
@@ -211,9 +225,10 @@ private:
   Mesh                        hmap;
   Mesh                        water_plane;
   Mesh                        water_mesh;
-  Mesh                        points_mesh;
   Mesh                        path_mesh;
-  InstancedMesh<BaseInstance> instanced_mesh;
+  InstancedMesh<BaseInstance> points_instanced_mesh;
+  InstancedMesh<BaseInstance> trees_instanced_mesh;
+  InstancedMesh<BaseInstance> rocks_instanced_mesh;
 
   Texture texture_albedo;
   Texture texture_hmap;

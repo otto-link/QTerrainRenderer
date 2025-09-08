@@ -96,37 +96,38 @@ void RenderWidget::initializeGL()
 
   this->update_water_plane();
 
-  // TODO Instance
-
   {
-    float r = 0.001f;
+    // float r = 0.001f;
 
-    auto tree_mesh = std::make_shared<Mesh>();
-    generate_tree(*tree_mesh, r, 0.1f * r, 5.f * r, r, 4);
+    // auto tree_mesh = std::make_shared<Mesh>();
+    // generate_tree(*tree_mesh, r, 0.1f * r, 5.f * r, r, 4);
 
-    // glm::vec3(0.2f, rd(0.2f, 0.8f), 0.2f)
+    // // glm::vec3(0.2f, rd(0.2f, 0.8f), 0.2f)
 
-    auto rock_mesh = std::make_shared<Mesh>();
-    generate_rock_mesh(*rock_mesh, r, 0.3f, 0, 2);
+    // auto rock_mesh = std::make_shared<Mesh>();
+    // generate_rock_mesh(*rock_mesh, r, 0.3f, 0, 2);
 
-    auto sphere_mesh = std::make_shared<Mesh>();
-    generate_sphere(*sphere_mesh, r);
+    // auto sphere_mesh = std::make_shared<Mesh>();
+    // generate_sphere(*sphere_mesh, r);
 
-    // 2. Fill instances
-    std::vector<BaseInstance> instances;
-    for (int i = 0; i < 50000; ++i)
-    {
-      auto rd = [](float a, float b) { return a + (b - a) * std::rand() / RAND_MAX; };
+    // // 2. Fill instances
+    // std::vector<BaseInstance> instances;
+    // for (int i = 0; i < 50000; ++i)
+    // {
+    //   auto rd = [](float a, float b) { return a + (b - a) * std::rand() / RAND_MAX; };
 
-      float v = rd(0.3f, 0.5f);
+    //   // float v = rd(0.3f, 0.5f);
+    //   // glm::vec3 c = glm::vec3(v, v, v);
 
-      instances.push_back({glm::vec3(rd(-1, 1), 0.1f, rd(-1, 1)),
-                           rd(0.5f, 2.0f),
-                           rd(0.0f, glm::two_pi<float>()),
-                           glm::vec3(v, v, v)});
-    }
+    //   glm::vec3 c = glm::vec3(0.2f, rd(0.2f, 0.8f), 0.2f);
 
-    instanced_mesh.create(rock_mesh, instances);
+    //   instances.push_back({glm::vec3(rd(-1, 1), 0.1f, rd(-1, 1)),
+    //                        rd(0.5f, 2.0f),
+    //                        rd(0.0f, glm::two_pi<float>()),
+    //                        c});
+    // }
+
+    // instanced_mesh.create(tree_mesh, instances);
   }
 
   // depth buffer
@@ -255,7 +256,11 @@ void RenderWidget::reset_texture_normal() { this->texture_normal.destroy(); }
 
 void RenderWidget::reset_path() { this->path_mesh.destroy(); }
 
-void RenderWidget::reset_points() { this->points_mesh.destroy(); }
+void RenderWidget::reset_points() { this->points_instanced_mesh.destroy(); }
+
+void RenderWidget::reset_rocks() { this->rocks_instanced_mesh.destroy(); }
+
+void RenderWidget::reset_trees() { this->trees_instanced_mesh.destroy(); }
 
 void RenderWidget::resizeEvent(QResizeEvent *event)
 {
@@ -390,20 +395,59 @@ void RenderWidget::set_points(const std::vector<float> &x,
   if (x.size() != y.size() || x.size() != h.size())
     throw std::invalid_argument("RenderWidget::set_points: vector sizes does not match");
 
-  std::vector<glm::vec3> points;
+  std::vector<BaseInstance> instances;
+
+  float     scale = 0.01f;
+  float     rotation = 0.f;
+  glm::vec3 color = glm::vec3(0.f, 1.f, 0.);
+
   for (size_t k = 0; k < x.size(); ++k)
   {
-    // rescale to render size
     float xs = 0.5f * this->hmap_w * (2.f * x[k] - 1.f);
     float hs = this->hmap_h0 + this->hmap_h * h[k];
     float ys = 0.5f * this->hmap_w * (2.f * y[k] - 1.f);
 
-    points.push_back(glm::vec3(xs, hs, ys));
+    instances.push_back({glm::vec3(xs, hs, ys), scale, rotation, color});
   }
 
-  // TODO scale with point value
+  // unit sphere
+  auto sphere_mesh = std::make_shared<Mesh>();
+  generate_sphere(*sphere_mesh, 1.f);
 
-  generate_downward_triangles(points_mesh, points, 0.05f, 0.01f);
+  this->points_instanced_mesh.create(sphere_mesh, instances);
+}
+
+void RenderWidget::set_rocks(const std::vector<float> &x,
+                             const std::vector<float> &y,
+                             const std::vector<float> &h,
+                             const std::vector<float> &radius)
+{
+  QTR_LOG->trace("RenderWidget::set_rocks");
+
+  if (x.size() != y.size() || x.size() != h.size() || x.size() != radius.size())
+    throw std::invalid_argument("RenderWidget::set_rocks: vector sizes does not match");
+
+  std::vector<BaseInstance> instances;
+
+  float     scale = 0.01f;
+  float     rotation = 0.f;
+  glm::vec3 color = glm::vec3(0.f, 1.f, 0.);
+
+  for (size_t k = 0; k < x.size(); ++k)
+  {
+    float xs = 0.5f * this->hmap_w * (2.f * x[k] - 1.f);
+    float hs = this->hmap_h0 + this->hmap_h * h[k];
+    float ys = 0.5f * this->hmap_w * (2.f * y[k] - 1.f);
+    float rs = 2.f * radius[k];
+
+    instances.push_back({glm::vec3(xs, hs, ys), scale, rotation, color});
+  }
+
+  // unit sphere
+  auto mesh = std::make_shared<Mesh>();
+  generate_rock(*mesh, 1.f, 0.3f, 0);
+
+  this->rocks_instanced_mesh.create(mesh, instances);
 }
 
 void RenderWidget::set_texture_albedo(const std::vector<uint8_t> &data, int width)
@@ -418,6 +462,40 @@ void RenderWidget::set_texture_normal(const std::vector<uint8_t> &data, int widt
   QTR_LOG->trace("RenderWidget::set_texture_normal");
 
   this->texture_normal.from_image_8bit_rgb(data, width);
+}
+
+void RenderWidget::set_trees(const std::vector<float> &x,
+                             const std::vector<float> &y,
+                             const std::vector<float> &h,
+                             const std::vector<float> &radius)
+{
+  QTR_LOG->trace("RenderWidget::set_trees");
+
+  if (x.size() != y.size() || x.size() != h.size() || x.size() != radius.size())
+    throw std::invalid_argument("RenderWidget::set_trees: vector sizes does not match");
+
+  std::vector<BaseInstance> instances;
+
+  float     scale = 0.01f;
+  float     rotation = 0.f;
+  glm::vec3 color = glm::vec3(0.f, 1.f, 0.);
+
+  for (size_t k = 0; k < x.size(); ++k)
+  {
+    float xs = 0.5f * this->hmap_w * (2.f * x[k] - 1.f);
+    float hs = this->hmap_h0 + this->hmap_h * h[k];
+    float ys = 0.5f * this->hmap_w * (2.f * y[k] - 1.f);
+    float rs = 2.f * radius[k];
+
+    instances.push_back({glm::vec3(xs, hs, ys), scale, rotation, color});
+  }
+
+  // unit sphere
+  auto  mesh = std::make_shared<Mesh>();
+  float r = 1.f;
+  generate_tree(*mesh, r, 0.1f * r, 5.f * r, r, 5);
+
+  this->trees_instanced_mesh.create(mesh, instances);
 }
 
 void RenderWidget::set_water_geometry(const std::vector<float> &data,
