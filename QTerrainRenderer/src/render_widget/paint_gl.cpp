@@ -208,8 +208,8 @@ void RenderWidget::render_ui()
   changed |= ImGui::Checkbox("Plane", &this->render_plane);
   changed |= ImGui::Checkbox("Points", &this->render_points);
   changed |= ImGui::Checkbox("Path", &this->render_path);
-  changed |= ImGui::Checkbox("Water", &this->render_rocks);
-  changed |= ImGui::Checkbox("Water", &this->render_trees);
+  changed |= ImGui::Checkbox("Rocks", &this->render_rocks);
+  changed |= ImGui::Checkbox("Trees", &this->render_trees);
   changed |= ImGui::Checkbox("Water", &this->render_water);
 
   // --- Materials ---

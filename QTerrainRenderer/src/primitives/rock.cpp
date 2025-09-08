@@ -49,7 +49,8 @@ void generate_rock(Mesh &mesh,
   for (int s = 0; s < subdivisions; ++s)
   {
     std::map<std::pair<uint, uint>, uint> midpoint_cache;
-    auto                                  get_midpoint = [&](uint i1, uint i2) -> uint
+
+    auto get_midpoint = [&](uint i1, uint i2) -> uint
     {
       if (i1 > i2)
         std::swap(i1, i2);
