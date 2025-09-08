@@ -90,6 +90,10 @@ void Mesh::destroy()
   this->has_indices = false;
 }
 
+size_t Mesh::get_index_count() const { return this->index_count; }
+
+GLuint Mesh::get_vao() const { return this->vao; }
+
 bool Mesh::is_active() const { return (this->vbo); }
 
 void Mesh::update_vertices(const std::vector<Vertex> &vertices)

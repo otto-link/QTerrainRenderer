@@ -99,8 +99,18 @@ void RenderWidget::initializeGL()
   // TODO Instance
 
   {
+    float r = 0.001f;
+
     auto tree_mesh = std::make_shared<Mesh>();
-    generate_tree(*tree_mesh.get(), 0.005f, 0.00025f, 8, 0.005f);
+    generate_tree(*tree_mesh, r, 0.1f * r, 5.f * r, r, 4);
+
+    // glm::vec3(0.2f, rd(0.2f, 0.8f), 0.2f)
+
+    auto rock_mesh = std::make_shared<Mesh>();
+    generate_rock_mesh(*rock_mesh, r, 0.3f, 0, 2);
+
+    auto sphere_mesh = std::make_shared<Mesh>();
+    generate_sphere(*sphere_mesh, r);
 
     // 2. Fill instances
     std::vector<BaseInstance> instances;
@@ -108,13 +118,15 @@ void RenderWidget::initializeGL()
     {
       auto rd = [](float a, float b) { return a + (b - a) * std::rand() / RAND_MAX; };
 
+      float v = rd(0.3f, 0.5f);
+
       instances.push_back({glm::vec3(rd(-1, 1), 0.1f, rd(-1, 1)),
                            rd(0.5f, 2.0f),
                            rd(0.0f, glm::two_pi<float>()),
-                           glm::vec3(0.2f, rd(0.f, 1.f), 0.2f)});
+                           glm::vec3(v, v, v)});
     }
 
-    instanced_mesh.create(tree_mesh, instances);
+    instanced_mesh.create(rock_mesh, instances);
   }
 
   // depth buffer

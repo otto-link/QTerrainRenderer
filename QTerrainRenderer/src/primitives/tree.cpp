@@ -8,57 +8,84 @@ namespace qtr
 {
 
 void generate_tree(Mesh &mesh,
-                   float height,
-                   float radius,
-                   int   segments,
-                   float base_y = 0.0f)
+                   float trunk_height,
+                   float trunk_radius,
+                   float crown_height,
+                   float crown_radius,
+                   int   trunk_segments)
 {
   std::vector<Vertex> vertices;
   std::vector<uint>   indices;
 
-  // Apex vertex
-  glm::vec3 apex(0.0f, base_y + height, 0.0f);
-  glm::vec3 apex_normal(0.0f, 1.0f, 0.0f);
-  glm::vec2 apex_uv(0.5f, 1.0f);
-  vertices.emplace_back(apex, apex_normal, apex_uv);
+  // -------------------
+  // Trunk (cylinder sides only)
+  // -------------------
+  int   base_index = 0;
+  float angle_step = glm::two_pi<float>() / trunk_segments;
 
-  // Base circle vertices
-  for (int i = 0; i < segments; ++i)
+  for (int i = 0; i <= trunk_segments; ++i)
   {
-    float     theta = 2.0f * glm::pi<float>() * float(i) / float(segments);
-    float     x = radius * cos(theta);
-    float     z = radius * sin(theta);
-    glm::vec3 pos(x, base_y, z);
-    glm::vec3 normal = glm::normalize(
-        glm::vec3(x, radius / height, z)); // approximate normal
-    glm::vec2 uv(float(i) / (segments - 1), 0.0f);
-    vertices.emplace_back(pos, normal, uv);
+    float     angle = i * angle_step;
+    float     cx = cos(angle);
+    float     cz = sin(angle);
+    glm::vec3 normal(cx, 0, cz);
+
+    glm::vec3 bottom(cx * trunk_radius, 0.0f, cz * trunk_radius);
+    glm::vec3 top(cx * trunk_radius, trunk_height, cz * trunk_radius);
+
+    vertices.emplace_back(bottom, normal, glm::vec2(i / float(trunk_segments), 0.0f));
+    vertices.emplace_back(top, normal, glm::vec2(i / float(trunk_segments), 1.0f));
   }
 
-  // Create side triangles (cone)
-  for (int i = 0; i < segments; ++i)
+  for (int i = 0; i < trunk_segments; ++i)
   {
-    int base0 = i + 1;
-    int base1 = (i + 1) % segments + 1;
-    indices.push_back(0); // apex
-    indices.push_back(base0);
-    indices.push_back(base1);
+    int i0 = base_index + i * 2;
+    int i1 = base_index + i * 2 + 1;
+    int i2 = base_index + (i + 1) * 2;
+    int i3 = base_index + (i + 1) * 2 + 1;
+
+    indices.push_back(i0);
+    indices.push_back(i2);
+    indices.push_back(i1);
+
+    indices.push_back(i1);
+    indices.push_back(i2);
+    indices.push_back(i3);
   }
 
-  // Optionally, add a base disk
-  glm::vec3 base_normal(0.0f, -1.0f, 0.0f);
-  int       base_center_idx = static_cast<int>(vertices.size());
-  vertices.emplace_back(glm::vec3(0.0f, base_y, 0.0f),
-                        base_normal,
-                        glm::vec2(0.5f, 0.5f));
+  // -------------------
+  // Crown (cone)
+  // -------------------
+  int       crown_base = static_cast<int>(vertices.size());
+  glm::vec3 tip(0, trunk_height + crown_height, 0);
 
-  for (int i = 0; i < segments; ++i)
+  for (int i = 0; i <= trunk_segments; ++i)
   {
-    int base0 = i + 1;
-    int base1 = (i + 1) % segments + 1;
-    indices.push_back(base_center_idx);
-    indices.push_back(base1);
-    indices.push_back(base0);
+    float angle = i * angle_step;
+    float cx = cos(angle);
+    float cz = sin(angle);
+
+    glm::vec3 base_pos(cx * crown_radius, trunk_height, cz * crown_radius);
+    glm::vec3 dir = glm::normalize(glm::vec3(cx, crown_height / crown_radius, cz));
+
+    vertices.emplace_back(base_pos, dir, glm::vec2(i / float(trunk_segments), 0.0f));
+    vertices.emplace_back(tip, dir, glm::vec2(i / float(trunk_segments), 1.0f));
+  }
+
+  for (int i = 0; i < trunk_segments; ++i)
+  {
+    int i0 = crown_base + i * 2;
+    int i1 = crown_base + i * 2 + 1;
+    int i2 = crown_base + (i + 1) * 2;
+    int i3 = crown_base + (i + 1) * 2 + 1;
+
+    indices.push_back(i0);
+    indices.push_back(i2);
+    indices.push_back(i1);
+
+    indices.push_back(i1);
+    indices.push_back(i2);
+    indices.push_back(i3);
   }
 
   mesh.create(vertices, indices);

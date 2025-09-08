@@ -3,40 +3,66 @@ R""(
    License. The full license is in the file LICENSE, distributed with this software. */
 #version 330 core
 
+// ============================================================================
+// Inputs / Outputs
+// ============================================================================
+
 in vec3 frag_pos;
 in vec3 frag_normal;
 in vec2 frag_uv;
 in vec4 frag_pos_light_space;
+in vec3 frag_instance_color;
 
 out vec4 frag_color;
 
+// ============================================================================
+// Uniforms
+// ============================================================================
+
+// --- Instance / base setup
+uniform bool has_instances;
+uniform vec3 base_color;
+
+// --- Rendering context
 uniform vec2  screen_size;
 uniform float time;
 uniform float near_plane;
 uniform float far_plane;
+
+// --- Heightmap scaling
 uniform float scale_h;
 uniform float hmap_h0;
 uniform float hmap_h;
 
+// --- Normal visualization
 uniform bool  normal_visualization;
 uniform float normal_map_scaling;
 
-uniform mat4  view;
-uniform mat4  projection;
+// --- Matrices
+uniform mat4 view;
+uniform mat4 projection;
+uniform mat4 light_space_matrix;
+
+// --- Lighting
 uniform vec3  light_pos;
-uniform mat4  light_space_matrix;
 uniform vec3  camera_pos;
 uniform vec3  view_pos;
-uniform vec3  base_color;
 uniform float shininess;
 uniform float spec_strength;
+
+// --- Shadows
 uniform bool  bypass_shadow_map;
 uniform float shadow_strength;
+
+// --- Ambient occlusion
 uniform bool  add_ambiant_occlusion;
 uniform float ambiant_occlusion_strength;
 uniform int   ambiant_occlusion_radius;
-uniform bool  use_texture_albedo;
 
+// --- Texturing
+uniform bool use_texture_albedo;
+
+// --- Water rendering
 uniform bool  use_water_colors;
 uniform vec3  color_shallow_water;
 uniform vec3  color_deep_water;
@@ -52,18 +78,26 @@ uniform float waves_amplitude;
 uniform float waves_normal_amplitude;
 uniform float waves_speed;
 
+// --- Fog
 uniform bool add_fog;
 
+// --- Atmospheric scattering
 uniform bool add_atmospheric_scattering;
 
+// --- Postprocessing
 uniform float gamma_correction;
 uniform bool  apply_tonemap;
 
+// --- Textures
 uniform sampler2D texture_albedo;
 uniform sampler2D texture_hmap;
 uniform sampler2D texture_normal;
 uniform sampler2D texture_shadow_map;
 uniform sampler2D texture_depth;
+
+// ============================================================================
+// Utility Functions
+// ============================================================================
 
 float relative_elevation(float y)
 {
@@ -300,11 +334,29 @@ float phase_hg(float cos_theta, float g)
   return (1.0 - g * g) / (4.0 * 3.14159265 * pow(denom, 1.5));
 }
 
+// ============================================================================
+// Main
+// ============================================================================
+
 void main()
 {
   vec3  color;
   float alpha = 1.0;
   vec3  normal = frag_normal;
+
+  // define base color (may be overriden afterwards depending on the
+  // shader parameters)
+  if (use_texture_albedo)
+  {
+    color = texture(texture_albedo, frag_uv).xyz; // TODO alpha channel
+  }
+  else
+  {
+    if (has_instances)
+      color = frag_instance_color;
+    else
+      color = base_color;
+  }
 
   // add details normal map
   if (normal_map_scaling > 0.0)
@@ -393,13 +445,6 @@ void main()
       // ground above water
       alpha = 0.0;
     }
-  }
-  else
-  {
-    if (use_texture_albedo)
-      color = texture(texture_albedo, frag_uv).xyz; // TODO alpha channel
-    else
-      color = base_color;
   }
 
   color.x = pow(color.x, 1.0 / gamma_correction);
@@ -517,17 +562,20 @@ void main()
       float cos_theta = dot(normalize(-light_dir), -ray_dir);
       float phase = phase_hg(cos_theta, hg_g);
 
-      float rayleigh_factor = exp(-sample_pos.y / rayleigh_height);
-      float mie_factor = exp(-sample_pos.y / mie_height);
-
       float pr = phase_rayleigh(cos_theta);
       float pm = phase_mie(cos_theta, hg_g);
 
       // soft cap for Mie scattering
       pm = pm / (1.0 + pm);
 
-      // pr *= rayleigh_factor;
-      // pm *= mie_factor;
+      if (false)
+      {
+        float rayleigh_factor = exp(-sample_pos.y / rayleigh_height);
+        float mie_factor = exp(-sample_pos.y / mie_height);
+
+        pr *= rayleigh_factor;
+        pm *= mie_factor;
+      }
 
       // scale by densities (tweak or make altitude-dependent)
       vec3 phase_color = rayleigh_color * pr + mie_color * pm;

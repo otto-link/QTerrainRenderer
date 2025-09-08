@@ -27,9 +27,12 @@ public:
   void create(const std::vector<Vertex> &vertices, const std::vector<uint> &indices = {});
   void destroy();
   void draw();
-  bool is_active() const;
-  void update_vertices(const std::vector<Vertex> &vertices);
+  size_t get_index_count() const;
+  GLuint get_vao() const;
+  bool   is_active() const;
+  void   update_vertices(const std::vector<Vertex> &vertices);
 
+private:
   GLuint vao = 0;
   GLuint vbo = 0;
   GLuint ebo = 0;

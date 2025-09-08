@@ -28,7 +28,7 @@ public:
     this->sp_mesh = sp_base_mesh;
     this->instance_count = static_cast<int>(instances.size());
 
-    glBindVertexArray(this->sp_mesh->vao);
+    glBindVertexArray(this->sp_mesh->get_vao());
 
     // Upload instance data
     glGenBuffers(1, &this->instance_vbo);
@@ -46,14 +46,14 @@ public:
 
   void draw(QOpenGLShaderProgram *p_shader)
   {
-    if (!p_shader || !this->sp_mesh->is_active())
+    if (!p_shader || !this->is_active())
       return;
 
     p_shader->setUniformValue("has_instances", true);
 
-    glBindVertexArray(this->sp_mesh->vao);
+    glBindVertexArray(this->sp_mesh->get_vao());
     glDrawElementsInstanced(GL_TRIANGLES,
-                            this->sp_mesh->index_count,
+                            this->sp_mesh->get_index_count(),
                             GL_UNSIGNED_INT,
                             nullptr,
                             this->instance_count);
@@ -72,6 +72,12 @@ public:
 
     this->instance_vbo = 0;
     this->instance_count = 0;
+  }
+
+  bool is_active()
+  {
+    bool state = this->sp_mesh ? this->sp_mesh->is_active() : false;
+    return state && (this->instance_vbo);
   }
 
 private:

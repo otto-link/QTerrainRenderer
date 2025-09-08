@@ -41,10 +41,22 @@ void generate_rectangle(Mesh            &mesh,
                         const glm::vec3 &p2,
                         float            height);
 
+void generate_rock_mesh(Mesh &mesh,
+                        float radius,
+                        float roughness, // e.g. 0.3f
+                        uint  seed,
+                        int   subdivisions = 1);
+
+void generate_sphere(Mesh &mesh,
+                     float radius,
+                     int   slices = 32, // longitudinal divisions
+                     int   stacks = 16);
+
 void generate_tree(Mesh &mesh,
-                   float height,
-                   float radius,
-                   int   segments,
-                   float base_y = 0.0f);
+                   float trunk_height,
+                   float trunk_radius,
+                   float crown_height,
+                   float crown_radius,
+                   int   trunk_segments = 16);
 
 } // namespace qtr
