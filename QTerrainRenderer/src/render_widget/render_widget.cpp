@@ -429,8 +429,6 @@ void RenderWidget::set_rocks(const std::vector<float> &x,
 
   std::vector<BaseInstance> instances;
 
-  float     scale = 0.01f;
-  float     rotation = 0.f;
   glm::vec3 color = glm::vec3(0.f, 1.f, 0.);
 
   for (size_t k = 0; k < x.size(); ++k)
@@ -439,8 +437,9 @@ void RenderWidget::set_rocks(const std::vector<float> &x,
     float hs = this->hmap_h0 + this->hmap_h * h[k];
     float ys = 0.5f * this->hmap_w * (2.f * y[k] - 1.f);
     float rs = 2.f * radius[k];
+    float rotation = std::rand() / RAND_MAX * glm::two_pi<float>();
 
-    instances.push_back({glm::vec3(xs, hs, ys), scale, rotation, color});
+    instances.push_back({glm::vec3(xs, hs, ys), rs, rotation, color});
   }
 
   // unit sphere
@@ -476,8 +475,6 @@ void RenderWidget::set_trees(const std::vector<float> &x,
 
   std::vector<BaseInstance> instances;
 
-  float     scale = 0.01f;
-  float     rotation = 0.f;
   glm::vec3 color = glm::vec3(0.f, 1.f, 0.);
 
   for (size_t k = 0; k < x.size(); ++k)
@@ -486,8 +483,9 @@ void RenderWidget::set_trees(const std::vector<float> &x,
     float hs = this->hmap_h0 + this->hmap_h * h[k];
     float ys = 0.5f * this->hmap_w * (2.f * y[k] - 1.f);
     float rs = 2.f * radius[k];
+    float rotation = std::rand() / RAND_MAX * glm::two_pi<float>();
 
-    instances.push_back({glm::vec3(xs, hs, ys), scale, rotation, color});
+    instances.push_back({glm::vec3(xs, hs, ys), rs, rotation, color});
   }
 
   // unit sphere
