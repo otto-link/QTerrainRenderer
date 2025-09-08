@@ -210,7 +210,7 @@ void RenderWidget::render_ui()
   changed |= ImGui::Checkbox("Path", &this->render_path);
   changed |= ImGui::Checkbox("Rocks", &this->render_rocks);
   changed |= ImGui::Checkbox("Trees", &this->render_trees);
-  changed |= ImGui::Checkbox("Water", &this->render_water);
+  changed |= ImGui::Checkbox("Water##render", &this->render_water);
 
   // --- Materials ---
   if (ImGui::CollapsingHeader("Materials", ImGuiTreeNodeFlags_DefaultOpen))
