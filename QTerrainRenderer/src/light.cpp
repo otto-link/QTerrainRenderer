@@ -4,11 +4,23 @@
 
 #include "qtr/light.hpp"
 #include "qtr/logger.hpp"
+#include "qtr/utils.hpp"
 
 namespace qtr
 {
 
 glm::vec3 Light::get_dir() const { return normalize(this->target - this->position); }
+
+void Light::json_from(const nlohmann::json &json)
+{
+  json_safe_get(json, "position", position);
+  json_safe_get(json, "target", target);
+}
+
+nlohmann::json Light::json_to() const
+{
+  return {{"position", position}, {"target", target}};
+}
 
 void Light::set_position_spherical(float distance, float theta, float phi)
 {

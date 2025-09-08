@@ -13,8 +13,8 @@ struct Light
   glm::vec3 position;
   glm::vec3 target = glm::vec3(0.f);
 
-  // void           json_from(nlohmann::json const &json);
-  // nlohmann::json json_to() const;
+  void           json_from(nlohmann::json const &json);
+  nlohmann::json json_to() const;
 
   glm::vec3 get_dir() const;
   void      set_position_spherical(float distance, float theta, float phi);
