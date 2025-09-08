@@ -7,6 +7,10 @@
 
 #include <QImage>
 
+#include <glm/glm.hpp>
+
+#include "nlohmann/json.hpp"
+
 #include "qtr/logger.hpp"
 
 namespace qtr

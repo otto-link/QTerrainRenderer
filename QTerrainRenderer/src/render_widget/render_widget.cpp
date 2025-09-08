@@ -47,6 +47,8 @@ RenderWidget::RenderWidget(const std::string &_title, QWidget *parent)
   // init.
   this->timer.start(); // global timer
   this->reset_camera_position();
+
+  QTR_LOG->trace("\n{}", this->camera.json_to().dump(4));
 }
 
 RenderWidget::~RenderWidget()

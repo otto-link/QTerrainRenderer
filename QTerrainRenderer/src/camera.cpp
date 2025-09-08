@@ -4,6 +4,7 @@
 
 #include "qtr/camera.hpp"
 #include "qtr/logger.hpp"
+#include "qtr/utils.hpp"
 
 namespace qtr
 {
@@ -26,6 +27,26 @@ glm::mat4 Camera::get_projection_matrix_perspective(float aspect_ratio) const
 glm::mat4 Camera::get_view_matrix() const
 {
   return glm::lookAt(this->position, this->target, this->up);
+}
+
+void Camera::json_from(const nlohmann::json &json)
+{
+  json_safe_get(json, "position", this->position);
+  json_safe_get(json, "target", this->target);
+  json_safe_get(json, "up", this->up);
+  json_safe_get(json, "fov", this->fov);
+  json_safe_get(json, "near_plane", this->near_plane);
+  json_safe_get(json, "far_plane", this->far_plane);
+}
+
+nlohmann::json Camera::json_to() const
+{
+  return {{"position", this->position},
+          {"target", this->target},
+          {"up", this->up},
+          {"fov", this->fov},
+          {"near_plane", this->near_plane},
+          {"far_plane", this->far_plane}};
 }
 
 void Camera::set_position_angles(float distance, float alpha_x, float alpha_y)

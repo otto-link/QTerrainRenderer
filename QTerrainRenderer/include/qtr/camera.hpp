@@ -17,8 +17,8 @@ struct Camera
   float     near_plane = 0.1f;
   float     far_plane = 100.f;
 
-  // void           json_from(nlohmann::json const &json);
-  // nlohmann::json json_to() const;
+  void           json_from(nlohmann::json const &json);
+  nlohmann::json json_to() const;
 
   glm::mat4 get_projection_matrix_ortho(float ortho_size) const;
   glm::mat4 get_projection_matrix_perspective(float aspect_ratio) const;
