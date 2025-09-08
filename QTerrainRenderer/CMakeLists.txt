@@ -21,9 +21,9 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${QTR_INCLUDE}
                                                    ${CMAKE_BINARY_DIR}/include)
 
 # data (two locations for convenience aka lazyness)
-file(COPY ${CMAKE_SOURCE_DIR}/QTerrainRenderer/data
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/data
      DESTINATION ${EXECUTABLE_OUTPUT_PATH}/.)
-file(COPY ${CMAKE_SOURCE_DIR}/QTerrainRenderer/data
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/data
      DESTINATION ${EXECUTABLE_OUTPUT_PATH}/../.)
 
 # Link libraries
