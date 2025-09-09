@@ -54,6 +54,22 @@ RenderWidget::~RenderWidget()
   this->doneCurrent();
 }
 
+void RenderWidget::clear()
+{
+  QTR_LOG->trace("RenderWidget::clear");
+
+  this->reset_heightmap_geometry();
+  this->reset_water_geometry();
+  this->reset_points();
+  this->reset_path();
+  this->reset_rocks();
+  this->reset_trees();
+  this->reset_texture_albedo();
+  this->reset_texture_normal();
+
+  this->need_update = true;
+}
+
 void RenderWidget::initializeGL()
 {
   QTR_LOG->trace("RenderWidget::initializeGL");
