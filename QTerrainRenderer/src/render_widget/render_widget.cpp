@@ -27,6 +27,7 @@ RenderWidget::RenderWidget(const std::string &_title, QWidget *parent)
   this->setWindowTitle(this->title.c_str());
   this->setFocusPolicy(Qt::StrongFocus);
   this->setMouseTracking(true);
+  this->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
   // force 60 FPS update
   this->connect(&frame_timer,
