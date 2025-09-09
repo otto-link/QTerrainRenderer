@@ -27,6 +27,9 @@ void RenderWidget::json_from(nlohmann::json const &json)
     QTR_LOG->error("RenderWidget::json_from: could not parse the widget geometry data");
   }
 
+  this->camera.json_from(json["camera"]);
+  this->light.json_from(json["light"]);
+
   // data
   json_safe_get(json, "title", title);
 
@@ -112,83 +115,89 @@ nlohmann::json RenderWidget::json_to() const
 
   nlohmann::json json;
 
-  json = {// General
-          {"title", title},
+  json = {
+      // General
+      {"title", title},
 
-          // GUI state
-          {"wireframe_mode", wireframe_mode},
-          {"auto_rotate_light", auto_rotate_light},
+      // GUI state
+      {"wireframe_mode", wireframe_mode},
+      {"auto_rotate_light", auto_rotate_light},
 
-          // Camera parameters
-          {"target", target},
-          {"pan_offset", pan_offset},
-          {"distance", distance},
-          {"alpha_x", alpha_x},
-          {"alpha_y", alpha_y},
-          {"light_phi", light_phi},
-          {"light_theta", light_theta},
-          {"light_distance", light_distance},
+      // Camera parameters
+      {"target", target},
+      {"pan_offset", pan_offset},
+      {"distance", distance},
+      {"alpha_x", alpha_x},
+      {"alpha_y", alpha_y},
+      {"light_phi", light_phi},
+      {"light_theta", light_theta},
+      {"light_distance", light_distance},
 
-          // Heightmap
-          {"scale_h", scale_h},
-          {"hmap_h0", hmap_h0},
-          {"hmap_w", hmap_w},
-          {"hmap_h", hmap_h},
+      // Heightmap
+      {"scale_h", scale_h},
+      {"hmap_h0", hmap_h0},
+      {"hmap_w", hmap_w},
+      {"hmap_h", hmap_h},
 
-          // Scene visibility
-          {"render_plane", render_plane},
-          {"render_points", render_points},
-          {"render_path", render_path},
-          {"render_hmap", render_hmap},
-          {"render_rocks", render_rocks},
-          {"render_trees", render_trees},
-          {"render_water", render_water},
+      // Scene visibility
+      {"render_plane", render_plane},
+      {"render_points", render_points},
+      {"render_path", render_path},
+      {"render_hmap", render_hmap},
+      {"render_rocks", render_rocks},
+      {"render_trees", render_trees},
+      {"render_water", render_water},
 
-          // Normals
-          {"normal_visualization", normal_visualization},
-          {"normal_map_scaling", normal_map_scaling},
+      // Normals
+      {"normal_visualization", normal_visualization},
+      {"normal_map_scaling", normal_map_scaling},
 
-          // Gamma & tonemap
-          {"gamma_correction", gamma_correction},
-          {"apply_tonemap", apply_tonemap},
+      // Gamma & tonemap
+      {"gamma_correction", gamma_correction},
+      {"apply_tonemap", apply_tonemap},
 
-          // Shadows
-          {"bypass_shadow_map", bypass_shadow_map},
-          {"shadow_strength", shadow_strength},
+      // Shadows
+      {"bypass_shadow_map", bypass_shadow_map},
+      {"shadow_strength", shadow_strength},
 
-          // Ambient occlusion
-          {"add_ambiant_occlusion", add_ambiant_occlusion},
-          {"ambiant_occlusion_strength", ambiant_occlusion_strength},
-          {"ambiant_occlusion_radius", ambiant_occlusion_radius},
+      // Ambient occlusion
+      {"add_ambiant_occlusion", add_ambiant_occlusion},
+      {"ambiant_occlusion_strength", ambiant_occlusion_strength},
+      {"ambiant_occlusion_radius", ambiant_occlusion_radius},
 
-          // Textures
-          {"bypass_texture_albedo", bypass_texture_albedo},
+      // Textures
+      {"bypass_texture_albedo", bypass_texture_albedo},
 
-          // Water
-          {"water_elevation", water_elevation},
-          {"color_shallow_water", color_shallow_water},
-          {"color_deep_water", color_deep_water},
-          {"water_color_depth", water_color_depth},
-          {"water_spec_strength", water_spec_strength},
+      // Water
+      {"water_elevation", water_elevation},
+      {"color_shallow_water", color_shallow_water},
+      {"color_deep_water", color_deep_water},
+      {"water_color_depth", water_color_depth},
+      {"water_spec_strength", water_spec_strength},
 
-          // Foam
-          {"add_water_foam", add_water_foam},
-          {"foam_color", foam_color},
-          {"foam_depth", foam_depth},
+      // Foam
+      {"add_water_foam", add_water_foam},
+      {"foam_color", foam_color},
+      {"foam_depth", foam_depth},
 
-          // Waves
-          {"add_water_waves", add_water_waves},
-          {"angle_spread_ratio", angle_spread_ratio},
-          {"waves_alpha", waves_alpha},
-          {"waves_kw", waves_kw},
-          {"waves_amplitude", waves_amplitude},
-          {"waves_normal_amplitude", waves_normal_amplitude},
-          {"animate_waves", animate_waves},
-          {"waves_speed", waves_speed},
+      // Waves
+      {"add_water_waves", add_water_waves},
+      {"angle_spread_ratio", angle_spread_ratio},
+      {"waves_alpha", waves_alpha},
+      {"waves_kw", waves_kw},
+      {"waves_amplitude", waves_amplitude},
+      {"waves_normal_amplitude", waves_normal_amplitude},
+      {"animate_waves", animate_waves},
+      {"waves_speed", waves_speed},
 
-          // Environment
-          {"add_fog", add_fog},
-          {"add_atmospheric_scattering", add_atmospheric_scattering}};
+      // Environment
+      {"add_fog", add_fog},
+      {"add_atmospheric_scattering", add_atmospheric_scattering},
+
+      // other classes
+      {"camera", this->camera.json_to()},
+      {"light", this->light.json_to()},
+  };
 
   // geometry
   QRect geom = this->geometry();
