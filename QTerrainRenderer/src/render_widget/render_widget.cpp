@@ -192,41 +192,70 @@ void RenderWidget::reset_camera_position()
 
   this->light_phi = -45.f / 180.f * 3.14f;
   this->light_theta = 30.f / 180.f * 3.14f;
+
+  this->need_update = true;
 }
 
 void RenderWidget::reset_heightmap_geometry()
 {
   this->hmap.destroy();
   this->texture_hmap.destroy();
+  this->need_update = true;
 }
 
-void RenderWidget::reset_water_geometry() { this->water_mesh.destroy(); }
+void RenderWidget::reset_water_geometry()
+{
+  this->water_mesh.destroy();
+  this->need_update = true;
+}
 
-void RenderWidget::reset_texture_albedo() { this->texture_albedo.destroy(); }
+void RenderWidget::reset_texture_albedo()
+{
+  this->texture_albedo.destroy();
+  this->need_update = true;
+}
 
-void RenderWidget::reset_texture_normal() { this->texture_normal.destroy(); }
+void RenderWidget::reset_texture_normal()
+{
+  this->texture_normal.destroy();
+  this->need_update = true;
+}
 
-void RenderWidget::reset_path() { this->path_mesh.destroy(); }
+void RenderWidget::reset_path()
+{
+  this->path_mesh.destroy();
+  this->need_update = true;
+}
 
-void RenderWidget::reset_points() { this->points_instanced_mesh.destroy(); }
+void RenderWidget::reset_points()
+{
+  this->points_instanced_mesh.destroy();
+  this->need_update = true;
+}
 
-void RenderWidget::reset_rocks() { this->rocks_instanced_mesh.destroy(); }
+void RenderWidget::reset_rocks()
+{
+  this->rocks_instanced_mesh.destroy();
+  this->need_update = true;
+}
 
-void RenderWidget::reset_trees() { this->trees_instanced_mesh.destroy(); }
+void RenderWidget::reset_trees()
+{
+  this->trees_instanced_mesh.destroy();
+  this->need_update = true;
+}
 
 void RenderWidget::resizeEvent(QResizeEvent *event)
 {
   QOpenGLWidget::resizeEvent(event);
-
-  // TODO update buffers
-  this->repaint();
+  this->need_update = true;
 }
 
 void RenderWidget::resizeGL(int w, int h)
 {
   this->glViewport(0, 0, w, h);
   ImGui::GetIO().DisplaySize = ImVec2(float(w), float(h));
-  this->repaint();
+  this->need_update = true;
 }
 
 void RenderWidget::set_common_uniforms(QOpenGLShaderProgram &shader,
@@ -311,6 +340,8 @@ void RenderWidget::set_heightmap_geometry(const std::vector<float> &data,
 
   // also generate the heightmap texture
   this->texture_hmap.from_float_vector(data, width);
+
+  this->need_update = true;
 }
 
 void RenderWidget::set_path(const std::vector<float> &x,
@@ -336,6 +367,8 @@ void RenderWidget::set_path(const std::vector<float> &x,
   // TODO scale with point value
 
   generate_path(path_mesh, points, 0.01f);
+
+  this->need_update = true;
 }
 
 void RenderWidget::set_points(const std::vector<float> &x,
@@ -367,6 +400,8 @@ void RenderWidget::set_points(const std::vector<float> &x,
   generate_sphere(*sphere_mesh, 1.f);
 
   this->points_instanced_mesh.create(sphere_mesh, instances);
+
+  this->need_update = true;
 }
 
 void RenderWidget::set_rocks(const std::vector<float> &x,
@@ -399,6 +434,8 @@ void RenderWidget::set_rocks(const std::vector<float> &x,
   generate_rock(*mesh, 1.f, 0.3f, 0);
 
   this->rocks_instanced_mesh.create(mesh, instances);
+
+  this->need_update = true;
 }
 
 void RenderWidget::set_texture_albedo(const std::vector<uint8_t> &data, int width)
@@ -406,6 +443,7 @@ void RenderWidget::set_texture_albedo(const std::vector<uint8_t> &data, int widt
   QTR_LOG->trace("RenderWidget::set_texture_albedo");
 
   this->texture_albedo.from_image_8bit_rgba(data, width);
+  this->need_update = true;
 }
 
 void RenderWidget::set_texture_normal(const std::vector<uint8_t> &data, int width)
@@ -413,6 +451,7 @@ void RenderWidget::set_texture_normal(const std::vector<uint8_t> &data, int widt
   QTR_LOG->trace("RenderWidget::set_texture_normal");
 
   this->texture_normal.from_image_8bit_rgb(data, width);
+  this->need_update = true;
 }
 
 void RenderWidget::set_trees(const std::vector<float> &x,
@@ -446,6 +485,8 @@ void RenderWidget::set_trees(const std::vector<float> &x,
   generate_tree(*mesh, r, 0.1f * r, 5.f * r, r, 5);
 
   this->trees_instanced_mesh.create(mesh, instances);
+
+  this->need_update = true;
 }
 
 void RenderWidget::set_water_geometry(const std::vector<float> &data,
@@ -471,6 +512,8 @@ void RenderWidget::set_water_geometry(const std::vector<float> &data,
                      add_skirt,
                      add_level,
                      exclude_below);
+
+  this->need_update = true;
 }
 
 void RenderWidget::setup_gl_state()
