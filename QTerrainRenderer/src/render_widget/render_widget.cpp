@@ -109,40 +109,6 @@ void RenderWidget::initializeGL()
 
   this->update_water_plane();
 
-  {
-    // float r = 0.001f;
-
-    // auto tree_mesh = std::make_shared<Mesh>();
-    // generate_tree(*tree_mesh, r, 0.1f * r, 5.f * r, r, 4);
-
-    // // glm::vec3(0.2f, rd(0.2f, 0.8f), 0.2f)
-
-    // auto rock_mesh = std::make_shared<Mesh>();
-    // generate_rock_mesh(*rock_mesh, r, 0.3f, 0, 2);
-
-    // auto sphere_mesh = std::make_shared<Mesh>();
-    // generate_sphere(*sphere_mesh, r);
-
-    // // 2. Fill instances
-    // std::vector<BaseInstance> instances;
-    // for (int i = 0; i < 50000; ++i)
-    // {
-    //   auto rd = [](float a, float b) { return a + (b - a) * std::rand() / RAND_MAX; };
-
-    //   // float v = rd(0.3f, 0.5f);
-    //   // glm::vec3 c = glm::vec3(v, v, v);
-
-    //   glm::vec3 c = glm::vec3(0.2f, rd(0.2f, 0.8f), 0.2f);
-
-    //   instances.push_back({glm::vec3(rd(-1, 1), 0.1f, rd(-1, 1)),
-    //                        rd(0.5f, 2.0f),
-    //                        rd(0.0f, glm::two_pi<float>()),
-    //                        c});
-    // }
-
-    // instanced_mesh.create(tree_mesh, instances);
-  }
-
   // depth buffer
   int depth_map_res = 256;
   this->texture_depth.generate_depth_texture(depth_map_res, depth_map_res, false);
