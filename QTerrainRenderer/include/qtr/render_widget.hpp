@@ -39,6 +39,8 @@ public:
   QSize sizeHint() const override;
 
   // --- Geometry
+  void clear(); // geom and texture
+
   void set_heightmap_geometry(const std::vector<float> &data,
                               int                       width,
                               int                       height,
@@ -89,7 +91,6 @@ protected:
   void resizeEvent(QResizeEvent *event) override;
 
   // --- Rendering
-  void clear();
   void paintGL() override;
   void render_scene();
   void render_depth_map(const glm::mat4 &model,
