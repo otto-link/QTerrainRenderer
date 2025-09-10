@@ -30,11 +30,20 @@ void RenderWidget::render_depth_map(const glm::mat4 &model,
     p_shader->setUniformValue("view", toQMat(view));
     p_shader->setUniformValue("projection", toQMat(projection));
 
-    this->plane.draw();
-    this->hmap.draw();
-    this->rocks_instanced_mesh.draw(p_shader);
-    this->trees_instanced_mesh.draw(p_shader);
-    this->water_plane.draw();
+    if (this->render_plane)
+      this->plane.draw();
+
+    if (this->render_hmap)
+      this->hmap.draw();
+
+    if (this->render_rocks)
+      this->rocks_instanced_mesh.draw(p_shader);
+
+    if (this->render_trees)
+      this->trees_instanced_mesh.draw(p_shader);
+
+    if (this->render_water)
+      this->water_plane.draw();
 
     p_shader->release();
 

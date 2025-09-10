@@ -2,6 +2,7 @@
    License. The full license is in the file LICENSE, distributed with this software. */
 #include <glm/gtc/constants.hpp>
 
+#include "qtr/logger.hpp"
 #include "qtr/mesh.hpp"
 
 namespace qtr

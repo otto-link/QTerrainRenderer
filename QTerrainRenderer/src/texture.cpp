@@ -42,7 +42,8 @@ void Texture::destroy()
 
 bool Texture::from_float_vector(const std::vector<float> &data, int new_width)
 {
-  QOpenGLFunctions_3_3_Core::initializeOpenGLFunctions();
+  this->initializeOpenGLFunctions();
+  // QOpenGLFunctions_3_3_Core::initializeOpenGLFunctions();
   this->destroy();
 
   this->width = new_width;
@@ -77,7 +78,8 @@ bool Texture::from_float_vector(const std::vector<float> &data, int new_width)
 
 bool Texture::from_image_8bit_grayscale(const std::vector<uint8_t> &img, int new_width)
 {
-  QOpenGLFunctions_3_3_Core::initializeOpenGLFunctions();
+  this->initializeOpenGLFunctions();
+  // QOpenGLFunctions_3_3_Core::initializeOpenGLFunctions();
   this->destroy();
 
   this->width = new_width;
@@ -108,7 +110,8 @@ bool Texture::from_image_8bit_grayscale(const std::vector<uint8_t> &img, int new
 
 bool Texture::from_image_8bit_rgb(const std::vector<uint8_t> &img, int new_width)
 {
-  QOpenGLFunctions_3_3_Core::initializeOpenGLFunctions();
+  this->initializeOpenGLFunctions();
+  // QOpenGLFunctions_3_3_Core::initializeOpenGLFunctions();
   this->destroy();
 
   this->width = new_width;
@@ -144,7 +147,8 @@ bool Texture::from_image_8bit_rgb(const std::vector<uint8_t> &img, int new_width
 
 bool Texture::from_image_8bit_rgba(const std::vector<uint8_t> &img, int new_width)
 {
-  QOpenGLFunctions_3_3_Core::initializeOpenGLFunctions();
+  this->initializeOpenGLFunctions();
+  // QOpenGLFunctions_3_3_Core::initializeOpenGLFunctions();
   this->destroy();
 
   this->width = new_width;
@@ -180,7 +184,8 @@ bool Texture::from_image_8bit_rgba(const std::vector<uint8_t> &img, int new_widt
 
 bool Texture::from_image_16bit_grayscale(const std::vector<uint16_t> &img, int new_width)
 {
-  QOpenGLFunctions_3_3_Core::initializeOpenGLFunctions();
+  this->initializeOpenGLFunctions();
+  // QOpenGLFunctions_3_3_Core::initializeOpenGLFunctions();
   this->destroy();
 
   this->width = new_width;
@@ -213,7 +218,8 @@ void Texture::generate_depth_texture(int  new_width,
                                      int  new_height,
                                      bool force_border_color)
 {
-  QOpenGLFunctions_3_3_Core::initializeOpenGLFunctions();
+  this->initializeOpenGLFunctions();
+  // QOpenGLFunctions_3_3_Core::initializeOpenGLFunctions();
   this->destroy();
 
   this->width = new_width;

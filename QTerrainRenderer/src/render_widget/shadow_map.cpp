@@ -44,14 +44,17 @@ void RenderWidget::render_shadow_map(const glm::mat4 &model,
     p_shader->setUniformValue("light_space_matrix", toQMat(light_space_matrix));
     p_shader->setUniformValue("model", toQMat(model));
 
-    this->plane.draw();
-    this->hmap.draw();
-    this->rocks_instanced_mesh.draw(p_shader);
-    this->trees_instanced_mesh.draw(p_shader);
+    if (this->render_plane)
+      this->plane.draw();
 
-    // water_plane.draw();
-    // points_mesh.draw();
-    // path_mesh.draw();
+    if (this->render_hmap)
+      this->hmap.draw();
+
+    if (this->render_rocks)
+      this->rocks_instanced_mesh.draw(p_shader);
+
+    if (this->render_trees)
+      this->trees_instanced_mesh.draw(p_shader);
 
     p_shader->release();
 

@@ -12,7 +12,7 @@ Shader::~Shader() { this->destroy(); }
 
 bool Shader::from_code(const std::string &vertex_code, const std::string &fragment_code)
 {
-  QOpenGLFunctions_3_3_Core::initializeOpenGLFunctions();
+  // QOpenGLFunctions_3_3_Core::initializeOpenGLFunctions();
 
   this->destroy();
   this->sp_program = std::make_unique<QOpenGLShaderProgram>();
@@ -51,7 +51,7 @@ bool Shader::from_code(const std::string &vertex_code, const std::string &fragme
 
 bool Shader::from_file(const std::string &vertex_path, const std::string &fragment_path)
 {
-  QOpenGLFunctions_3_3_Core::initializeOpenGLFunctions();
+  // QOpenGLFunctions_3_3_Core::initializeOpenGLFunctions();
 
   // Helper lambda to read file contents into a string
   auto read_file = [](const std::string &path) -> std::string

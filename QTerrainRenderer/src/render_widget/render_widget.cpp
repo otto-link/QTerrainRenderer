@@ -59,6 +59,8 @@ void RenderWidget::clear()
 {
   QTR_LOG->trace("RenderWidget::clear");
 
+  this->makeCurrent();
+
   this->reset_heightmap_geometry();
   this->reset_water_geometry();
   this->reset_points();
@@ -69,13 +71,16 @@ void RenderWidget::clear()
   this->reset_texture_normal();
 
   this->need_update = true;
+
+  this->doneCurrent();
 }
 
 void RenderWidget::initializeGL()
 {
   QTR_LOG->trace("RenderWidget::initializeGL");
 
-  QOpenGLFunctions_3_3_Core::initializeOpenGLFunctions();
+  this->makeCurrent();
+  this->initializeOpenGLFunctions();
 
   // shaders (NB, context needs to be set beforehand...)
   QTR_LOG->trace("RenderWidget::initializeGL: setting up shaders...");
@@ -107,7 +112,6 @@ void RenderWidget::initializeGL()
                                                 shadow_map_lit_pass_frag);
 
   generate_plane(this->plane, 0.f, 0.f, 0.f, 4.f, 4.f);
-
   this->update_water_plane();
 
   // depth buffer
@@ -162,6 +166,8 @@ void RenderWidget::initializeGL()
 
   // OpenGL3 backend
   ImGui_ImplOpenGL3_Init("#version 330");
+
+  this->doneCurrent();
 }
 
 void RenderWidget::reset_camera_position()
@@ -181,9 +187,11 @@ void RenderWidget::reset_camera_position()
 
 void RenderWidget::reset_heightmap_geometry()
 {
+  this->makeCurrent();
   this->hmap.destroy();
   this->texture_hmap.destroy();
   this->need_update = true;
+  this->doneCurrent();
 }
 
 void RenderWidget::reset_water_geometry()
@@ -279,6 +287,7 @@ void RenderWidget::set_common_uniforms(QOpenGLShaderProgram &shader,
   shader.setUniformValue("ambiant_occlusion_radius", ambiant_occlusion_radius);
 
   // Rendering settings
+  shader.setUniformValue("has_instances", false);
   shader.setUniformValue("scale_h", scale_h);
   shader.setUniformValue("hmap_h0", this->hmap_h0);
   shader.setUniformValue("hmap_h", this->hmap_h);
@@ -306,6 +315,8 @@ void RenderWidget::set_heightmap_geometry(const std::vector<float> &data,
 {
   QTR_LOG->trace("RenderWidget::set_heightmap_geometry");
 
+  this->makeCurrent();
+
   generate_heightmap(this->hmap,
                      data,
                      width,
@@ -323,8 +334,8 @@ void RenderWidget::set_heightmap_geometry(const std::vector<float> &data,
 
   // also generate the heightmap texture
   this->texture_hmap.from_float_vector(data, width);
-
   this->need_update = true;
+  this->doneCurrent();
 }
 
 void RenderWidget::set_path(const std::vector<float> &x,
@@ -332,6 +343,8 @@ void RenderWidget::set_path(const std::vector<float> &x,
                             const std::vector<float> &h)
 {
   QTR_LOG->trace("RenderWidget::set_path");
+
+  this->makeCurrent();
 
   if (x.size() != y.size() || x.size() != h.size())
     throw std::invalid_argument("RenderWidget::set_path: vector sizes does not match");
@@ -350,8 +363,8 @@ void RenderWidget::set_path(const std::vector<float> &x,
   // TODO scale with point value
 
   generate_path(path_mesh, points, 0.01f);
-
   this->need_update = true;
+  this->doneCurrent();
 }
 
 void RenderWidget::set_points(const std::vector<float> &x,
@@ -359,6 +372,8 @@ void RenderWidget::set_points(const std::vector<float> &x,
                               const std::vector<float> &h)
 {
   QTR_LOG->trace("RenderWidget::set_points");
+
+  this->makeCurrent();
 
   if (x.size() != y.size() || x.size() != h.size())
     throw std::invalid_argument("RenderWidget::set_points: vector sizes does not match");
@@ -383,8 +398,8 @@ void RenderWidget::set_points(const std::vector<float> &x,
   generate_sphere(*sphere_mesh, 1.f);
 
   this->points_instanced_mesh.create(sphere_mesh, instances);
-
   this->need_update = true;
+  this->doneCurrent();
 }
 
 void RenderWidget::set_rocks(const std::vector<float> &x,
@@ -393,6 +408,8 @@ void RenderWidget::set_rocks(const std::vector<float> &x,
                              const std::vector<float> &radius)
 {
   QTR_LOG->trace("RenderWidget::set_rocks");
+
+  this->makeCurrent();
 
   if (x.size() != y.size() || x.size() != h.size() || x.size() != radius.size())
     throw std::invalid_argument("RenderWidget::set_rocks: vector sizes does not match");
@@ -417,13 +434,15 @@ void RenderWidget::set_rocks(const std::vector<float> &x,
   generate_rock(*mesh, 1.f, 0.3f, 0);
 
   this->rocks_instanced_mesh.create(mesh, instances);
-
   this->need_update = true;
+  this->doneCurrent();
 }
 
 void RenderWidget::set_texture_albedo(const std::vector<uint8_t> &data, int width)
 {
   QTR_LOG->trace("RenderWidget::set_texture_albedo");
+
+  this->makeCurrent();
 
   this->texture_albedo.from_image_8bit_rgba(data, width);
   this->need_update = true;
@@ -432,6 +451,8 @@ void RenderWidget::set_texture_albedo(const std::vector<uint8_t> &data, int widt
 void RenderWidget::set_texture_normal(const std::vector<uint8_t> &data, int width)
 {
   QTR_LOG->trace("RenderWidget::set_texture_normal");
+
+  this->makeCurrent();
 
   this->texture_normal.from_image_8bit_rgb(data, width);
   this->need_update = true;
@@ -443,6 +464,8 @@ void RenderWidget::set_trees(const std::vector<float> &x,
                              const std::vector<float> &radius)
 {
   QTR_LOG->trace("RenderWidget::set_trees");
+
+  this->makeCurrent();
 
   if (x.size() != y.size() || x.size() != h.size() || x.size() != radius.size())
     throw std::invalid_argument("RenderWidget::set_trees: vector sizes does not match");
@@ -468,8 +491,8 @@ void RenderWidget::set_trees(const std::vector<float> &x,
   generate_tree(*mesh, r, 0.1f * r, 5.f * r, r, 5);
 
   this->trees_instanced_mesh.create(mesh, instances);
-
   this->need_update = true;
+  this->doneCurrent();
 }
 
 void RenderWidget::set_water_geometry(const std::vector<float> &data,
@@ -478,6 +501,8 @@ void RenderWidget::set_water_geometry(const std::vector<float> &data,
                                       float                     exclude_below)
 {
   QTR_LOG->trace("RenderWidget::set_water_geometry");
+
+  this->makeCurrent();
 
   bool  add_skirt = false;
   float add_level = 0.f;
@@ -497,6 +522,7 @@ void RenderWidget::set_water_geometry(const std::vector<float> &data,
                      exclude_below);
 
   this->need_update = true;
+  this->doneCurrent();
 }
 
 void RenderWidget::setup_gl_state()

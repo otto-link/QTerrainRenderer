@@ -12,7 +12,7 @@ Mesh::~Mesh() { this->destroy(); }
 
 void Mesh::create(const std::vector<Vertex> &vertices, const std::vector<uint> &indices)
 {
-  QOpenGLFunctions_3_3_Core::initializeOpenGLFunctions();
+  this->initializeOpenGLFunctions();
   this->destroy();
 
   this->vertex_count = vertices.size();
@@ -41,6 +41,10 @@ void Mesh::create(const std::vector<Vertex> &vertices, const std::vector<uint> &
                  indices.data(),
                  GL_STATIC_DRAW);
   }
+  else
+  {
+    this->ebo = 0;
+  }
 
   // Vertex attributes
   GLsizei stride = sizeof(Vertex);
@@ -58,7 +62,7 @@ void Mesh::create(const std::vector<Vertex> &vertices, const std::vector<uint> &
 
 void Mesh::draw()
 {
-  if (!this->vbo)
+  if (!this->vbo && !this->vao)
     return;
 
   glBindVertexArray(this->vao);
@@ -94,7 +98,7 @@ size_t Mesh::get_index_count() const { return this->index_count; }
 
 GLuint Mesh::get_vao() const { return this->vao; }
 
-bool Mesh::is_active() const { return (this->vbo); }
+bool Mesh::is_active() const { return (this->vbo && this->vao); }
 
 void Mesh::update_vertices(const std::vector<Vertex> &vertices)
 {
