@@ -110,6 +110,11 @@ void RenderWidget::json_from(nlohmann::json const &json)
   json_safe_get(json, "fog_density", fog_density);
   json_safe_get(json, "fog_height", fog_height);
   json_safe_get(json, "add_atmospheric_scattering", add_atmospheric_scattering);
+  json_safe_get(json, "scattering_density", scattering_density);
+  json_safe_get(json, "rayleigh_color", rayleigh_color);
+  json_safe_get(json, "mie_color", mie_color);
+  json_safe_get(json, "fog_strength", fog_strength);
+  json_safe_get(json, "fog_scattering_ratio", fog_scattering_ratio);
 }
 
 nlohmann::json RenderWidget::json_to() const
@@ -199,6 +204,11 @@ nlohmann::json RenderWidget::json_to() const
       {"fog_density", fog_density},
       {"fog_height", fog_height},
       {"add_atmospheric_scattering", add_atmospheric_scattering},
+      {"scattering_density", scattering_density},
+      {"rayleigh_color", rayleigh_color},
+      {"mie_color", mie_color},
+      {"fog_strength", fog_strength},
+      {"fog_scattering_ratio", fog_scattering_ratio},
 
       // other classes
       {"camera", this->camera.json_to()},

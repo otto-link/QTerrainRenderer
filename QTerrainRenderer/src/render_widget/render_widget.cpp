@@ -298,10 +298,15 @@ void RenderWidget::set_common_uniforms(QOpenGLShaderProgram &shader,
 
   // Effects
   shader.setUniformValue("add_fog", add_fog);
-  shader.setUniformValue("add_atmospheric_scattering", add_atmospheric_scattering);
   shader.setUniformValue("fog_color", toQVec(fog_color));
   shader.setUniformValue("fog_density", fog_density);
   shader.setUniformValue("fog_height", fog_height);
+  shader.setUniformValue("add_atmospheric_scattering", add_atmospheric_scattering);
+  shader.setUniformValue("scattering_density", scattering_density);
+  shader.setUniformValue("rayleigh_color", toQVec(rayleigh_color));
+  shader.setUniformValue("mie_color", toQVec(mie_color));
+  shader.setUniformValue("fog_strength", fog_strength);
+  shader.setUniformValue("fog_scattering_ratio", fog_scattering_ratio);
 
   // Reset per-object flags
   shader.setUniformValue("use_texture_albedo", false);

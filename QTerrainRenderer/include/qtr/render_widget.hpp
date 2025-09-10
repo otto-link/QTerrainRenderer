@@ -212,9 +212,14 @@ private:
   // --- Environmental effects
   bool      add_fog = false;
   glm::vec3 fog_color = glm::vec3(1.f, 1.f, 1.f);
-  float     fog_density = 50.0;
-  float     fog_height = 0.1;
+  float     fog_density = 50.0f;
+  float     fog_height = 0.1f;
   bool      add_atmospheric_scattering = false;
+  float     scattering_density = 0.1f;
+  glm::vec3 rayleigh_color = glm::vec3(0.4f, 0.6f, 1.0f); // bluish
+  glm::vec3 mie_color = glm::vec3(1.0f, 0.8f, 0.7f);      // whitish/yellowish
+  float     fog_strength = 0.5f;
+  float     fog_scattering_ratio = 0.7f;
 
   // --- OpenGL resources
   std::unique_ptr<ShaderManager> sp_shader_manager;

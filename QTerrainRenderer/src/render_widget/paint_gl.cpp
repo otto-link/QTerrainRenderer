@@ -294,6 +294,14 @@ void RenderWidget::render_ui()
     changed |= ImGui::ColorEdit3("Color##fog", glm::value_ptr(this->fog_color));
 
     changed |= ImGui::Checkbox("Scattering", &this->add_atmospheric_scattering);
+    changed |= ImGui::SliderFloat("Density##scat", &this->scattering_density, 0.f, 1.f);
+    changed |= ImGui::SliderFloat("Fog strength##scat", &this->fog_strength, 0.f, 1.f);
+    changed |= ImGui::SliderFloat("Scattering ratio##scat",
+                                  &this->fog_scattering_ratio,
+                                  0.f,
+                                  1.f);
+    changed |= ImGui::ColorEdit3("Rayleigh color", glm::value_ptr(this->rayleigh_color));
+    changed |= ImGui::ColorEdit3("Mie color", glm::value_ptr(this->mie_color));
   }
 
   // --- End main window ---

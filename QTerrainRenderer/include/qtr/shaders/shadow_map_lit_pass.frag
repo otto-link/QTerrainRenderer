@@ -85,7 +85,12 @@ uniform float fog_density;
 uniform float fog_height;
 
 // --- Atmospheric scattering
-uniform bool add_atmospheric_scattering;
+uniform bool  add_atmospheric_scattering;
+uniform float scattering_density;
+uniform vec3  rayleigh_color;
+uniform vec3  mie_color;
+uniform float fog_strength;
+uniform float fog_scattering_ratio;
 
 // --- Postprocessing
 uniform float gamma_correction;
@@ -517,18 +522,11 @@ void main()
 
   if (add_atmospheric_scattering)
   {
-    float fog_density = 0.2;
     int   num_steps = 32;
-    vec3  fog_color = vec3(1.0, 1.0, 1.0);
     vec3  light_color = vec3(1.0, 1.0, 1.0);
     float hg_g = 0.7;
-    float rayleigh_height = 1.0;
-    float mie_height = 0.7;
-    vec3  rayleigh_color = vec3(0.5, 0.7, 1.0); // bluish
-    vec3  mie_color = vec3(1.0, 0.8, 0.7);      // whitish/yellowish
-
-    float fog_strength = 0.5;
-    float fog_scattering_ratio = 0.7;
+    float rayleigh_height = 0.4;
+    float mie_height = 0.1;
 
     // Ray direction (from camera to fragment)
     vec3  ray_dir = normalize(frag_pos - camera_pos);
@@ -550,7 +548,7 @@ void main()
 
       // simple exponential fog
       float dist = length(sample_pos - camera_pos);
-      float density = exp(-fog_density * dist) * step_size;
+      float density = exp(-scattering_density * dist) * step_size;
       density *= (0.8 + 0.2 * hash(sample_pos * 0.1));
 
       // Shadow test
@@ -588,7 +586,7 @@ void main()
 
     frag_color.xyz = mix(frag_color.xyz,
                          fogged,
-                         clamp(fog_density * ray_length, 0.0, fog_strength));
+                         clamp(scattering_density * ray_length, 0.0, fog_strength));
   }
 
   if (apply_tonemap)
