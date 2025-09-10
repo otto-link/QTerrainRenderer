@@ -522,10 +522,10 @@ void main()
     vec3  fog_color = vec3(1.0, 1.0, 1.0);
     vec3  light_color = vec3(1.0, 1.0, 1.0);
     float hg_g = 0.7;
-    float rayleigh_height = 0.8;
-    float mie_height = 0.4;
+    float rayleigh_height = 1.0;
+    float mie_height = 0.7;
     vec3  rayleigh_color = vec3(0.5, 0.7, 1.0); // bluish
-    vec3  mie_color = vec3(1.0, 0.9, 0.8);      // whitish/yellowish
+    vec3  mie_color = vec3(1.0, 0.8, 0.7);      // whitish/yellowish
 
     float fog_strength = 0.5;
     float fog_scattering_ratio = 0.7;

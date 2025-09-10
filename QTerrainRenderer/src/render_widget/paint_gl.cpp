@@ -291,6 +291,7 @@ void RenderWidget::render_ui()
     changed |= ImGui::Checkbox("Fog", &this->add_fog);
     changed |= ImGui::SliderFloat("Density##fog", &this->fog_density, 0.f, 100.f);
     changed |= ImGui::SliderFloat("Height##fog", &this->fog_height, 0.f, 1.f);
+    changed |= ImGui::ColorEdit3("Color##fog", glm::value_ptr(this->fog_color));
 
     changed |= ImGui::Checkbox("Scattering", &this->add_atmospheric_scattering);
   }
