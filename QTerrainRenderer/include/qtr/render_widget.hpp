@@ -210,8 +210,11 @@ private:
   float waves_speed = 0.2f;
 
   // --- Environmental effects
-  bool add_fog = false;
-  bool add_atmospheric_scattering = false;
+  bool      add_fog = false;
+  glm::vec3 fog_color = glm::vec3(1.f, 1.f, 1.f);
+  float     fog_density = 50.0;
+  float     fog_height = 0.1;
+  bool      add_atmospheric_scattering = false;
 
   // --- OpenGL resources
   std::unique_ptr<ShaderManager> sp_shader_manager;

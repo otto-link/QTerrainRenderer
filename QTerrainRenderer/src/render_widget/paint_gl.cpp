@@ -289,6 +289,9 @@ void RenderWidget::render_ui()
   if (ImGui::CollapsingHeader("Atmosphere", ImGuiTreeNodeFlags_DefaultOpen))
   {
     changed |= ImGui::Checkbox("Fog", &this->add_fog);
+    changed |= ImGui::SliderFloat("Density##fog", &this->fog_density, 0.f, 100.f);
+    changed |= ImGui::SliderFloat("Height##fog", &this->fog_height, 0.f, 1.f);
+
     changed |= ImGui::Checkbox("Scattering", &this->add_atmospheric_scattering);
   }
 

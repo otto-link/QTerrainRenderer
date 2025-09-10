@@ -79,7 +79,10 @@ uniform float waves_normal_amplitude;
 uniform float waves_speed;
 
 // --- Fog
-uniform bool add_fog;
+uniform bool  add_fog;
+uniform vec3  fog_color;
+uniform float fog_density;
+uniform float fog_height;
 
 // --- Atmospheric scattering
 uniform bool add_atmospheric_scattering;
@@ -494,10 +497,6 @@ void main()
 
   if (add_fog)
   {
-    float fog_density = 50.0;
-    vec3  fog_color = vec3(1.0, 1.0, 1.0);
-    float fog_height = 0.1;
-
     if (frag_pos.y > 0.0)
     {
       // fetch depth

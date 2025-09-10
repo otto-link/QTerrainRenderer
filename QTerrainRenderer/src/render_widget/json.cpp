@@ -106,6 +106,9 @@ void RenderWidget::json_from(nlohmann::json const &json)
 
   // Environment
   json_safe_get(json, "add_fog", add_fog);
+  json_safe_get(json, "fog_color", fog_color);
+  json_safe_get(json, "fog_density", fog_density);
+  json_safe_get(json, "fog_height", fog_height);
   json_safe_get(json, "add_atmospheric_scattering", add_atmospheric_scattering);
 }
 
@@ -192,6 +195,9 @@ nlohmann::json RenderWidget::json_to() const
 
       // Environment
       {"add_fog", add_fog},
+      {"fog_color", fog_color},
+      {"fog_density", fog_density},
+      {"fog_height", fog_height},
       {"add_atmospheric_scattering", add_atmospheric_scattering},
 
       // other classes
