@@ -81,7 +81,7 @@ public:
   void set_texture_albedo(const std::vector<uint8_t> &data, int width); // RGBA 8bit
   void reset_texture_albedo();
 
-  void set_texture_normal(const std::vector<uint8_t> &data, int width); // RGB 8bit
+  void set_texture_normal(const std::vector<uint8_t> &data, int width); // RGBA 8bit
   void reset_texture_normal();
 
 protected:

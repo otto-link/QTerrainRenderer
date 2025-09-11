@@ -462,7 +462,7 @@ void RenderWidget::set_texture_normal(const std::vector<uint8_t> &data, int widt
 
   this->makeCurrent();
 
-  this->texture_normal.from_image_8bit_rgb(data, width);
+  this->texture_normal.from_image_8bit_rgba(data, width);
   this->need_update = true;
 }
 

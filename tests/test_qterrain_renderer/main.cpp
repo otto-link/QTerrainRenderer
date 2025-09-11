@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
 
   {
     int                  width, height;
-    std::vector<uint8_t> data = qtr::load_png_as_8bit_rgb("nmap2.png", width, height);
+    std::vector<uint8_t> data = qtr::load_png_as_8bit_rgba("nmap2.png", width, height);
 
     renderer->set_texture_normal(data, width);
     renderer->reset_texture_normal();
