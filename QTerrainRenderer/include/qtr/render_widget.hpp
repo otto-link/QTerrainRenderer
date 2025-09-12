@@ -77,7 +77,8 @@ public:
                  const std::vector<float> &radius);
   void reset_trees();
 
-  void update_water_plane();
+  float get_water_elevation() const;
+  void  update_water_plane();
 
   // --- Textures
   void set_texture_albedo(const std::vector<uint8_t> &data, int width); // RGBA 8bit

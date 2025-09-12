@@ -84,6 +84,8 @@ ImGuiIO &RenderWidget::get_imgui_io()
   return ImGui::GetIO();
 }
 
+float RenderWidget::get_water_elevation() const { return this->water_elevation; }
+
 void RenderWidget::initializeGL()
 {
   QTR_LOG->trace("RenderWidget::initializeGL");
