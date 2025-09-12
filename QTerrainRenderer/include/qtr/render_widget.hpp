@@ -11,6 +11,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include <imgui.h>
+
 #include "nlohmann/json.hpp"
 
 #include "qtr/camera.hpp"
@@ -110,12 +112,13 @@ protected:
   void update_time();
 
   // --- Input forwarding to ImGui
-  void mousePressEvent(QMouseEvent *e) override;
-  void mouseReleaseEvent(QMouseEvent *e) override;
-  void mouseMoveEvent(QMouseEvent *e) override;
-  void wheelEvent(QWheelEvent *e) override;
-  void keyPressEvent(QKeyEvent *e) override;
-  void keyReleaseEvent(QKeyEvent *e) override;
+  ImGuiIO &get_imgui_io();
+  void     mousePressEvent(QMouseEvent *e) override;
+  void     mouseReleaseEvent(QMouseEvent *e) override;
+  void     mouseMoveEvent(QMouseEvent *e) override;
+  void     wheelEvent(QWheelEvent *e) override;
+  void     keyPressEvent(QKeyEvent *e) override;
+  void     keyReleaseEvent(QKeyEvent *e) override;
 
 private:
   // --- Helpers
@@ -245,6 +248,9 @@ private:
   Texture texture_normal; // for details
   Texture texture_shadow_map;
   Texture texture_depth;
+
+  // --- ImGUI
+  ImGuiContext *imgui_context;
 };
 
 // --- Helpers

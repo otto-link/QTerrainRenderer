@@ -50,9 +50,12 @@ RenderWidget::RenderWidget(const std::string &_title, QWidget *parent)
 RenderWidget::~RenderWidget()
 {
   this->makeCurrent();
+  ImGui::SetCurrentContext(this->imgui_context);
   ImGui_ImplOpenGL3_Shutdown();
-  ImGui::DestroyContext();
+  ImGui::DestroyContext(this->imgui_context);
   this->doneCurrent();
+
+  this->imgui_context = nullptr;
 }
 
 void RenderWidget::clear()
@@ -73,6 +76,12 @@ void RenderWidget::clear()
   this->need_update = true;
 
   this->doneCurrent();
+}
+
+ImGuiIO &RenderWidget::get_imgui_io()
+{
+  ImGui::SetCurrentContext(this->imgui_context);
+  return ImGui::GetIO();
 }
 
 void RenderWidget::initializeGL()
@@ -160,7 +169,8 @@ void RenderWidget::initializeGL()
 
   // ImGui context
   IMGUI_CHECKVERSION();
-  ImGui::CreateContext();
+  this->imgui_context = ImGui::CreateContext();
+  ImGui::SetCurrentContext(this->imgui_context);
   ImGui::StyleColorsDark();
   imgui_set_blender_style();
 
@@ -245,7 +255,7 @@ void RenderWidget::resizeEvent(QResizeEvent *event)
 void RenderWidget::resizeGL(int w, int h)
 {
   this->glViewport(0, 0, w, h);
-  ImGui::GetIO().DisplaySize = ImVec2(float(w), float(h));
+  this->get_imgui_io().DisplaySize = ImVec2(float(w), float(h));
   this->need_update = true;
 }
 

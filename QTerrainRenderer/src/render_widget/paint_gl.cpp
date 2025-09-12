@@ -165,25 +165,11 @@ void RenderWidget::render_scene()
 
 void RenderWidget::render_ui()
 {
+  ImGui::SetCurrentContext(this->imgui_context);
   ImGui_ImplOpenGL3_NewFrame();
   ImGui::NewFrame();
 
   // --- Overlay: FPS ---
-  {
-    ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration |
-                             ImGuiWindowFlags_AlwaysAutoResize |
-                             ImGuiWindowFlags_NoSavedSettings |
-                             ImGuiWindowFlags_NoFocusOnAppearing |
-                             ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoMove;
-
-    ImGui::SetNextWindowBgAlpha(0.f);
-    ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_Always);
-
-    ImGui::Begin("Overlay", nullptr, flags);
-    ImGui::Text("%s - FPS: %.1f", this->title.c_str(), ImGui::GetIO().Framerate);
-    ImGui::End();
-  }
-
   bool changed = false;
 
   ImGui::SetNextWindowBgAlpha(0.95f);
@@ -309,7 +295,7 @@ void RenderWidget::render_ui()
   ImGui::End();
 
   // --- IO / camera control ---
-  ImGuiIO &io = ImGui::GetIO();
+  ImGuiIO &io = this->get_imgui_io();
 
   if (!io.WantCaptureMouse) // only outside the ImGUI window
   {
