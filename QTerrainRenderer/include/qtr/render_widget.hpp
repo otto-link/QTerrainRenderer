@@ -1,8 +1,6 @@
 /* Copyright (c) 2025 Otto Link. Distributed under the terms of the GNU General Public
    License. The full license is in the file LICENSE, distributed with this software. */
 #pragma once
-#include "qtr/windows_patch.hpp"
-
 #include <QElapsedTimer>
 #include <QOpenGLFunctions_3_3_Core>
 #include <QOpenGLWidget>
@@ -12,7 +10,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#define IMGUI_IMPL_OPENGL_LOADER_GLAD  
+
 #include <imgui.h>
 
 #include "nlohmann/json.hpp"
