@@ -35,4 +35,5 @@ target_link_libraries(
          Qt6::Widgets
          Qt6::OpenGL
          Qt6::OpenGLWidgets
-         imgui::imgui)
+         imgui::imgui
+         glfw3)

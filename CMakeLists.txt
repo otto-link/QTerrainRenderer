@@ -67,6 +67,7 @@ endif()
 find_package(nlohmann_json 3.11 REQUIRED)
 find_package(spdlog REQUIRED)
 find_package(Qt6 REQUIRED COMPONENTS Core Widgets OpenGL OpenGLWidgets)
+find_package(glfw3 CONFIG REQUIRED)
 
 add_subdirectory(external)
 add_subdirectory(QTerrainRenderer)

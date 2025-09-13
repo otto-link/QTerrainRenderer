@@ -18,4 +18,6 @@ set(IMGUI_INCLUDE_DIRECTORIES
 add_library(${PROJECT_NAME} STATIC ${IMGUI_SOURCE_FILES})
 add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 
+target_link_libraries(imgui PRIVATE glfw)
+
 target_include_directories(${PROJECT_NAME} PUBLIC ${IMGUI_INCLUDE_DIRECTORIES})
