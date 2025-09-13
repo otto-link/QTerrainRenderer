@@ -181,32 +181,6 @@ float phase_rayleigh(float cos_theta)
   return 3.0 / (16.0 * 3.1415926535) * (1.0 + cos_theta * cos_theta);
 }
 
-float compute_AO(vec2 uv, sampler2D hmap, int radius, float strength)
-{
-  vec2  texel_size = 1.0 / textureSize(hmap, 0);
-  float h = texture(hmap, uv).r;
-  float occ = 0.0;
-  int   count = 0;
-
-  for (int x = -radius; x <= radius; x++)
-    for (int y = -radius; y <= radius; y++)
-    {
-      if (x == 0 && y == 0)
-        continue;
-
-      float neighbor = texture(hmap, uv + vec2(x, y) * texel_size).r;
-      if (neighbor > h)
-        occ += neighbor - h;
-      count++;
-    }
-
-  occ = occ / float(count) * 2.0; // in [0 ,1]
-  occ *= strength;
-  occ = clamp(1.0 - occ, 0.0, 1.0);
-
-  return occ;
-}
-
 // horizonn-based ambiant occlusion
 float compute_hbao(vec2 uv, sampler2D hmap, float scale, int dir_count, int step_count)
 {

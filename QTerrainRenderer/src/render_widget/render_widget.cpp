@@ -1,10 +1,13 @@
 /* Copyright (c) 2025 Otto Link. Distributed under the terms of the GNU General Public
    License. The full license is in the file LICENSE, distributed with this software. */
+#include "qtr/windows_patch.hpp"
+
 #include <stdexcept>
 
 #include <QOpenGLFunctions>
 
-#include <backends/imgui_impl_opengl3.h>
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
 #include <imgui.h>
 
 #include "qtr/config.hpp"
@@ -91,6 +94,7 @@ void RenderWidget::initializeGL()
   QTR_LOG->trace("RenderWidget::initializeGL");
 
   this->makeCurrent();
+
   this->initializeOpenGLFunctions();
 
   // shaders (NB, context needs to be set beforehand...)
