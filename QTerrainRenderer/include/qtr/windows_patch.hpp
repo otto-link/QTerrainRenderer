@@ -5,9 +5,9 @@
 // include in the sources, not in the headers
 
 #ifdef _WIN32
-#   define WIN32_LEAN_AND_MEAN
-#   include <windows.h>
-#   undef IN
-#   undef OUT
-#   undef Data
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#undef IN
+#undef OUT
+#undef Data
 #endif

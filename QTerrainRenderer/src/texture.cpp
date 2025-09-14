@@ -2,9 +2,9 @@
  License. The full license is in the file LICENSE, distributed with this software. */
 #include "qtr/windows_patch.hpp"
 
-#include "qtr/texture.hpp"
 #include "qtr/gl_errors.hpp"
 #include "qtr/logger.hpp"
+#include "qtr/texture.hpp"
 
 namespace qtr
 {

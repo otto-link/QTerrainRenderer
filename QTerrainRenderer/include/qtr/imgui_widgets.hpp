@@ -6,7 +6,7 @@
 
 #include <glm/vec3.hpp>
 
-#define IMGUI_IMPL_OPENGL_LOADER_GLAD  
+#define IMGUI_IMPL_OPENGL_LOADER_GLAD
 #include <imgui.h>
 
 #include "qtr/water_colors.hpp"
