@@ -105,7 +105,8 @@ void TextureManager::bind_and_set(QOpenGLShaderProgram &shader)
   for (auto &[name, sp_tex] : this->textures)
   {
     const std::string tex_id = "texture_" + name;
-    sp_tex->bind_and_set(shader, tex_id, unit++);
+    sp_tex->bind_and_set(shader, tex_id, unit);
+    unit++;
   }
 }
 

@@ -11,7 +11,7 @@ void RenderWidget::render_depth_map(const glm::mat4 &model,
                                     const glm::mat4 &view,
                                     const glm::mat4 &projection)
 {
-  QOpenGLShaderProgram *p_shader = this->sp_shader_manager->get(QTR_TEX_DEPTH)->get();
+  QOpenGLShaderProgram *p_shader = this->sp_shader_manager->get("depth_map")->get();
 
   if (p_shader)
   {

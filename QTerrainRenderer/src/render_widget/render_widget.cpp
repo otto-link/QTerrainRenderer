@@ -125,7 +125,7 @@ void RenderWidget::initializeGL()
                                                 diffuse_basic_vertex,
                                                 diffuse_blinn_phong_frag);
 
-  this->sp_shader_manager->add_shader_from_code(QTR_TEX_DEPTH,
+  this->sp_shader_manager->add_shader_from_code("depth_map",
                                                 depth_map_vertex,
                                                 depth_map_frag);
 
@@ -234,14 +234,18 @@ void RenderWidget::reset_heightmap_geometry()
 
 void RenderWidget::reset_path()
 {
+  this->makeCurrent();
   this->path_mesh.destroy();
   this->need_update = true;
+  this->doneCurrent();
 }
 
 void RenderWidget::reset_points()
 {
+  this->makeCurrent();
   this->points_instanced_mesh.destroy();
   this->need_update = true;
+  this->doneCurrent();
 }
 
 void RenderWidget::reset_texture(const std::string &name)
@@ -251,6 +255,7 @@ void RenderWidget::reset_texture(const std::string &name)
   this->makeCurrent();
   this->sp_texture_manager->get(name)->destroy();
   this->need_update = true;
+  this->doneCurrent();
 }
 
 void RenderWidget::reset_textures()
@@ -258,26 +263,40 @@ void RenderWidget::reset_textures()
   QTR_LOG->trace("RenderWidget::reset_textures");
 
   this->makeCurrent();
-  this->sp_texture_manager->resets();
+
+  // /!\ do not reset the depth maps
+  const std::vector<std::string> tex_names = {QTR_TEX_ALBEDO,
+                                              QTR_TEX_HMAP,
+                                              QTR_TEX_NORMAL};
+  for (auto &s : tex_names)
+    this->sp_texture_manager->get(s)->destroy();
+
   this->need_update = true;
+  this->doneCurrent();
 }
 
 void RenderWidget::reset_water_geometry()
 {
+  this->makeCurrent();
   this->water_mesh.destroy();
   this->need_update = true;
+  this->doneCurrent();
 }
 
 void RenderWidget::reset_rocks()
 {
+  this->makeCurrent();
   this->rocks_instanced_mesh.destroy();
   this->need_update = true;
+  this->doneCurrent();
 }
 
 void RenderWidget::reset_trees()
 {
+  this->makeCurrent();
   this->trees_instanced_mesh.destroy();
   this->need_update = true;
+  this->doneCurrent();
 }
 
 void RenderWidget::resizeEvent(QResizeEvent *event)

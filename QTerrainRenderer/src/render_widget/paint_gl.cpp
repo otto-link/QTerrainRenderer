@@ -200,7 +200,7 @@ void RenderWidget::render_ui()
   // --- Materials ---
   if (ImGui::CollapsingHeader("Materials", ImGuiTreeNodeFlags_DefaultOpen))
   {
-    ImGui::Text(QTR_TEX_ALBEDO);
+    ImGui::Text("Albedo");
     changed |= ImGui::SliderFloat("Gamma", &this->gamma_correction, 0.01f, 4.f);
     changed |= ImGui::Checkbox("Bypass albedo", &this->bypass_texture_albedo);
     changed |= ImGui::Checkbox("Tonemap", &this->apply_tonemap);
