@@ -47,6 +47,19 @@ RenderWidget::RenderWidget(const std::string &_title, QWidget *parent)
   // init.
   this->timer.start(); // global timer
   this->reset_camera_position();
+
+  // managers
+  this->sp_shader_manager = std::make_unique<ShaderManager>();
+  this->sp_texture_manager = std::make_unique<TextureManager>();
+
+  // add placeholder for each texture
+  const std::vector<std::string> tex_names = {QTR_TEX_ALBEDO,
+                                              QTR_TEX_HMAP,
+                                              QTR_TEX_NORMAL,
+                                              QTR_TEX_SHADOW_MAP,
+                                              QTR_TEX_DEPTH};
+  for (auto &s : tex_names)
+    this->sp_texture_manager->add(s);
 }
 
 RenderWidget::~RenderWidget()
@@ -73,6 +86,8 @@ void RenderWidget::clear()
   this->reset_rocks();
   this->reset_trees();
 
+  this->reset_textures();
+
   this->need_update = true;
 
   this->doneCurrent();
@@ -97,8 +112,6 @@ void RenderWidget::initializeGL()
   // --- Shaders
 
   QTR_LOG->trace("RenderWidget::initializeGL: setting up shaders...");
-
-  this->sp_shader_manager = std::make_unique<ShaderManager>();
 
   this->sp_shader_manager->add_shader_from_code("diffuse_basic",
                                                 diffuse_basic_vertex,
@@ -125,17 +138,6 @@ void RenderWidget::initializeGL()
                                                 shadow_map_lit_pass_frag);
 
   // --- Textures
-
-  this->sp_texture_manager = std::make_unique<TextureManager>();
-
-  // add placeholder for each texture
-  const std::vector<std::string> tex_names = {QTR_TEX_ALBEDO,
-                                              QTR_TEX_HMAP,
-                                              QTR_TEX_NORMAL,
-                                              QTR_TEX_SHADOW_MAP,
-                                              QTR_TEX_DEPTH};
-  for (auto &s : tex_names)
-    this->sp_texture_manager->add(s);
 
   // depth buffer
   {
@@ -224,7 +226,8 @@ void RenderWidget::reset_heightmap_geometry()
 {
   this->makeCurrent();
   this->hmap.destroy();
-  this->sp_texture_manager->get(QTR_TEX_HMAP)->destroy();
+  if (this->sp_texture_manager->get(QTR_TEX_HMAP))
+    this->sp_texture_manager->get(QTR_TEX_HMAP)->destroy();
   this->need_update = true;
   this->doneCurrent();
 }

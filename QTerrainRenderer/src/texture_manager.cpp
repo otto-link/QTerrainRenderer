@@ -117,8 +117,13 @@ void TextureManager::clear()
 
 Texture *TextureManager::get(const std::string &name)
 {
-  auto it = this->textures.find(name);
-  return (it != this->textures.end()) ? it->second.get() : nullptr;
+  auto     it = this->textures.find(name);
+  Texture *ptr = (it != this->textures.end()) ? it->second.get() : nullptr;
+
+  if (!ptr)
+    QTR_LOG->error("TextureManager::get: unknown texture id {}", name);
+
+  return ptr;
 }
 
 void TextureManager::resets()
