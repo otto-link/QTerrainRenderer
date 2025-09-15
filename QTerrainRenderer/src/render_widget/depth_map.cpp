@@ -2,7 +2,6 @@
    License. The full license is in the file LICENSE, distributed with this software. */
 #include "qtr/windows_patch.hpp"
 
-#include "qtr/gl_errors.hpp"
 #include "qtr/render_widget.hpp"
 
 namespace qtr
@@ -50,8 +49,6 @@ void RenderWidget::render_depth_map(const glm::mat4 &model,
     p_shader->release();
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-    check_gl_error("RenderWidget::render_depth_map: render depth map");
 
     // set previous FBO back
     glBindFramebuffer(GL_FRAMEBUFFER, previous_fbo);

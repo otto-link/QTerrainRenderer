@@ -11,7 +11,6 @@
 #include <imgui.h>
 
 #include "qtr/config.hpp"
-#include "qtr/gl_errors.hpp"
 #include "qtr/imgui_widgets.hpp"
 #include "qtr/logger.hpp"
 #include "qtr/mesh.hpp"
@@ -145,8 +144,6 @@ void RenderWidget::initializeGL()
     glDrawBuffer(GL_NONE);
     glReadBuffer(GL_NONE);
 
-    check_gl_error("Texture::initializeGL: attach FBO");
-
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
   }
 
@@ -165,8 +162,6 @@ void RenderWidget::initializeGL()
                            0);
     glDrawBuffer(GL_NONE);
     glReadBuffer(GL_NONE);
-
-    check_gl_error("Texture::initializeGL: attach FBO");
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
   }

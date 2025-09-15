@@ -2,7 +2,6 @@
  License. The full license is in the file LICENSE, distributed with this software. */
 #include "qtr/windows_patch.hpp"
 
-#include "qtr/gl_errors.hpp"
 #include "qtr/logger.hpp"
 #include "qtr/texture.hpp"
 
@@ -54,8 +53,6 @@ bool Texture::from_float_vector(const std::vector<float> &data, int new_width)
   glGenTextures(1, &this->id);
   glBindTexture(GL_TEXTURE_2D, this->id);
 
-  check_gl_error("Texture::from_float_vector: gen/bind");
-
   glTexImage2D(GL_TEXTURE_2D,
                0,
                GL_R32F, // internal format (1 float channel)
@@ -65,8 +62,6 @@ bool Texture::from_float_vector(const std::vector<float> &data, int new_width)
                GL_RED,
                GL_FLOAT,
                data.data());
-
-  check_gl_error("Texture::from_float_vector: data");
 
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -229,8 +224,6 @@ void Texture::generate_depth_texture(int  new_width,
 
   glGenTextures(1, &this->id);
   glBindTexture(GL_TEXTURE_2D, this->id);
-
-  check_gl_error("Texture::generate_depth_texture: gen/bind");
 
   glTexImage2D(GL_TEXTURE_2D,
                0,

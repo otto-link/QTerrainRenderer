@@ -10,7 +10,6 @@
 #include <imgui.h>
 
 #include "qtr/config.hpp"
-#include "qtr/gl_errors.hpp"
 #include "qtr/imgui_widgets.hpp"
 #include "qtr/logger.hpp"
 #include "qtr/mesh.hpp"
@@ -30,9 +29,6 @@ void RenderWidget::paintGL()
 
   this->render_scene();
   this->render_ui(); // ImGUI overlay
-
-  // check for errors...
-  check_gl_error("RenderWidget::paintGL");
 }
 
 void RenderWidget::render_scene()
@@ -196,8 +192,8 @@ void RenderWidget::render_ui()
   changed |= ImGui::Checkbox("Plane", &this->render_plane);
   changed |= ImGui::Checkbox("Points", &this->render_points);
   changed |= ImGui::Checkbox("Path", &this->render_path);
-  changed |= ImGui::Checkbox("Rocks", &this->render_rocks);
-  changed |= ImGui::Checkbox("Trees", &this->render_trees);
+  // changed |= ImGui::Checkbox("Rocks", &this->render_rocks);
+  // changed |= ImGui::Checkbox("Trees", &this->render_trees);
   changed |= ImGui::Checkbox("Water##render", &this->render_water);
 
   // --- Materials ---

@@ -4,7 +4,6 @@
 
 #include "qtr/camera.hpp"
 #include "qtr/config.hpp"
-#include "qtr/gl_errors.hpp"
 #include "qtr/imgui_widgets.hpp"
 #include "qtr/instanced_mesh.hpp"
 #include "qtr/logger.hpp"

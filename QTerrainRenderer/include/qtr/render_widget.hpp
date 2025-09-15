@@ -166,8 +166,8 @@ private:
   bool render_points = true;
   bool render_path = true;
   bool render_hmap = true;
-  bool render_rocks = true;
-  bool render_trees = true;
+  bool render_rocks = false;
+  bool render_trees = false;
   bool render_water = true;
 
   // Normals

@@ -2,7 +2,6 @@
    License. The full license is in the file LICENSE, distributed with this software. */
 #include "qtr/windows_patch.hpp"
 
-#include "qtr/gl_errors.hpp"
 #include "qtr/render_widget.hpp"
 
 namespace qtr
@@ -62,8 +61,6 @@ void RenderWidget::render_shadow_map(const glm::mat4 &model,
 
     glCullFace(GL_BACK);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-    check_gl_error("RenderWidget::render_shadow_map: render shadow pass");
 
     // set previous FBO back
     glBindFramebuffer(GL_FRAMEBUFFER, previous_fbo);
