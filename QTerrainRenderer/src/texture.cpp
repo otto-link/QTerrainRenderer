@@ -22,13 +22,13 @@ void Texture::bind(int unit)
 }
 
 void Texture::bind_and_set(QOpenGLShaderProgram &shader,
-                           const std::string    &text_id,
+                           const std::string    &tex_id,
                            int                   unit)
 {
   if (this->is_active())
   {
     this->bind(unit);
-    shader.setUniformValue(text_id.c_str(), unit);
+    shader.setUniformValue(tex_id.c_str(), unit);
   }
 }
 

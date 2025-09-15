@@ -20,6 +20,13 @@
 #include "qtr/mesh.hpp"
 #include "qtr/shader_manager.hpp"
 #include "qtr/texture.hpp"
+#include "qtr/texture_manager.hpp"
+
+#define QTR_TEX_ALBEDO "albedo"
+#define QTR_TEX_HMAP "hmap"
+#define QTR_TEX_NORMAL "normal"
+#define QTR_TEX_SHADOW_MAP "shadow_map"
+#define QTR_TEX_DEPTH "depth"
 
 namespace qtr
 {
@@ -80,11 +87,11 @@ public:
   void  update_water_plane();
 
   // --- Textures
-  void set_texture_albedo(const std::vector<uint8_t> &data, int width); // RGBA 8bit
-  void reset_texture_albedo();
-
-  void set_texture_normal(const std::vector<uint8_t> &data, int width); // RGBA 8bit
-  void reset_texture_normal();
+  void set_texture(const std::string          &name,
+                   const std::vector<uint8_t> &data,
+                   int                         width); // RGBA 8bit
+  void reset_texture(const std::string &name);
+  void reset_textures();
 
 protected:
   // --- OpenGL lifecycle
@@ -243,11 +250,7 @@ private:
   InstancedMesh<BaseInstance> trees_instanced_mesh;
   InstancedMesh<BaseInstance> rocks_instanced_mesh;
 
-  Texture texture_albedo;
-  Texture texture_hmap;
-  Texture texture_normal; // for details
-  Texture texture_shadow_map;
-  Texture texture_depth;
+  std::unique_ptr<TextureManager> sp_texture_manager;
 
   // --- ImGUI
   ImGuiContext *imgui_context;

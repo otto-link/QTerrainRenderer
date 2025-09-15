@@ -72,8 +72,6 @@ void RenderWidget::clear()
   this->reset_path();
   this->reset_rocks();
   this->reset_trees();
-  this->reset_texture_albedo();
-  this->reset_texture_normal();
 
   this->need_update = true;
 
@@ -96,7 +94,8 @@ void RenderWidget::initializeGL()
 
   this->initializeOpenGLFunctions();
 
-  // shaders (NB, context needs to be set beforehand...)
+  // --- Shaders
+
   QTR_LOG->trace("RenderWidget::initializeGL: setting up shaders...");
 
   this->sp_shader_manager = std::make_unique<ShaderManager>();
@@ -113,7 +112,7 @@ void RenderWidget::initializeGL()
                                                 diffuse_basic_vertex,
                                                 diffuse_blinn_phong_frag);
 
-  this->sp_shader_manager->add_shader_from_code("depth_map",
+  this->sp_shader_manager->add_shader_from_code(QTR_TEX_DEPTH,
                                                 depth_map_vertex,
                                                 depth_map_frag);
 
@@ -125,21 +124,35 @@ void RenderWidget::initializeGL()
                                                 shadow_map_lit_pass_vertex,
                                                 shadow_map_lit_pass_frag);
 
-  generate_plane(this->plane, 0.f, 0.f, 0.f, 4.f, 4.f);
-  this->update_water_plane();
+  // --- Textures
+
+  this->sp_texture_manager = std::make_unique<TextureManager>();
+
+  // add placeholder for each texture
+  const std::vector<std::string> tex_names = {QTR_TEX_ALBEDO,
+                                              QTR_TEX_HMAP,
+                                              QTR_TEX_NORMAL,
+                                              QTR_TEX_SHADOW_MAP,
+                                              QTR_TEX_DEPTH};
+  for (auto &s : tex_names)
+    this->sp_texture_manager->add(s);
 
   // depth buffer
-  int depth_map_res = 256;
-  this->texture_depth.generate_depth_texture(depth_map_res, depth_map_res, false);
-
-  // Create framebuffer for depth map
   {
+    int depth_map_res = 512;
+
+    this->sp_texture_manager->add_depth_texture(QTR_TEX_DEPTH,
+                                                depth_map_res,
+                                                depth_map_res,
+                                                false);
+
+    // create framebuffer for depth map
     glGenFramebuffers(1, &this->fbo_depth);
     glBindFramebuffer(GL_FRAMEBUFFER, this->fbo_depth);
     glFramebufferTexture2D(GL_FRAMEBUFFER,
                            GL_DEPTH_ATTACHMENT,
                            GL_TEXTURE_2D,
-                           this->texture_depth.get_id(),
+                           this->sp_texture_manager->get(QTR_TEX_DEPTH)->get_id(),
                            0);
     glDrawBuffer(GL_NONE);
     glReadBuffer(GL_NONE);
@@ -148,23 +161,34 @@ void RenderWidget::initializeGL()
   }
 
   // shadow map texture and buffer
-  int shadow_map_res = 2048;
-  this->texture_shadow_map.generate_depth_texture(shadow_map_res, shadow_map_res, true);
-
-  // Create framebuffer for shadow depth
   {
+    int shadow_map_res = 2048;
+
+    this->sp_texture_manager->add_depth_texture(QTR_TEX_SHADOW_MAP,
+                                                shadow_map_res,
+                                                shadow_map_res,
+                                                true);
+
+    // create framebuffer for shadow depth
     glGenFramebuffers(1, &this->fbo);
     glBindFramebuffer(GL_FRAMEBUFFER, this->fbo);
     glFramebufferTexture2D(GL_FRAMEBUFFER,
                            GL_DEPTH_ATTACHMENT,
                            GL_TEXTURE_2D,
-                           this->texture_shadow_map.get_id(),
+                           this->sp_texture_manager->get(QTR_TEX_SHADOW_MAP)->get_id(),
                            0);
     glDrawBuffer(GL_NONE);
     glReadBuffer(GL_NONE);
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
   }
+
+  // --- Meshes
+
+  generate_plane(this->plane, 0.f, 0.f, 0.f, 4.f, 4.f);
+  this->update_water_plane();
+
+  // --- ImGUI
 
   QTR_LOG->trace("RenderWidget::initializeGL: setup ImGui context");
 
@@ -200,27 +224,9 @@ void RenderWidget::reset_heightmap_geometry()
 {
   this->makeCurrent();
   this->hmap.destroy();
-  this->texture_hmap.destroy();
+  this->sp_texture_manager->get(QTR_TEX_HMAP)->destroy();
   this->need_update = true;
   this->doneCurrent();
-}
-
-void RenderWidget::reset_water_geometry()
-{
-  this->water_mesh.destroy();
-  this->need_update = true;
-}
-
-void RenderWidget::reset_texture_albedo()
-{
-  this->texture_albedo.destroy();
-  this->need_update = true;
-}
-
-void RenderWidget::reset_texture_normal()
-{
-  this->texture_normal.destroy();
-  this->need_update = true;
 }
 
 void RenderWidget::reset_path()
@@ -232,6 +238,30 @@ void RenderWidget::reset_path()
 void RenderWidget::reset_points()
 {
   this->points_instanced_mesh.destroy();
+  this->need_update = true;
+}
+
+void RenderWidget::reset_texture(const std::string &name)
+{
+  QTR_LOG->trace("RenderWidget::reset_texture: {}", name);
+
+  this->makeCurrent();
+  this->sp_texture_manager->get(name)->destroy();
+  this->need_update = true;
+}
+
+void RenderWidget::reset_textures()
+{
+  QTR_LOG->trace("RenderWidget::reset_textures");
+
+  this->makeCurrent();
+  this->sp_texture_manager->resets();
+  this->need_update = true;
+}
+
+void RenderWidget::reset_water_geometry()
+{
+  this->water_mesh.destroy();
   this->need_update = true;
 }
 
@@ -267,11 +297,7 @@ void RenderWidget::set_common_uniforms(QOpenGLShaderProgram &shader,
                                        const glm::mat4      &light_space)
 {
   // Textures
-  this->texture_albedo.bind_and_set(shader, "texture_albedo", 0);
-  this->texture_hmap.bind_and_set(shader, "texture_hmap", 1);
-  this->texture_normal.bind_and_set(shader, "texture_normal", 2);
-  this->texture_shadow_map.bind_and_set(shader, "texture_shadow_map", 3);
-  this->texture_depth.bind_and_set(shader, "texture_depth", 4);
+  this->sp_texture_manager->bind_and_set(shader);
 
   // Time & matrices
   shader.setUniformValue("time", time);
@@ -352,7 +378,7 @@ void RenderWidget::set_heightmap_geometry(const std::vector<float> &data,
   QTR_LOG->trace("RenderWidget::set_heightmap_geometry: w x h = {} x {}", width, height);
 
   // also generate the heightmap texture
-  this->texture_hmap.from_float_vector(data, width);
+  this->sp_texture_manager->get(QTR_TEX_HMAP)->from_float_vector(data, width);
   this->need_update = true;
   this->doneCurrent();
 }
@@ -457,23 +483,15 @@ void RenderWidget::set_rocks(const std::vector<float> &x,
   this->doneCurrent();
 }
 
-void RenderWidget::set_texture_albedo(const std::vector<uint8_t> &data, int width)
+void RenderWidget::set_texture(const std::string          &name,
+                               const std::vector<uint8_t> &data,
+                               int                         width)
 {
-  QTR_LOG->trace("RenderWidget::set_texture_albedo");
+  QTR_LOG->trace("RenderWidget::set_texture: {}", name);
 
   this->makeCurrent();
 
-  this->texture_albedo.from_image_8bit_rgba(data, width);
-  this->need_update = true;
-}
-
-void RenderWidget::set_texture_normal(const std::vector<uint8_t> &data, int width)
-{
-  QTR_LOG->trace("RenderWidget::set_texture_normal");
-
-  this->makeCurrent();
-
-  this->texture_normal.from_image_8bit_rgba(data, width);
+  this->sp_texture_manager->get(name)->from_image_8bit_rgba(data, width);
   this->need_update = true;
 }
 
@@ -560,14 +578,7 @@ void RenderWidget::setup_gl_state()
 
 QSize RenderWidget::sizeHint() const { return QSize(QTR_CONFIG->widget.size_hint); }
 
-void RenderWidget::unbind_textures()
-{
-  this->texture_albedo.unbind();
-  this->texture_hmap.unbind();
-  this->texture_normal.unbind();
-  this->texture_shadow_map.unbind();
-  this->texture_depth.unbind();
-}
+void RenderWidget::unbind_textures() { this->sp_texture_manager->unbind(); }
 
 void RenderWidget::update_camera()
 {

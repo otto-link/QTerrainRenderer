@@ -94,11 +94,12 @@ void RenderWidget::render_scene()
     if (this->render_hmap)
     {
       p_shader->setUniformValue("base_color", QVector3D(0.8f, 0.8f, 0.8f));
-      p_shader->setUniformValue("use_texture_albedo",
-                                true && !this->bypass_texture_albedo &&
-                                    this->texture_albedo.is_active());
+      p_shader->setUniformValue(
+          "use_texture_albedo",
+          true && !this->bypass_texture_albedo &&
+              this->sp_texture_manager->get(QTR_TEX_ALBEDO)->is_active());
 
-      if (this->texture_normal.is_active())
+      if (this->sp_texture_manager->get(QTR_TEX_NORMAL)->is_active())
         p_shader->setUniformValue("normal_map_scaling", this->normal_map_scaling);
 
       p_shader->setUniformValue("add_ambiant_occlusion", this->add_ambiant_occlusion);
@@ -199,7 +200,7 @@ void RenderWidget::render_ui()
   // --- Materials ---
   if (ImGui::CollapsingHeader("Materials", ImGuiTreeNodeFlags_DefaultOpen))
   {
-    ImGui::Text("Albedo");
+    ImGui::Text(QTR_TEX_ALBEDO);
     changed |= ImGui::SliderFloat("Gamma", &this->gamma_correction, 0.01f, 4.f);
     changed |= ImGui::Checkbox("Bypass albedo", &this->bypass_texture_albedo);
     changed |= ImGui::Checkbox("Tonemap", &this->apply_tonemap);

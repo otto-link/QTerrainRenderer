@@ -28,7 +28,7 @@ public:
   int    get_height() const;
 
   void bind(int unit = 0);
-  void bind_and_set(QOpenGLShaderProgram &shader, const std::string &text_id, int unit);
+  void bind_and_set(QOpenGLShaderProgram &shader, const std::string &tex_id, int unit);
   void unbind();
   void destroy();
   bool is_active() const;
@@ -38,4 +38,5 @@ private:
   int    width;
   int    height;
 };
+
 } // namespace qtr

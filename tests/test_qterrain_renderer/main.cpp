@@ -27,16 +27,16 @@ int main(int argc, char *argv[])
     int                  width, height;
     std::vector<uint8_t> data = qtr::load_png_as_8bit_rgba("texture.png", width, height);
 
-    renderer->set_texture_albedo(data, width);
-    // renderer->reset_texture_albedo();
+    renderer->set_texture(QTR_TEX_ALBEDO, data, width);
+    // renderer->reset_texture(QTR_TEX_ALBEDO);
   }
 
   {
     int                  width, height;
     std::vector<uint8_t> data = qtr::load_png_as_8bit_rgba("nmap2.png", width, height);
 
-    renderer->set_texture_normal(data, width);
-    renderer->reset_texture_normal();
+    renderer->set_texture(QTR_TEX_NORMAL, data, width);
+    renderer->reset_texture(QTR_TEX_NORMAL);
   }
 
   {

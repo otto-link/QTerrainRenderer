@@ -11,16 +11,18 @@ void RenderWidget::render_depth_map(const glm::mat4 &model,
                                     const glm::mat4 &view,
                                     const glm::mat4 &projection)
 {
-  QOpenGLShaderProgram *p_shader = this->sp_shader_manager->get("depth_map")->get();
+  QOpenGLShaderProgram *p_shader = this->sp_shader_manager->get(QTR_TEX_DEPTH)->get();
 
   if (p_shader)
   {
+    Texture *p_tex = this->sp_texture_manager->get(QTR_TEX_DEPTH);
+
     // backup FBO state to avoid messing up with others FBO (ImGUI
     // for instance...)
     GLint previous_fbo;
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, &previous_fbo);
 
-    glViewport(0, 0, this->texture_depth.get_width(), this->texture_depth.get_height());
+    glViewport(0, 0, p_tex->get_width(), p_tex->get_height());
     glBindFramebuffer(GL_FRAMEBUFFER, this->fbo_depth);
 
     glClear(GL_DEPTH_BUFFER_BIT);
