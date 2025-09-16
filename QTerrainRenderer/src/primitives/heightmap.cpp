@@ -38,7 +38,7 @@ void generate_heightmap(Mesh                     &mesh,
     {
       int idx = j * width + i;
 
-      if (data[idx] < exclude_below)
+      if (data[idx] <= exclude_below)
       {
         continue; // skip this vertex
       }
