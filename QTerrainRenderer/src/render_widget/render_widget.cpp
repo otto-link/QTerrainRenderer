@@ -296,15 +296,19 @@ void RenderWidget::reset_trees()
 
 void RenderWidget::resizeEvent(QResizeEvent *event)
 {
+  this->makeCurrent();
   QOpenGLWidget::resizeEvent(event);
   this->need_update = true;
+  this->doneCurrent();
 }
 
 void RenderWidget::resizeGL(int w, int h)
 {
+  this->makeCurrent();
   this->glViewport(0, 0, w, h);
   this->get_imgui_io().DisplaySize = ImVec2(float(w), float(h));
   this->need_update = true;
+  this->doneCurrent();
 }
 
 void RenderWidget::set_common_uniforms(QOpenGLShaderProgram &shader,
