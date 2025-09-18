@@ -40,6 +40,12 @@ int main(int argc, char *argv[])
   }
 
   {
+    renderer->makeCurrent();
+    qtr::generate_plane(renderer->get_water_mesh(), 0.f, 0.1f * 0.4f, 0.f, 2.f, 2.f);
+    renderer->doneCurrent();
+  }
+
+  {
     std::vector<float> x, y, h;
     x = {0.05f, 0.1f, 0.2f, 0.7f, 0.8f};
     y = {0.2f, 0.2f, 0.4f, 0.7f, 0.8f};

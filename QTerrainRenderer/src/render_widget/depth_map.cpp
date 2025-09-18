@@ -39,14 +39,14 @@ void RenderWidget::render_depth_map(const glm::mat4 &model,
     if (this->render_hmap)
       this->hmap.draw();
 
+    if (this->render_water)
+      this->water_mesh.draw();
+
     if (this->render_rocks)
       this->rocks_instanced_mesh.draw(p_shader);
 
     if (this->render_trees)
       this->trees_instanced_mesh.draw(p_shader);
-
-    if (this->render_water)
-      this->water_plane.draw();
 
     p_shader->release();
 

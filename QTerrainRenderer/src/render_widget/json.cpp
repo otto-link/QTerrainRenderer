@@ -83,7 +83,6 @@ void RenderWidget::json_from(nlohmann::json const &json)
   json_safe_get(json, "bypass_texture_albedo", bypass_texture_albedo);
 
   // Water
-  json_safe_get(json, "water_elevation", water_elevation);
   json_safe_get(json, "color_shallow_water", color_shallow_water);
   json_safe_get(json, "color_deep_water", color_deep_water);
   json_safe_get(json, "water_color_depth", water_color_depth);
@@ -177,7 +176,6 @@ nlohmann::json RenderWidget::json_to() const
       {"bypass_texture_albedo", bypass_texture_albedo},
 
       // Water
-      {"water_elevation", water_elevation},
       {"color_shallow_water", color_shallow_water},
       {"color_deep_water", color_deep_water},
       {"water_color_depth", water_color_depth},

@@ -49,6 +49,8 @@ public:
   // --- Geometry
   void clear(); // geom and texture
 
+  Mesh &get_water_mesh();
+
   void set_heightmap_geometry(const std::vector<float> &data,
                               int                       width,
                               int                       height,
@@ -82,9 +84,6 @@ public:
                  const std::vector<float> &h,
                  const std::vector<float> &radius);
   void reset_trees();
-
-  float get_water_elevation() const;
-  void  update_water_plane();
 
   // --- Textures
   void set_texture(const std::string          &name,
@@ -198,7 +197,6 @@ private:
   bool bypass_texture_albedo = false;
 
   // --- Water
-  float     water_elevation = 0.1f;
   glm::vec3 color_shallow_water;
   glm::vec3 color_deep_water;
   float     water_color_depth = 0.015f;
@@ -243,7 +241,6 @@ private:
 
   Mesh                        plane;
   Mesh                        hmap;
-  Mesh                        water_plane;
   Mesh                        water_mesh;
   Mesh                        path_mesh;
   InstancedMesh<BaseInstance> points_instanced_mesh;

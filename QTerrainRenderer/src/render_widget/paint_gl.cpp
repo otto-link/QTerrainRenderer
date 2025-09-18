@@ -152,8 +152,6 @@ void RenderWidget::render_scene()
       // fallback
       if (this->water_mesh.is_active())
         this->water_mesh.draw();
-      else
-        this->water_plane.draw();
     }
 
     this->unbind_textures();
@@ -235,13 +233,6 @@ void RenderWidget::render_ui()
   // --- Water ---
   if (ImGui::CollapsingHeader("Water", ImGuiTreeNodeFlags_DefaultOpen))
   {
-
-    if (ImGui::SliderFloat("Elevation", &this->water_elevation, 0.f, 1.f))
-    {
-      changed = true;
-      this->update_water_plane();
-    }
-
     changed |= ImGui::SliderFloat("Color depth", &this->water_color_depth, 0.f, 0.2f);
     changed |= ImGui::SliderFloat("Specularity", &this->water_spec_strength, 0.f, 1.f);
     changed |= imgui_show_water_preset_selector(this->color_shallow_water,

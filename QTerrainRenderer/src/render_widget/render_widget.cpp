@@ -99,7 +99,7 @@ ImGuiIO &RenderWidget::get_imgui_io()
   return ImGui::GetIO();
 }
 
-float RenderWidget::get_water_elevation() const { return this->water_elevation; }
+Mesh &RenderWidget::get_water_mesh() { return this->water_mesh; }
 
 void RenderWidget::initializeGL()
 {
@@ -184,11 +184,6 @@ void RenderWidget::initializeGL()
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
   }
-
-  // --- Meshes
-
-  generate_plane(this->plane, 0.f, 0.f, 0.f, 4.f, 4.f);
-  this->update_water_plane();
 
   // --- ImGUI
 
@@ -635,16 +630,6 @@ void RenderWidget::update_time()
 {
   this->dt = static_cast<float>(this->timer.restart()) / 1000.0f;
   this->time += this->dt;
-}
-
-void RenderWidget::update_water_plane()
-{
-  generate_plane(this->water_plane,
-                 0.f,
-                 this->hmap_h0 + this->hmap_h * this->water_elevation,
-                 0.f,
-                 2.f,
-                 2.f);
 }
 
 } // namespace qtr
