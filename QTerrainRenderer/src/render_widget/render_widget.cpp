@@ -137,6 +137,10 @@ void RenderWidget::initializeGL()
                                                 shadow_map_lit_pass_vertex,
                                                 shadow_map_lit_pass_frag);
 
+  // --- Meshes
+
+  generate_plane(this->plane, 0.f, 0.f, 0.f, 2.f * this->hmap_w, 2.f * this->hmap_w);
+
   // --- Textures
 
   // depth buffer
@@ -223,6 +227,14 @@ void RenderWidget::reset_heightmap_geometry()
   this->hmap.destroy();
   if (this->sp_texture_manager->get(QTR_TEX_HMAP))
     this->sp_texture_manager->get(QTR_TEX_HMAP)->destroy();
+  this->need_update = true;
+  this->doneCurrent();
+}
+
+void RenderWidget::reset_leaves()
+{
+  this->makeCurrent();
+  this->leaves_instanced_mesh.destroy();
   this->need_update = true;
   this->doneCurrent();
 }
@@ -404,6 +416,43 @@ void RenderWidget::set_heightmap_geometry(const std::vector<float> &data,
   this->doneCurrent();
 }
 
+void RenderWidget::set_leaves(const std::vector<float> &x,
+                              const std::vector<float> &y,
+                              const std::vector<float> &h,
+                              const std::vector<float> &radius)
+{
+  QTR_LOG->trace("RenderWidget::set_leaves");
+
+  this->makeCurrent();
+
+  if (x.size() != y.size() || x.size() != h.size() || x.size() != radius.size())
+    throw std::invalid_argument("RenderWidget::set_leaves: vector sizes does not match");
+
+  std::vector<BaseInstance> instances;
+
+  glm::vec3 color = glm::vec3(0.f, 1.f, 0.);
+
+  for (size_t k = 0; k < x.size(); ++k)
+  {
+    float xs = 0.5f * this->hmap_w * (2.f * x[k] - 1.f);
+    float hs = this->hmap_h0 + this->hmap_h * h[k];
+    float ys = 0.5f * this->hmap_w * (2.f * y[k] - 1.f);
+    float rs = 2.f * radius[k];
+    float rotation = (float)std::rand() / RAND_MAX * glm::two_pi<float>();
+
+    instances.push_back({glm::vec3(xs, hs, ys), rs, rotation, color});
+  }
+
+  // unit sphere
+  auto  mesh = std::make_shared<Mesh>();
+  float r = 1.f;
+  generate_grass_leaf_2sided(*mesh, glm::vec3(0.f, 0.f, 0.f), r, 0.1f * r);
+
+  this->leaves_instanced_mesh.create(mesh, instances);
+  this->need_update = true;
+  this->doneCurrent();
+}
+
 void RenderWidget::set_path(const std::vector<float> &x,
                             const std::vector<float> &y,
                             const std::vector<float> &h)
@@ -490,7 +539,7 @@ void RenderWidget::set_rocks(const std::vector<float> &x,
     float hs = this->hmap_h0 + this->hmap_h * h[k];
     float ys = 0.5f * this->hmap_w * (2.f * y[k] - 1.f);
     float rs = 2.f * radius[k];
-    float rotation = std::rand() / RAND_MAX * glm::two_pi<float>();
+    float rotation = (float)std::rand() / RAND_MAX * glm::two_pi<float>();
 
     instances.push_back({glm::vec3(xs, hs, ys), rs, rotation, color});
   }
@@ -538,7 +587,7 @@ void RenderWidget::set_trees(const std::vector<float> &x,
     float hs = this->hmap_h0 + this->hmap_h * h[k];
     float ys = 0.5f * this->hmap_w * (2.f * y[k] - 1.f);
     float rs = 2.f * radius[k];
-    float rotation = std::rand() / RAND_MAX * glm::two_pi<float>();
+    float rotation = (float)std::rand() / RAND_MAX * glm::two_pi<float>();
 
     instances.push_back({glm::vec3(xs, hs, ys), rs, rotation, color});
   }

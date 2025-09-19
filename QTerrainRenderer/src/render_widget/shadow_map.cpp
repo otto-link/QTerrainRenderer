@@ -55,6 +55,9 @@ void RenderWidget::render_shadow_map(const glm::mat4 &model,
     if (this->render_rocks)
       this->rocks_instanced_mesh.draw(p_shader);
 
+    if (this->render_leaves)
+      this->leaves_instanced_mesh.draw(p_shader);
+
     if (this->render_trees)
       this->trees_instanced_mesh.draw(p_shader);
 

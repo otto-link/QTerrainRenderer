@@ -106,17 +106,17 @@ void RenderWidget::render_scene()
       this->hmap.draw();
 
       p_shader->setUniformValue("normal_map_scaling", 0.f);
+      p_shader->setUniformValue("use_texture_albedo", false);
     }
 
     if (this->render_rocks)
-    {
       this->rocks_instanced_mesh.draw(p_shader);
-    }
+
+    if (this->render_leaves)
+      this->leaves_instanced_mesh.draw(p_shader);
 
     if (this->render_trees)
-    {
       this->trees_instanced_mesh.draw(p_shader);
-    }
 
     if (this->render_water)
     {

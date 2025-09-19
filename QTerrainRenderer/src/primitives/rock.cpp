@@ -9,8 +9,6 @@
 namespace qtr
 {
 
-#include <random>
-
 void generate_rock(Mesh &mesh,
                    float radius,
                    float roughness,

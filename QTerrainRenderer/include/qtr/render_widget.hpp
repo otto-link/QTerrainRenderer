@@ -85,6 +85,12 @@ public:
                  const std::vector<float> &radius);
   void reset_trees();
 
+  void set_leaves(const std::vector<float> &x,
+                  const std::vector<float> &y,
+                  const std::vector<float> &h,
+                  const std::vector<float> &radius);
+  void reset_leaves();
+
   // --- Textures
   void set_texture(const std::string          &name,
                    const std::vector<uint8_t> &data,
@@ -172,9 +178,10 @@ private:
   bool render_points = true;
   bool render_path = true;
   bool render_hmap = true;
-  bool render_rocks = false;
-  bool render_trees = false;
+  bool render_rocks = true;
+  bool render_trees = true;
   bool render_water = true;
+  bool render_leaves = true;
 
   // Normals
   bool  normal_visualization = false;
@@ -246,6 +253,7 @@ private:
   InstancedMesh<BaseInstance> points_instanced_mesh;
   InstancedMesh<BaseInstance> trees_instanced_mesh;
   InstancedMesh<BaseInstance> rocks_instanced_mesh;
+  InstancedMesh<BaseInstance> leaves_instanced_mesh;
 
   std::unique_ptr<TextureManager> sp_texture_manager;
 

@@ -1,5 +1,7 @@
 /* Copyright (c) 2025 Otto Link. Distributed under the terms of the GNU General Public
    License. The full license is in the file LICENSE, distributed with this software. */
+#include <random>
+
 #include <QApplication>
 
 #include "qterrain_renderer.hpp"
@@ -52,7 +54,7 @@ int main(int argc, char *argv[])
     h = {0.8f, 0.2f, 1.f, 0.5f, 0.7f};
 
     renderer->set_points(x, y, h);
-    // renderer->reset_points();
+    renderer->reset_points();
   }
 
   {
@@ -62,7 +64,24 @@ int main(int argc, char *argv[])
     h = {0.8f, 0.2f, 1.f, 0.5f, 0.7f};
 
     renderer->set_path(x, y, h);
-    // renderer->reset_points();
+    renderer->reset_path();
+  }
+
+  {
+    size_t             n = 50000;
+    std::vector<float> x, y, h, r;
+
+    for (size_t k = 0; k < n; ++k)
+    {
+      x.push_back((float)std::rand() / RAND_MAX);
+      y.push_back((float)std::rand() / RAND_MAX);
+      h.push_back(0.1f + 0.f * (float)std::rand() / RAND_MAX);
+      r.push_back(0.001f * (float)std::rand() / RAND_MAX);
+    }
+
+    // renderer->set_trees(x, y, h, r);
+    // renderer->set_leaves(x, y, h, r);
+    // renderer->reset_leaves();
   }
 
   return app.exec();

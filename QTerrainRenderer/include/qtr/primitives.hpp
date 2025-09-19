@@ -26,6 +26,12 @@ void generate_heightmap(Mesh                     &mesh,
                         float                     add_level = 0.f,
                         float                     exclude_below = -FLT_MAX);
 
+void generate_grass_leaf_2sided(Mesh            &mesh,
+                                const glm::vec3 &base_pos,
+                                float            height,
+                                float            width,
+                                float            bend = 0.2f);
+
 void generate_path(Mesh &mesh, const std::vector<glm::vec3> &points, float width);
 
 void generate_plane(Mesh &mesh, float x, float y, float z, float lx, float ly);
