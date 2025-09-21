@@ -4,9 +4,46 @@
 
 #include "qtr/imgui_widgets.hpp"
 #include "qtr/logger.hpp"
+#include "qtr/render_widget.hpp"
 
 namespace qtr
 {
+
+bool imgui_enum_selector(const std::string              &label,
+                         int                            &value,
+                         const std::vector<std::string> &options)
+{
+  // ImGui expects const char*[]
+  std::vector<const char *> cstrs;
+  cstrs.reserve(options.size());
+  for (auto &s : options)
+    cstrs.push_back(s.c_str());
+
+  return ImGui::Combo(label.c_str(),
+                      &value,
+                      cstrs.data(),
+                      static_cast<int>(cstrs.size()));
+}
+
+bool imgui_viewer_main_menubar(RenderWidget &render_widget)
+{
+  bool changed = false;
+
+  if (ImGui::BeginMainMenuBar())
+  {
+    if (ImGui::BeginMenu("Viewer type"))
+    {
+      if (ImGui::MenuItem("2D viewer"))
+        render_widget.set_render_type(RenderType::RENDER_2D);
+      if (ImGui::MenuItem("3D renderer"))
+        render_widget.set_render_type(RenderType::RENDER_3D);
+      ImGui::EndMenu();
+    }
+    ImGui::EndMainMenuBar();
+  }
+
+  return changed;
+}
 
 void imgui_set_blender_style()
 {

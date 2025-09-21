@@ -137,6 +137,10 @@ void RenderWidget::initializeGL()
                                                 shadow_map_lit_pass_vertex,
                                                 shadow_map_lit_pass_frag);
 
+  this->sp_shader_manager->add_shader_from_code("viewer2d_cmap",
+                                                viewer2d_cmap_vertex,
+                                                viewer2d_cmap_frag);
+
   // --- Meshes
 
   generate_plane(this->plane, 0.f, 0.f, 0.f, 2.f * this->hmap_w, 2.f * this->hmap_w);
@@ -515,6 +519,11 @@ void RenderWidget::set_points(const std::vector<float> &x,
   this->points_instanced_mesh.create(sphere_mesh, instances);
   this->need_update = true;
   this->doneCurrent();
+}
+
+void RenderWidget::set_render_type(const RenderType &new_render_type)
+{
+  this->render_type = new_render_type;
 }
 
 void RenderWidget::set_rocks(const std::vector<float> &x,

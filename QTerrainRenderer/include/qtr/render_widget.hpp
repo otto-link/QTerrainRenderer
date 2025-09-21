@@ -31,6 +31,30 @@
 namespace qtr
 {
 
+enum RenderType : int
+{
+  RENDER_2D,
+  RENDER_3D
+};
+
+struct Viewer2DSettings
+{
+  float     zoom = 0.9f;
+  glm::vec2 offset = glm::vec2(0.f, 0.f);
+  bool      hillshading = true;
+  float     sun_azimuth = 90.f / 180.f * 3.14f;
+  float     sun_zenith = 60.f / 180.f * 3.14f;
+
+  enum Colormap : int
+  {
+    // dont change order (for OpenGL)
+    GRAY,
+    VIRIDIS,
+    TURBO,
+    MAGMA
+  } cmap = Colormap::MAGMA;
+};
+
 class RenderWidget : public QOpenGLWidget, protected QOpenGLFunctions_3_3_Core
 {
   Q_OBJECT
@@ -42,6 +66,9 @@ public:
   // --- Serialization
   void           json_from(nlohmann::json const &json);
   nlohmann::json json_to() const;
+
+  // --- Setters
+  void set_render_type(const RenderType &new_render_type);
 
   // --- QWidget interface
   QSize sizeHint() const override;
@@ -106,12 +133,14 @@ protected:
 
   // --- Rendering
   void paintGL() override;
-  void render_scene();
+  void render_scene_render_2d();
+  void render_scene_render_3d();
+  void render_ui_render_2d();
+  void render_ui_render_3d();
   void render_depth_map(const glm::mat4 &model,
                         const glm::mat4 &view,
                         const glm::mat4 &projection);
   void render_shadow_map(const glm::mat4 &model, glm::mat4 &light_space_matrix);
-  void render_ui();
   void set_common_uniforms(QOpenGLShaderProgram &shader,
                            const glm::mat4      &model,
                            const glm::mat4      &projection,
@@ -138,6 +167,7 @@ private:
 
   // --- General
   std::string title;
+  RenderType  render_type = RenderType::RENDER_2D;
 
   // --- GUI state
   QTimer               frame_timer;
@@ -235,6 +265,9 @@ private:
   glm::vec3 mie_color = glm::vec3(1.0f, 0.8f, 0.7f);      // whitish/yellowish
   float     fog_strength = 0.5f;
   float     fog_scattering_ratio = 0.7f;
+
+  // --- 2D Viewer
+  Viewer2DSettings viewer2d_settings;
 
   // --- OpenGL resources
   std::unique_ptr<ShaderManager> sp_shader_manager;

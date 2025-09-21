@@ -66,4 +66,12 @@ static const std::string shadow_map_lit_pass_frag =
 #include "shaders/shadow_map_lit_pass.frag"
     ;
 
+static const std::string viewer2d_cmap_vertex =
+#include "shaders/viewer2d_cmap.vert"
+    ;
+
+static const std::string viewer2d_cmap_frag =
+#include "shaders/viewer2d_cmap.frag"
+    ;
+
 } // namespace qtr

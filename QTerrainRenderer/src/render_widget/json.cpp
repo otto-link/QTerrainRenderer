@@ -114,6 +114,14 @@ void RenderWidget::json_from(nlohmann::json const &json)
   json_safe_get(json, "mie_color", mie_color);
   json_safe_get(json, "fog_strength", fog_strength);
   json_safe_get(json, "fog_scattering_ratio", fog_scattering_ratio);
+
+  // Viewer 2D
+  json_safe_get(json, "viewer2d_settings.zoom", viewer2d_settings.zoom);
+  json_safe_get(json, "viewer2d_settings.offset", viewer2d_settings.offset);
+  json_safe_get(json, "viewer2d_settings.hillshading", viewer2d_settings.hillshading);
+  json_safe_get(json, "viewer2d_settings.sun_azimuth", viewer2d_settings.sun_azimuth);
+  json_safe_get(json, "viewer2d_settings.sun_zenith", viewer2d_settings.sun_zenith);
+  json_safe_get(json, "viewer2d_settings.cmap", viewer2d_settings.cmap);
 }
 
 nlohmann::json RenderWidget::json_to() const
@@ -211,6 +219,14 @@ nlohmann::json RenderWidget::json_to() const
       // other classes
       {"camera", this->camera.json_to()},
       {"light", this->light.json_to()},
+
+      // Viewer 2D
+      {"viewer2d_settings.zoom", viewer2d_settings.zoom},
+      {"viewer2d_settings.offset", viewer2d_settings.offset},
+      {"viewer2d_settings.hillshading", viewer2d_settings.hillshading},
+      {"viewer2d_settings.sun_azimuth", viewer2d_settings.sun_azimuth},
+      {"viewer2d_settings.sun_zenith", viewer2d_settings.sun_zenith},
+      {"viewer2d_settings.cmap", viewer2d_settings.cmap},
   };
 
   // geometry
