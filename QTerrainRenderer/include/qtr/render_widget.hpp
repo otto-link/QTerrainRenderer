@@ -167,7 +167,7 @@ private:
 
   // --- General
   std::string title;
-  RenderType  render_type = RenderType::RENDER_2D;
+  RenderType  render_type = RenderType::RENDER_3D;
 
   // --- GUI state
   QTimer               frame_timer;
