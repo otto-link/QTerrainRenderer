@@ -154,7 +154,7 @@ void main()
   if (hillshading) // hillshading
   {
     float shade = hillshade(normal);
-    color *= (0.5f + 0.5f * shade);
+    color *= shade;
   }
 
   frag_color = vec4(color, alpha);
