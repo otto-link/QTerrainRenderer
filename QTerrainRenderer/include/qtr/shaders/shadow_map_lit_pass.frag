@@ -386,7 +386,11 @@ void main()
       float eps = 0.5 / textureSize(texture_hmap, 0).x;
       float dhdx = (texture(texture_hmap, frag_uv + vec2(eps, 0.0)).r - h) / eps;
       float dhdy = (texture(texture_hmap, frag_uv + vec2(0.0, eps)).r - h) / eps;
-      vec2  dir_slope = normalize(vec2(dhdx, dhdy));
+
+      vec2  dir_slope  =vec2(0.f, 0.f);
+      vec2 diff = vec2(dhdx, dhdy);
+      if (length(diff) > 1e-6f)
+	dir_slope = normalize(diff);
 
       float attenuation = exp(-depth / (2.0 * water_color_depth));
       dir = mix(dir, dir_slope, attenuation);
