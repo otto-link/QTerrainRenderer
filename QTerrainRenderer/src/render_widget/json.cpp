@@ -9,7 +9,7 @@ namespace qtr
 
 void RenderWidget::json_from(nlohmann::json const &json)
 {
-  QTR_LOG->trace("RenderWidget::json_from");
+  qtr::Logger::log()->trace("RenderWidget::json_from");
 
   // geometry
   if (json.contains("x") && json.contains("y") && json.contains("width") &&
@@ -24,7 +24,7 @@ void RenderWidget::json_from(nlohmann::json const &json)
   }
   else
   {
-    QTR_LOG->error("RenderWidget::json_from: could not parse the widget geometry data");
+    qtr::Logger::log()->error("RenderWidget::json_from: could not parse the widget geometry data");
   }
 
   this->camera.json_from(json["camera"]);
@@ -126,7 +126,7 @@ void RenderWidget::json_from(nlohmann::json const &json)
 
 nlohmann::json RenderWidget::json_to() const
 {
-  QTR_LOG->trace("RenderWidget::json_to");
+  qtr::Logger::log()->trace("RenderWidget::json_to");
 
   nlohmann::json json;
 

@@ -8,7 +8,7 @@
 
 int main(int argc, char *argv[])
 {
-  QTR_LOG->info("testing qterrain_renderer...");
+  qtr::Logger::log()->info("testing qterrain_renderer...");
 
   qputenv("QT_LOGGING_RULES", QTR_QPUTENV_QT_LOGGING_RULES);
   QApplication app(argc, argv);

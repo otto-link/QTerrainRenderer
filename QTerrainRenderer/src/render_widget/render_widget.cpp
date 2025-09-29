@@ -24,7 +24,7 @@ namespace qtr
 RenderWidget::RenderWidget(const std::string &_title, QWidget *parent)
     : QOpenGLWidget(parent), title(_title)
 {
-  QTR_LOG->trace("RenderWidget::RenderWidget");
+  qtr::Logger::log()->trace("RenderWidget::RenderWidget");
 
   this->setWindowTitle(this->title.c_str());
   this->setFocusPolicy(Qt::StrongFocus);
@@ -75,7 +75,7 @@ RenderWidget::~RenderWidget()
 
 void RenderWidget::clear()
 {
-  QTR_LOG->trace("RenderWidget::clear");
+  qtr::Logger::log()->trace("RenderWidget::clear");
 
   this->makeCurrent();
 
@@ -103,7 +103,7 @@ Mesh &RenderWidget::get_water_mesh() { return this->water_mesh; }
 
 void RenderWidget::initializeGL()
 {
-  QTR_LOG->trace("RenderWidget::initializeGL");
+  qtr::Logger::log()->trace("RenderWidget::initializeGL");
 
   this->makeCurrent();
 
@@ -111,7 +111,7 @@ void RenderWidget::initializeGL()
 
   // --- Shaders
 
-  QTR_LOG->trace("RenderWidget::initializeGL: setting up shaders...");
+  qtr::Logger::log()->trace("RenderWidget::initializeGL: setting up shaders...");
 
   this->sp_shader_manager->add_shader_from_code("diffuse_basic",
                                                 diffuse_basic_vertex,
@@ -195,7 +195,7 @@ void RenderWidget::initializeGL()
 
   // --- ImGUI
 
-  QTR_LOG->trace("RenderWidget::initializeGL: setup ImGui context");
+  qtr::Logger::log()->trace("RenderWidget::initializeGL: setup ImGui context");
 
   // ImGui context
   IMGUI_CHECKVERSION();
@@ -261,7 +261,7 @@ void RenderWidget::reset_points()
 
 void RenderWidget::reset_texture(const std::string &name)
 {
-  QTR_LOG->trace("RenderWidget::reset_texture: {}", name);
+  qtr::Logger::log()->trace("RenderWidget::reset_texture: {}", name);
 
   this->makeCurrent();
   this->sp_texture_manager->get(name)->destroy();
@@ -271,7 +271,7 @@ void RenderWidget::reset_texture(const std::string &name)
 
 void RenderWidget::reset_textures()
 {
-  QTR_LOG->trace("RenderWidget::reset_textures");
+  qtr::Logger::log()->trace("RenderWidget::reset_textures");
 
   this->makeCurrent();
 
@@ -395,7 +395,7 @@ void RenderWidget::set_heightmap_geometry(const std::vector<float> &data,
                                           int                       height,
                                           bool                      add_skirt)
 {
-  QTR_LOG->trace("RenderWidget::set_heightmap_geometry");
+  qtr::Logger::log()->trace("RenderWidget::set_heightmap_geometry");
 
   this->makeCurrent();
 
@@ -412,7 +412,7 @@ void RenderWidget::set_heightmap_geometry(const std::vector<float> &data,
                      add_skirt,
                      0.f);
 
-  QTR_LOG->trace("RenderWidget::set_heightmap_geometry: w x h = {} x {}", width, height);
+  qtr::Logger::log()->trace("RenderWidget::set_heightmap_geometry: w x h = {} x {}", width, height);
 
   // also generate the heightmap texture
   this->sp_texture_manager->get(QTR_TEX_HMAP)->from_float_vector(data, width);
@@ -425,7 +425,7 @@ void RenderWidget::set_leaves(const std::vector<float> &x,
                               const std::vector<float> &h,
                               const std::vector<float> &radius)
 {
-  QTR_LOG->trace("RenderWidget::set_leaves");
+  qtr::Logger::log()->trace("RenderWidget::set_leaves");
 
   this->makeCurrent();
 
@@ -461,7 +461,7 @@ void RenderWidget::set_path(const std::vector<float> &x,
                             const std::vector<float> &y,
                             const std::vector<float> &h)
 {
-  QTR_LOG->trace("RenderWidget::set_path");
+  qtr::Logger::log()->trace("RenderWidget::set_path");
 
   this->makeCurrent();
 
@@ -490,7 +490,7 @@ void RenderWidget::set_points(const std::vector<float> &x,
                               const std::vector<float> &y,
                               const std::vector<float> &h)
 {
-  QTR_LOG->trace("RenderWidget::set_points");
+  qtr::Logger::log()->trace("RenderWidget::set_points");
 
   this->makeCurrent();
 
@@ -531,7 +531,7 @@ void RenderWidget::set_rocks(const std::vector<float> &x,
                              const std::vector<float> &h,
                              const std::vector<float> &radius)
 {
-  QTR_LOG->trace("RenderWidget::set_rocks");
+  qtr::Logger::log()->trace("RenderWidget::set_rocks");
 
   this->makeCurrent();
 
@@ -566,7 +566,7 @@ void RenderWidget::set_texture(const std::string          &name,
                                const std::vector<uint8_t> &data,
                                int                         width)
 {
-  QTR_LOG->trace("RenderWidget::set_texture: {}", name);
+  qtr::Logger::log()->trace("RenderWidget::set_texture: {}", name);
 
   this->makeCurrent();
 
@@ -579,7 +579,7 @@ void RenderWidget::set_trees(const std::vector<float> &x,
                              const std::vector<float> &h,
                              const std::vector<float> &radius)
 {
-  QTR_LOG->trace("RenderWidget::set_trees");
+  qtr::Logger::log()->trace("RenderWidget::set_trees");
 
   this->makeCurrent();
 
@@ -616,7 +616,7 @@ void RenderWidget::set_water_geometry(const std::vector<float> &data,
                                       int                       height,
                                       float                     exclude_below)
 {
-  QTR_LOG->trace("RenderWidget::set_water_geometry");
+  qtr::Logger::log()->trace("RenderWidget::set_water_geometry");
 
   this->makeCurrent();
 

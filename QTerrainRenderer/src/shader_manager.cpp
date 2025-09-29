@@ -8,7 +8,7 @@ namespace qtr
 
 ShaderManager::~ShaderManager()
 {
-  QTR_LOG->trace("ShaderManager::~ShaderManager");
+  qtr::Logger::log()->trace("ShaderManager::~ShaderManager");
   this->clear();
 }
 
@@ -16,13 +16,13 @@ bool ShaderManager::add_shader_from_code(const std::string &name,
                                          const std::string &vertex_code,
                                          const std::string &fragment_code)
 {
-  QTR_LOG->trace("ShaderManager::add_shader_from_code: {}", name);
+  qtr::Logger::log()->trace("ShaderManager::add_shader_from_code: {}", name);
 
   auto shader = std::make_unique<Shader>();
 
   if (!shader->from_code(vertex_code, fragment_code))
   {
-    QTR_LOG->error("ShaderManager::add_shader_from_code: could not add shader");
+    qtr::Logger::log()->error("ShaderManager::add_shader_from_code: could not add shader");
     return false;
   }
 
@@ -34,13 +34,13 @@ bool ShaderManager::add_shader_from_file(const std::string &name,
                                          const std::string &vertex_path,
                                          const std::string &fragment_path)
 {
-  QTR_LOG->trace("ShaderManager::add_shader_from_file: {}", name);
+  qtr::Logger::log()->trace("ShaderManager::add_shader_from_file: {}", name);
 
   auto shader = std::make_unique<Shader>();
 
   if (!shader->from_file(vertex_path, fragment_path))
   {
-    QTR_LOG->error("ShaderManager::add_shader_from_file: could not add shader");
+    qtr::Logger::log()->error("ShaderManager::add_shader_from_file: could not add shader");
     return false;
   }
 
@@ -54,7 +54,7 @@ Shader *ShaderManager::get(const std::string &name)
     return this->shaders.at(name).get();
   else
   {
-    QTR_LOG->error("unknown shader: {}", name);
+    qtr::Logger::log()->error("unknown shader: {}", name);
     return nullptr;
   }
 }
