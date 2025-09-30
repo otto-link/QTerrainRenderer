@@ -20,7 +20,8 @@ bool Shader::from_code(const std::string &vertex_code, const std::string &fragme
   if (!this->sp_program->addShaderFromSourceCode(QOpenGLShader::Vertex,
                                                  vertex_code.c_str()))
   {
-    qtr::Logger::log()->error("Shader::from_code: could not add vertex shader source code");
+    qtr::Logger::log()->error(
+        "Shader::from_code: could not add vertex shader source code");
     qtr::Logger::log()->error("Shader::from_code: build log >>>");
     qtr::Logger::log()->error("{}", this->sp_program->log().toStdString());
     qtr::Logger::log()->error("Shader::from_code: <<< build log");
@@ -72,14 +73,16 @@ bool Shader::from_file(const std::string &vertex_path, const std::string &fragme
   std::string vertex_code = read_file(vertex_path);
   if (vertex_code.empty())
   {
-    qtr::Logger::log()->error("Shader::from_file: vertex shader '{}' is empty", vertex_path);
+    qtr::Logger::log()->error("Shader::from_file: vertex shader '{}' is empty",
+                              vertex_path);
     return false;
   }
 
   std::string fragment_code = read_file(fragment_path);
   if (fragment_code.empty())
   {
-    qtr::Logger::log()->error("Shader::from_file: fragment shader '{}' is empty", fragment_path);
+    qtr::Logger::log()->error("Shader::from_file: fragment shader '{}' is empty",
+                              fragment_path);
     return false;
   }
 

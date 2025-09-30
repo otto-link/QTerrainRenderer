@@ -412,7 +412,9 @@ void RenderWidget::set_heightmap_geometry(const std::vector<float> &data,
                      add_skirt,
                      0.f);
 
-  qtr::Logger::log()->trace("RenderWidget::set_heightmap_geometry: w x h = {} x {}", width, height);
+  qtr::Logger::log()->trace("RenderWidget::set_heightmap_geometry: w x h = {} x {}",
+                            width,
+                            height);
 
   // also generate the heightmap texture
   this->sp_texture_manager->get(QTR_TEX_HMAP)->from_float_vector(data, width);

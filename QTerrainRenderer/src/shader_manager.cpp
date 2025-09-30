@@ -22,7 +22,8 @@ bool ShaderManager::add_shader_from_code(const std::string &name,
 
   if (!shader->from_code(vertex_code, fragment_code))
   {
-    qtr::Logger::log()->error("ShaderManager::add_shader_from_code: could not add shader");
+    qtr::Logger::log()->error(
+        "ShaderManager::add_shader_from_code: could not add shader");
     return false;
   }
 
@@ -40,7 +41,8 @@ bool ShaderManager::add_shader_from_file(const std::string &name,
 
   if (!shader->from_file(vertex_path, fragment_path))
   {
-    qtr::Logger::log()->error("ShaderManager::add_shader_from_file: could not add shader");
+    qtr::Logger::log()->error(
+        "ShaderManager::add_shader_from_file: could not add shader");
     return false;
   }
 

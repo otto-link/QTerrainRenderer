@@ -23,7 +23,8 @@ bool TextureManager::add_from_float_vector(const std::string        &name,
   auto tex = std::make_unique<Texture>();
   if (!tex->from_float_vector(data, width))
   {
-    qtr::Logger::log()->error("TextureManager::add_from_float_vector: texure generation failed");
+    qtr::Logger::log()->error(
+        "TextureManager::add_from_float_vector: texure generation failed");
     return false;
   }
 
@@ -38,7 +39,8 @@ bool TextureManager::add_from_image_8bit_grayscale(const std::string          &n
   auto tex = std::make_unique<Texture>();
   if (!tex->from_image_8bit_grayscale(img, width))
   {
-    qtr::Logger::log()->error("TextureManager::add_from_float_vector: texure generation failed");
+    qtr::Logger::log()->error(
+        "TextureManager::add_from_float_vector: texure generation failed");
     return false;
   }
 
@@ -53,7 +55,8 @@ bool TextureManager::add_from_image_8bit_rgb(const std::string          &name,
   auto tex = std::make_unique<Texture>();
   if (!tex->from_image_8bit_rgb(img, width))
   {
-    qtr::Logger::log()->error("TextureManager::add_from_float_vector: texure generation failed");
+    qtr::Logger::log()->error(
+        "TextureManager::add_from_float_vector: texure generation failed");
     return false;
   }
 
@@ -80,7 +83,8 @@ bool TextureManager::add_from_image_16bit_grayscale(const std::string           
   auto tex = std::make_unique<Texture>();
   if (!tex->from_image_16bit_grayscale(img, width))
   {
-    qtr::Logger::log()->error("TextureManager::add_from_float_vector: texure generation failed");
+    qtr::Logger::log()->error(
+        "TextureManager::add_from_float_vector: texure generation failed");
     return false;
   }
 

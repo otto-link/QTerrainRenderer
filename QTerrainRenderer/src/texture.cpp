@@ -118,9 +118,9 @@ bool Texture::from_image_8bit_rgb(const std::vector<uint8_t> &img, int new_width
   glBindTexture(GL_TEXTURE_2D, this->id);
 
   qtr::Logger::log()->trace("Texture::from_image_8bit_rgb: id = {}, w x h = {} x {}",
-                 this->id,
-                 this->width,
-                 this->height);
+                            this->id,
+                            this->width,
+                            this->height);
 
   glTexImage2D(GL_TEXTURE_2D,
                0,
@@ -155,9 +155,9 @@ bool Texture::from_image_8bit_rgba(const std::vector<uint8_t> &img, int new_widt
   glBindTexture(GL_TEXTURE_2D, this->id);
 
   qtr::Logger::log()->trace("Texture::from_image_8bit_rgba: id = {}, w x h = {} x {}",
-                 this->id,
-                 this->width,
-                 this->height);
+                            this->id,
+                            this->width,
+                            this->height);
 
   glTexImage2D(GL_TEXTURE_2D,
                0,

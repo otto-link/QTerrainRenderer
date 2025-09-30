@@ -24,7 +24,8 @@ void RenderWidget::json_from(nlohmann::json const &json)
   }
   else
   {
-    qtr::Logger::log()->error("RenderWidget::json_from: could not parse the widget geometry data");
+    qtr::Logger::log()->error(
+        "RenderWidget::json_from: could not parse the widget geometry data");
   }
 
   this->camera.json_from(json["camera"]);
@@ -32,6 +33,7 @@ void RenderWidget::json_from(nlohmann::json const &json)
 
   // data
   json_safe_get(json, "title", title);
+  json_safe_get(json, "render_type", render_type);
 
   // GUI state
   json_safe_get(json, "wireframe_mode", wireframe_mode);
@@ -133,6 +135,7 @@ nlohmann::json RenderWidget::json_to() const
   json = {
       // General
       {"title", title},
+      {"render_type", render_type},
 
       // GUI state
       {"wireframe_mode", wireframe_mode},
