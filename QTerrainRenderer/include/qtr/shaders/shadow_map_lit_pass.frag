@@ -3,9 +3,7 @@ R""(
    License. The full license is in the file LICENSE, distributed with this software. */
 #version 330 core
 
-// ============================================================================
-// Inputs / Outputs
-// ============================================================================
+// === Inputs / Outputs
 
 in vec3 frag_pos;
 in vec3 frag_normal;
@@ -15,9 +13,7 @@ in vec3 frag_instance_color;
 
 out vec4 frag_color;
 
-// ============================================================================
-// Uniforms
-// ============================================================================
+// === Uniforms
 
 // --- Instance / base setup
 uniform bool has_instances;
@@ -103,9 +99,7 @@ uniform sampler2D texture_normal;
 uniform sampler2D texture_shadow_map;
 uniform sampler2D texture_depth;
 
-// ============================================================================
-// Utility Functions
-// ============================================================================
+// === Utility Functions
 
 float relative_elevation(float y)
 {
@@ -241,11 +235,7 @@ float sigmoid(float x, float width, float x0)
 
 float hash(vec3 p) { return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453); }
 
-// ------------------------------------------------------------
 // 2D -> 2D hash (deterministic, cheap, no trig)
-// Adapted from Dave Hoskins' "hash without sine" style hashes.
-// 'seed' lets you decorrelate multiple fields.
-// ------------------------------------------------------------
 vec2 hash22f(vec2 p, float seed)
 {
   // fold the seed in; any small non-zero scaling works
@@ -261,13 +251,7 @@ vec2 hash22f(vec2 p, float seed)
   return fract(vec2(q.x * q.y, q.z * q.x));
 }
 
-// ------------------------------------------------------------
 // Gabor-like wavelet sum (scalar output)
-// p  : sample position (world or texture space)
-// dir: preferred direction (need not be normalized; we normalize inside)
-// angle_spread_ratio: how much directions vary per-cell around 'dir'
-// fseed: randomization seed
-// ------------------------------------------------------------
 float gabor_wave_scalar(vec2 p, vec2 dir, float angle_spread_ratio, float fseed)
 {
   vec2 ip = floor(p);
@@ -316,9 +300,7 @@ float phase_hg(float cos_theta, float g)
   return (1.0 - g * g) / (4.0 * 3.14159265 * pow(denom, 1.5));
 }
 
-// ============================================================================
-// Main
-// ============================================================================
+// === Main
 
 void main()
 {
