@@ -169,6 +169,7 @@ void RenderWidget::render_ui_render_3d()
   changed |= ImGui::Checkbox("Wireframe", &this->wireframe_mode);
   changed |= ImGui::SliderFloat("Height scale", &this->scale_h, 0.f, 2.f);
   changed |= ImGui::SliderAngle("FOV", &this->camera.fov, 10.f, 180.f);
+  changed |= ImGui::Checkbox("Auto rotate cam.", &this->auto_rotate_camera);
 
   if (ImGui::Button("Reset Camera"))
   {

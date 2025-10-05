@@ -38,6 +38,7 @@ void RenderWidget::json_from(nlohmann::json const &json)
   // GUI state
   json_safe_get(json, "wireframe_mode", wireframe_mode);
   json_safe_get(json, "auto_rotate_light", auto_rotate_light);
+  json_safe_get(json, "auto_rotate_camera", auto_rotate_camera);
 
   // Camera parameters
   json_safe_get(json, "target", target);
@@ -140,6 +141,7 @@ nlohmann::json RenderWidget::json_to() const
       // GUI state
       {"wireframe_mode", wireframe_mode},
       {"auto_rotate_light", auto_rotate_light},
+      {"auto_rotate_camera", auto_rotate_camera},
 
       // Camera parameters
       {"target", target},

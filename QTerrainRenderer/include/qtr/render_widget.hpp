@@ -184,6 +184,7 @@ private:
   // --- User parameters
   bool wireframe_mode = false;
   bool auto_rotate_light = false;
+  bool auto_rotate_camera = false;
 
   // --- Camera parameters (see reset_camera_position)
   glm::vec3 target;      // Orbit center

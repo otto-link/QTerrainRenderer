@@ -671,6 +671,12 @@ void RenderWidget::update_camera()
 
   this->camera.position += pan;
   this->camera.target = this->target + pan;
+
+  if (this->auto_rotate_camera)
+  {
+    this->alpha_y += 0.5f * this->dt;
+    this->need_update = true;
+  }
 }
 
 void RenderWidget::update_light()
