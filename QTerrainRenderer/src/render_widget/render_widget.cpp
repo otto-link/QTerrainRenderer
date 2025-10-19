@@ -264,7 +264,8 @@ void RenderWidget::reset_texture(const std::string &name)
   qtr::Logger::log()->trace("RenderWidget::reset_texture: {}", name);
 
   this->makeCurrent();
-  this->sp_texture_manager->get(name)->destroy();
+  if (this->sp_texture_manager->get(name))
+    this->sp_texture_manager->get(name)->destroy();
   this->need_update = true;
   this->doneCurrent();
 }
@@ -280,7 +281,8 @@ void RenderWidget::reset_textures()
                                               QTR_TEX_HMAP,
                                               QTR_TEX_NORMAL};
   for (auto &s : tex_names)
-    this->sp_texture_manager->get(s)->destroy();
+    if (this->sp_texture_manager->get(s))
+      this->sp_texture_manager->get(s)->destroy();
 
   this->need_update = true;
   this->doneCurrent();
@@ -417,7 +419,8 @@ void RenderWidget::set_heightmap_geometry(const std::vector<float> &data,
                             height);
 
   // also generate the heightmap texture
-  this->sp_texture_manager->get(QTR_TEX_HMAP)->from_float_vector(data, width);
+  if (this->sp_texture_manager->get(QTR_TEX_HMAP))
+    this->sp_texture_manager->get(QTR_TEX_HMAP)->from_float_vector(data, width);
   this->need_update = true;
   this->doneCurrent();
 }
@@ -572,7 +575,8 @@ void RenderWidget::set_texture(const std::string          &name,
 
   this->makeCurrent();
 
-  this->sp_texture_manager->get(name)->from_image_8bit_rgba(data, width);
+  if (this->sp_texture_manager->get(name))
+    this->sp_texture_manager->get(name)->from_image_8bit_rgba(data, width);
   this->need_update = true;
 }
 
