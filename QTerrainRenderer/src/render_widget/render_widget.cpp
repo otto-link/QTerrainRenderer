@@ -143,7 +143,7 @@ void RenderWidget::initializeGL()
 
   // --- Meshes
 
-  generate_plane(this->plane, 0.f, 0.f, 0.f, 2.f * this->hmap_w, 2.f * this->hmap_w);
+  generate_plane(this->plane, 0.f, -1e-3f, 0.f, 2.f * this->hmap_w, 2.f * this->hmap_w);
 
   // --- Textures
 
