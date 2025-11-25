@@ -29,6 +29,8 @@ uniform float far_plane;
 uniform float scale_h;
 uniform float hmap_h0;
 uniform float hmap_h;
+uniform float hmap_hmin;
+uniform float hmap_hmax;
 
 // --- Normal visualization
 uniform bool  normal_visualization;
@@ -105,7 +107,7 @@ float relative_elevation(float y)
 {
   // from world OpenGL coordinate to [0, 1] (for texture heighmap
   // for instance)
-  return (y / scale_h - hmap_h0) / hmap_h;
+  return (y / scale_h - hmap_hmin) / (hmap_hmax - hmap_hmin);
 }
 
 float calculate_shadow(vec4 frag_pos_light_space,
@@ -388,7 +390,7 @@ void main()
       normal.xz += waves_normal_amplitude * gw * dir * (1.0 - attenuation);
     }
 
-    if (depth > 0.f)
+    if (depth > -100.f)
     {
 
       float transparency = exp(-depth / water_color_depth);

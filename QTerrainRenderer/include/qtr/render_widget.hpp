@@ -198,9 +198,11 @@ private:
 
   // --- Heightmap
   float scale_h = 1.0f;
-  float hmap_h0 = 0.f; // hmap bottom level
-  float hmap_w = 2.f;  // width of sides
-  float hmap_h = 0.4f; // elevations
+  float hmap_h0 = 0.f;   // hmap zero level
+  float hmap_hmin = 0.f; // hmap min level
+  float hmap_hmax = 0.f; // hmap max level
+  float hmap_w = 2.f;    // width of sides
+  float hmap_h = 0.4f;   // elevations scaling (at input)
 
   // --- Rendering parameters
 
