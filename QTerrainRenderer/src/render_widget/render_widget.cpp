@@ -367,8 +367,6 @@ void RenderWidget::set_common_uniforms(QOpenGLShaderProgram &shader,
   shader.setUniformValue("scale_h", scale_h);
   shader.setUniformValue("hmap_h0", this->hmap_h0);
   shader.setUniformValue("hmap_h", this->hmap_h);
-  shader.setUniformValue("hmap_hmin", this->hmap_hmin);
-  shader.setUniformValue("hmap_hmax", this->hmap_hmax);
   shader.setUniformValue("normal_visualization", normal_visualization);
   shader.setUniformValue("normal_map_scaling", 0.f); // reset by default
   shader.setUniformValue("gamma_correction", gamma_correction);
@@ -413,8 +411,6 @@ void RenderWidget::set_heightmap_geometry(const std::vector<float> &data,
                      this->hmap_w,
                      this->hmap_h,
                      this->hmap_w,
-                     this->hmap_hmin,
-                     this->hmap_hmax,
                      add_skirt,
                      0.f);
 
@@ -422,7 +418,9 @@ void RenderWidget::set_heightmap_geometry(const std::vector<float> &data,
                             width,
                             height);
 
-  // also generate the heightmap texture
+  // also generate the heightmap texture /!\ texture of float, scaled
+  // as the input, not scaled as what the OpenGL sees (there is an
+  // additional this->hmap_h scaling for OpenGL)
   if (this->sp_texture_manager->get(QTR_TEX_HMAP))
     this->sp_texture_manager->get(QTR_TEX_HMAP)->from_float_vector(data, width);
   this->need_update = true;
@@ -632,7 +630,6 @@ void RenderWidget::set_water_geometry(const std::vector<float> &data,
 
   bool  add_skirt = false;
   float add_level = 0.f;
-  float dummy;
 
   generate_heightmap(this->water_mesh,
                      data,
@@ -644,8 +641,6 @@ void RenderWidget::set_water_geometry(const std::vector<float> &data,
                      this->hmap_w,
                      this->hmap_h,
                      this->hmap_w,
-                     dummy, // output, not used
-                     dummy, // output, not used
                      add_skirt,
                      add_level,
                      exclude_below);

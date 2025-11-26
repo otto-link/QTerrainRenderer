@@ -22,8 +22,6 @@ void generate_heightmap(Mesh                     &mesh,
                         float                     lx,
                         float                     ly,
                         float                     lz,
-                        float                    &hmin,
-                        float                    &hmax,
                         bool                      add_skirt = false,
                         float                     add_level = 0.f,
                         float                     exclude_below = -FLT_MAX);

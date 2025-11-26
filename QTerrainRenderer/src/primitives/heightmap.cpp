@@ -18,8 +18,6 @@ void generate_heightmap(Mesh                     &mesh,
                         float                     lx,
                         float                     ly,
                         float                     lz,
-                        float                    &hmin,
-                        float                    &hmax,
                         bool                      add_skirt,
                         float                     add_level,
                         float                     exclude_below)
@@ -35,8 +33,6 @@ void generate_heightmap(Mesh                     &mesh,
   float dz = lz / (height - 1); // Z step
 
   // ---- Generate main surface vertices ----
-  hmin = FLT_MAX;
-  hmax = -FLT_MAX;
 
   for (int j = 0; j < height; ++j)
     for (int i = 0; i < width; ++i)
@@ -49,8 +45,6 @@ void generate_heightmap(Mesh                     &mesh,
       }
 
       float h = y + data[idx] * ly;
-      hmin = std::min(hmin, h);
-      hmax = std::max(hmax, h);
 
       glm::vec3 position(x - hx + i * dx, // X
                          h,               // Y (heightmap modifies Y)

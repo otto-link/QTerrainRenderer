@@ -166,6 +166,7 @@ void RenderWidget::render_ui_render_3d()
   // --- View & Camera ---
   ImGui::SeparatorText("View");
   changed |= ImGui::Checkbox("Normal visualization", &this->normal_visualization);
+  ImGui::SameLine();
   changed |= ImGui::Checkbox("Wireframe", &this->wireframe_mode);
   changed |= ImGui::SliderFloat("Height scale", &this->scale_h, 0.f, 2.f);
   changed |= ImGui::SliderAngle("FOV", &this->camera.fov, 10.f, 180.f);
@@ -179,13 +180,34 @@ void RenderWidget::render_ui_render_3d()
 
   // --- Rendering Toggles ---
   ImGui::SeparatorText("Render Options");
-  changed |= ImGui::Checkbox("Terrain", &this->render_hmap);
-  changed |= ImGui::Checkbox("Plane", &this->render_plane);
-  changed |= ImGui::Checkbox("Points", &this->render_points);
-  changed |= ImGui::Checkbox("Path", &this->render_path);
-  // changed |= ImGui::Checkbox("Rocks", &this->render_rocks);
-  // changed |= ImGui::Checkbox("Trees", &this->render_trees);
-  changed |= ImGui::Checkbox("Water##render", &this->render_water);
+
+  if (ImGui::BeginTable("#CheckGrid", 2))
+  {
+    ImGui::TableNextRow();
+    ImGui::TableNextColumn();
+    changed |= ImGui::Checkbox("Plane", &this->render_plane);
+    //
+    ImGui::TableNextRow();
+    ImGui::TableNextColumn();
+    changed |= ImGui::Checkbox("Terrain", &this->render_hmap);
+    ImGui::TableNextColumn();
+    changed |= ImGui::Checkbox("Water##render", &this->render_water);
+    //
+    ImGui::TableNextRow();
+    ImGui::TableNextColumn();
+    changed |= ImGui::Checkbox("Points", &this->render_points);
+    ImGui::SameLine();
+    ImGui::TableNextColumn();
+    changed |= ImGui::Checkbox("Path", &this->render_path);
+    //
+    // ImGui::TableNextRow();
+    // ImGui::TableNextColumn();
+    // changed |= ImGui::Checkbox("Rocks", &this->render_rocks);
+    // ImGui::TableNextColumn();
+    // changed |= ImGui::Checkbox("Trees", &this->render_trees);
+
+    ImGui::EndTable();
+  }
 
   // --- Materials ---
   if (ImGui::CollapsingHeader("Materials", ImGuiTreeNodeFlags_DefaultOpen))

@@ -29,8 +29,6 @@ uniform float far_plane;
 uniform float scale_h;
 uniform float hmap_h0;
 uniform float hmap_h;
-uniform float hmap_hmin;
-uniform float hmap_hmax;
 
 // --- Normal visualization
 uniform bool  normal_visualization;
@@ -103,11 +101,10 @@ uniform sampler2D texture_depth;
 
 // === Utility Functions
 
-float relative_elevation(float y)
+float orginal_input_elevation(float y)
 {
-  // from world OpenGL coordinate to [0, 1] (for texture heighmap
-  // for instance)
-  return (y / scale_h - hmap_hmin) / (hmap_hmax - hmap_hmin);
+  // from world OpenGL coordinate to orginial heightmap input coordinates
+  return y / scale_h / hmap_h - hmap_h0;
 }
 
 float calculate_shadow(vec4 frag_pos_light_space,
@@ -344,9 +341,9 @@ void main()
 
   if (false) // raw elevation
   {
-    float h = clamp(relative_elevation(frag_pos.y), 0.0, 1.0);
-    frag_color = vec4(turbo(h), 1.0);
-    return;
+    // float h = clamp(orginal_input_elevation(frag_pos.y), 0.0, 1.0);
+    // frag_color = vec4(turbo(h), 1.0);
+    // return;
   }
 
   if (false) // raw depth
@@ -359,7 +356,7 @@ void main()
   if (use_water_colors)
   {
     float h = texture(texture_hmap, frag_uv).r;
-    float depth = relative_elevation(frag_pos.y) - h;
+    float depth = orginal_input_elevation(frag_pos.y) - h;
 
     if (add_water_waves)
     {
@@ -390,7 +387,7 @@ void main()
       normal.xz += waves_normal_amplitude * gw * dir * (1.0 - attenuation);
     }
 
-    if (depth > -100.f)
+    if (depth > 0.f)
     {
 
       float transparency = exp(-depth / water_color_depth);
