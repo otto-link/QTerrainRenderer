@@ -21,6 +21,11 @@ public:
     QSize size_hint = QSize(1024, 768);
   } widget;
 
+  struct Viewer3D
+  {
+    bool show_mouse_control = true;
+  } viewer3d;
+
 private:
   Config(const Config &) = delete;
   Config &operator=(const Config &) = delete;

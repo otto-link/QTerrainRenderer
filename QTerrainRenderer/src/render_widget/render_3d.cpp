@@ -294,6 +294,45 @@ void RenderWidget::render_ui_render_3d()
     changed |= ImGui::ColorEdit3("Mie color", glm::value_ptr(this->mie_color));
   }
 
+  // --- Mouse controls overlay ---
+  if (QTR_CONFIG->viewer3d.show_mouse_control)
+  {
+    // Offset from top-right corner
+    const ImVec2 padding(20.0f, 20.0f);
+
+    // Get main viewport
+    ImGuiViewport *viewport = ImGui::GetMainViewport();
+
+    // Position at top-right
+    ImVec2 pos = ImVec2(viewport->WorkPos.x + viewport->WorkSize.x - padding.x,
+                        viewport->WorkPos.y + padding.y);
+
+    // Window flags for overlay
+    ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration |
+                             ImGuiWindowFlags_NoBackground |
+                             ImGuiWindowFlags_AlwaysAutoResize |
+                             ImGuiWindowFlags_NoSavedSettings |
+                             ImGuiWindowFlags_NoFocusOnAppearing |
+                             ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoMove;
+
+    // Remove frame/border
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(8, 8));
+
+    // Set exact screen position
+    ImGui::SetNextWindowPos(pos, ImGuiCond_Always, ImVec2(1.0f, 0.0f));
+    ImGui::SetNextWindowBgAlpha(0.35f);
+
+    if (ImGui::Begin("MouseControlsOverlay", nullptr, flags))
+    {
+      ImGui::Text("LMB: Rotate");
+      ImGui::Text("Wheel: Zoom");
+      ImGui::Text("RMB: Pan");
+    }
+    ImGui::End();
+    ImGui::PopStyleVar(2);
+  }
+
   // --- End main window ---
   this->need_update |= changed;
   ImGui::End();
