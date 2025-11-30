@@ -91,6 +91,15 @@ void generate_heightmap(Mesh                     &mesh,
   // ---- Skirts (optional, unchanged but will respect missing vertices) ----
   if (add_skirt)
   {
+    // Find minimum elevation (above exclude_below)
+    float minElevation = std::numeric_limits<float>::max();
+    for (float h : data)
+    {
+      if (h > exclude_below && h < minElevation)
+        minElevation = h;
+    }
+    float skirtBase = y + minElevation * ly; // convert to world Y
+
     auto add_skirt_edge = [&](auto getIndex, int count)
     {
       for (int k = 0; k < count - 1; ++k)
@@ -104,9 +113,9 @@ void generate_heightmap(Mesh                     &mesh,
 
         // Bottom skirt vertices (lower in Y)
         glm::vec3 bottomPos0 = vertices[top0].position;
-        bottomPos0.y = add_level;
+        bottomPos0.y = skirtBase;
         glm::vec3 bottomPos1 = vertices[top1].position;
-        bottomPos1.y = add_level;
+        bottomPos1.y = skirtBase;
 
         vertices.emplace_back(bottomPos0, glm::vec3(0, 0, 0), vertices[top0].uv);
         vertices.emplace_back(bottomPos1, glm::vec3(0, 0, 0), vertices[top1].uv);
