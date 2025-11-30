@@ -64,11 +64,14 @@ RenderWidget::RenderWidget(const std::string &_title, QWidget *parent)
 
 RenderWidget::~RenderWidget()
 {
-  this->makeCurrent();
-  ImGui::SetCurrentContext(this->imgui_context);
-  ImGui_ImplOpenGL3_Shutdown();
-  ImGui::DestroyContext(this->imgui_context);
-  this->doneCurrent();
+  if (this->context())
+  {
+    this->makeCurrent();
+    ImGui::SetCurrentContext(this->imgui_context);
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui::DestroyContext(this->imgui_context);
+    this->doneCurrent();
+  }
 
   this->imgui_context = nullptr;
 }
