@@ -28,6 +28,8 @@ void RenderWidget::paintGL()
   this->update_camera();
 
   // scene and UI
+  this->makeCurrent();
+
   switch (this->render_type)
   {
   case RenderType::RENDER_2D:
@@ -40,6 +42,8 @@ void RenderWidget::paintGL()
     this->render_ui_render_3d();
     break;
   }
+
+  this->doneCurrent();
 }
 
 } // namespace qtr

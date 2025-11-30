@@ -54,7 +54,7 @@ void imgui_set_blender_style()
   ImGuiStyle &style = ImGui::GetStyle();
 
   // ===== Colors =====
-  ImVec4 blender_blue = ImVec4(0.278f, 0.447f, 0.702f, 1.0f);
+  ImVec4 blender_blue = ImVec4(0.369f, 0.506f, 0.675f, 1.f);
   ImVec4 blender_blue_hover = ImVec4(0.357f, 0.525f, 0.780f, 1.0f);
   ImVec4 blender_blue_active = ImVec4(0.200f, 0.369f, 0.624f, 1.0f);
 
