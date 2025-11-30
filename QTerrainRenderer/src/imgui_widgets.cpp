@@ -29,9 +29,11 @@ bool imgui_viewer_main_menubar(RenderWidget &render_widget)
 {
   bool changed = false;
 
+  ImGui::PushStyleColor(ImGuiCol_MenuBarBg, ImVec4(0.1f, 0.1f, 0.1f, 1.0f));
+
   if (ImGui::BeginMainMenuBar())
   {
-    if (ImGui::BeginMenu("Viewer type"))
+    if (ImGui::BeginMenu("Viewer Type"))
     {
       if (ImGui::MenuItem("2D viewer"))
         render_widget.set_render_type(RenderType::RENDER_2D);
@@ -41,6 +43,8 @@ bool imgui_viewer_main_menubar(RenderWidget &render_widget)
     }
     ImGui::EndMainMenuBar();
   }
+
+  ImGui::PopStyleColor();
 
   return changed;
 }
