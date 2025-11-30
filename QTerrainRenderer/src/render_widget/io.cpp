@@ -53,14 +53,14 @@ void RenderWidget::wheelEvent(QWheelEvent *e)
   this->need_update = true;
 }
 
-void RenderWidget::keyPressEvent(QKeyEvent *e)
+void RenderWidget::keyPressEvent(QKeyEvent * /* e */)
 {
 
   // this->get_imgui_io().KeysDown[e->key()] = true;
   this->need_update = true;
 }
 
-void RenderWidget::keyReleaseEvent(QKeyEvent *e)
+void RenderWidget::keyReleaseEvent(QKeyEvent * /* e */)
 {
 
   // this->get_imgui_io().KeysDown[e->key()] = false;

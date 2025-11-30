@@ -24,7 +24,8 @@ void generate_heightmap(Mesh                     &mesh,
                         float                     lz,
                         bool                      add_skirt = false,
                         float                     add_level = 0.f,
-                        float                     exclude_below = -FLT_MAX);
+                        float                     exclude_below = -FLT_MAX,
+                        float                    *p_hmin = nullptr);
 
 void generate_grass_leaf_2sided(Mesh            &mesh,
                                 const glm::vec3 &base_pos,

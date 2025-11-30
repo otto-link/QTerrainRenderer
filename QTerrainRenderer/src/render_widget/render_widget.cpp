@@ -146,7 +146,12 @@ void RenderWidget::initializeGL()
 
   // --- Meshes
 
-  generate_plane(this->plane, 0.f, -1e-3f, 0.f, 2.f * this->hmap_w, 2.f * this->hmap_w);
+  generate_plane(this->plane,
+                 0.f,
+                 -1e-3f,
+                 0.f,
+                 2000.f * this->hmap_w,
+                 2000.f * this->hmap_w);
 
   // --- Textures
 
@@ -415,7 +420,17 @@ void RenderWidget::set_heightmap_geometry(const std::vector<float> &data,
                      this->hmap_h,
                      this->hmap_w,
                      add_skirt,
-                     0.f);
+                     0.f,
+                     -FLT_MAX,
+                     &this->hmap_hmin);
+
+  // regenerate plane
+  generate_plane(this->plane,
+                 0.f,
+                 this->hmap_hmin * this->hmap_h - 1e-3f,
+                 0.f,
+                 2000.f * this->hmap_w,
+                 2000.f * this->hmap_w);
 
   qtr::Logger::log()->trace("RenderWidget::set_heightmap_geometry: w x h = {} x {}",
                             width,

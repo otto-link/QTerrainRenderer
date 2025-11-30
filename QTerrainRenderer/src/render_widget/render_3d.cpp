@@ -59,7 +59,7 @@ void RenderWidget::render_scene_render_3d()
     // base plane
     if (this->render_plane)
     {
-      p_shader->setUniformValue("base_color", QVector3D(0.5f, 0.5f, 0.5f));
+      p_shader->setUniformValue("base_color", QVector3D(0.2f, 0.2f, 0.2f));
       p_shader->setUniformValue("add_ambiant_occlusion", false);
       this->plane.draw();
     }
