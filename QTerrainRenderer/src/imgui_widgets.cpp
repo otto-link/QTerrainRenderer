@@ -29,7 +29,8 @@ bool imgui_viewer_main_menubar(RenderWidget &render_widget)
 {
   bool changed = false;
 
-  ImGui::PushStyleColor(ImGuiCol_MenuBarBg, ImVec4(0.1f, 0.1f, 0.1f, 1.0f));
+  ImGui::PushStyleColor(ImGuiCol_MenuBarBg, ImVec4(0.f, 0.f, 0.f, 0.1f));
+  ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.f, 0.f, 0.f, 0.1f));
 
   if (ImGui::BeginMainMenuBar())
   {
@@ -44,7 +45,7 @@ bool imgui_viewer_main_menubar(RenderWidget &render_widget)
     ImGui::EndMainMenuBar();
   }
 
-  ImGui::PopStyleColor();
+  ImGui::PopStyleColor(2);
 
   return changed;
 }
