@@ -434,14 +434,13 @@ void RenderWidget::set_heightmap_geometry(const std::vector<float> &data,
   }
   else
   {
-    // TODO need some testing & debugging
     update_heightmap_elevation(this->hmap,
                                data,
                                width,
                                height,
                                this->hmap_h0,
                                this->hmap_h,
-                               this->hmap_hmin, // update, output
+                               this->hmap_hmin, // [out]
                                /* add_level */ 0.f);
   }
 

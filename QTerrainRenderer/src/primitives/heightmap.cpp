@@ -181,6 +181,11 @@ void update_heightmap_elevation(Mesh                     &mesh,
   auto &inds = mesh.get_indices();
   auto &vertex_map = mesh.get_vertex_map();
 
+  hmin = std::numeric_limits<float>::max();
+
+  // vertices beyond that index are skirt vertices
+  int max_index = 0;
+
   // update Y positions
   for (int j = 0; j < height; ++j)
     for (int i = 0; i < width; ++i)
@@ -188,18 +193,25 @@ void update_heightmap_elevation(Mesh                     &mesh,
       int idx = j * width + i;
       int vindex = vertex_map[idx]; // store this once at creation
 
+      max_index = std::max(max_index, vindex);
+
       if (vindex < 0)
         continue;
 
-      float h = data[idx];
-      hmin = std::min(hmin, h / ly);
-      verts[vindex].position.y = y + h * ly + add_level;
+      float hraw = data[idx];
+      hmin = std::min(hmin, hraw);
+
+      verts[vindex].position.y = y + hraw * ly + add_level;
     }
 
-  // recompute normals
-  for (auto &v : verts)
-    v.normal = glm::vec3(0);
+  // fix skirt elevation
+  if (max_index + 1 < verts.size())
+  {
+    for (size_t k = max_index + 1; k < verts.size(); ++k)
+      verts[k].position.y = y + hmin * ly + add_level;
+  }
 
+  // normals
   for (size_t k = 0; k < inds.size(); k += 3)
   {
     auto &v0 = verts[inds[k]];
