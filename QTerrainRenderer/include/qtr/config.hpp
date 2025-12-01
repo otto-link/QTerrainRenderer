@@ -23,7 +23,7 @@ public:
 
   struct Viewer3D
   {
-    bool show_mouse_control = true;
+    bool show_mouse_control = false;
   } viewer3d;
 
 private:
