@@ -10,14 +10,17 @@ Mesh::Mesh() {}
 
 Mesh::~Mesh() { this->destroy(); }
 
-void Mesh::create(const std::vector<Vertex> &vertices, const std::vector<uint> &indices)
+void Mesh::create(std::vector<Vertex> vertices_in,
+                  std::vector<uint>   indices_in,
+                  bool                store_cpu_copy,
+                  std::vector<int>    vertex_map_in)
 {
   this->initializeOpenGLFunctions();
   this->destroy();
 
-  this->vertex_count = vertices.size();
-  this->index_count = indices.size();
-  this->has_indices = !indices.empty();
+  this->vertex_count = vertices_in.size();
+  this->index_count = indices_in.size();
+  this->has_indices = !indices_in.empty();
 
   // Create VAO
   glGenVertexArrays(1, &this->vao);
@@ -27,8 +30,8 @@ void Mesh::create(const std::vector<Vertex> &vertices, const std::vector<uint> &
   glGenBuffers(1, &this->vbo);
   glBindBuffer(GL_ARRAY_BUFFER, this->vbo);
   glBufferData(GL_ARRAY_BUFFER,
-               vertices.size() * sizeof(Vertex),
-               vertices.data(),
+               vertices_in.size() * sizeof(Vertex),
+               vertices_in.data(),
                GL_DYNAMIC_DRAW);
 
   // Create EBO
@@ -37,8 +40,8 @@ void Mesh::create(const std::vector<Vertex> &vertices, const std::vector<uint> &
     glGenBuffers(1, &this->ebo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->ebo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-                 indices.size() * sizeof(uint),
-                 indices.data(),
+                 indices_in.size() * sizeof(uint),
+                 indices_in.data(),
                  GL_STATIC_DRAW);
   }
   else
@@ -58,6 +61,13 @@ void Mesh::create(const std::vector<Vertex> &vertices, const std::vector<uint> &
   glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride, (void *)(6 * sizeof(float)));
 
   glBindVertexArray(0);
+
+  if (store_cpu_copy)
+  {
+    this->vertices = std::move(vertices_in);
+    this->indices = std::move(indices_in);
+    this->vertex_map = std::move(vertex_map_in);
+  }
 }
 
 void Mesh::draw()
@@ -96,7 +106,13 @@ void Mesh::destroy()
 
 size_t Mesh::get_index_count() const { return this->index_count; }
 
+std::vector<uint> &Mesh::get_indices() { return this->indices; }
+
 GLuint Mesh::get_vao() const { return this->vao; }
+
+std::vector<Vertex> &Mesh::get_vertices() { return this->vertices; }
+
+std::vector<int> &Mesh::get_vertex_map() { return this->vertex_map; }
 
 bool Mesh::is_active() const { return (this->vbo && this->vao); }
 
@@ -106,6 +122,18 @@ void Mesh::update_vertices(const std::vector<Vertex> &vertices)
     return;
   glBindBuffer(GL_ARRAY_BUFFER, this->vbo);
   glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.size() * sizeof(Vertex), vertices.data());
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
+void Mesh::update_vertices()
+{
+  if (!this->vbo)
+    return;
+  glBindBuffer(GL_ARRAY_BUFFER, this->vbo);
+  glBufferSubData(GL_ARRAY_BUFFER,
+                  0,
+                  this->vertices.size() * sizeof(Vertex),
+                  this->vertices.data());
   glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 

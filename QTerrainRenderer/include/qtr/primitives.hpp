@@ -27,6 +27,15 @@ void generate_heightmap(Mesh                     &mesh,
                         float                     exclude_below = -FLT_MAX,
                         float                    *p_hmin = nullptr);
 
+void update_heightmap_elevation(Mesh                     &mesh,
+                                const std::vector<float> &data,
+                                int                       width,
+                                int                       height,
+                                float                     y,
+                                float                     ly,
+                                float                    &hmin,
+                                float                     add_level = 0.f);
+
 void generate_grass_leaf_2sided(Mesh            &mesh,
                                 const glm::vec3 &base_pos,
                                 float            height,

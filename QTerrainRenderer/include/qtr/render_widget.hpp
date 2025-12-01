@@ -203,6 +203,9 @@ private:
   float hmap_hmax = 0.f; // hmap max level
   float hmap_w = 2.f;    // width of sides
   float hmap_h = 0.4f;   // elevations scaling (at input)
+  int   current_width = 0;
+  int   current_height = 0;
+  bool  current_add_skirt_state = true;
 
   // --- Rendering parameters
 
