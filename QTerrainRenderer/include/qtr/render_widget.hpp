@@ -232,9 +232,9 @@ private:
   float shadow_strength = 0.9f;
 
   // Ambient occlusion
-  bool  add_ambiant_occlusion = false;
-  float ambiant_occlusion_strength = 5.f;
-  int   ambiant_occlusion_radius = 3;
+  bool  add_ambiant_occlusion = true;
+  float ambiant_occlusion_strength = 0.8f;
+  float ambiant_occlusion_radius = 0.03f;
 
   // Textures control
   bool bypass_texture_albedo = false;

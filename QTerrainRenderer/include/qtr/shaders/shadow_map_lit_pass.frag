@@ -53,7 +53,7 @@ uniform float shadow_strength;
 // --- Ambient occlusion
 uniform bool  add_ambiant_occlusion;
 uniform float ambiant_occlusion_strength;
-uniform int   ambiant_occlusion_radius;
+uniform float ambiant_occlusion_radius;
 
 // --- Texturing
 uniform bool use_texture_albedo;
@@ -136,8 +136,8 @@ float calculate_shadow(vec4 frag_pos_light_space,
     float current_depth = proj_coords.z;
 
     // locally tune bias
-    float bias_min = 0.0005f;
-    float bias_max = 0.001f;
+    float bias_min = 1e-4f;
+    float bias_max = 1e-4f;
     float bias_t = clamp(dot(frag_normal, light_dir), 0.0, 1.0); // in [0, 1]
     float bias = mix(bias_max, bias_min, bias_t);
 
@@ -175,30 +175,62 @@ float phase_rayleigh(float cos_theta)
 }
 
 // horizonn-based ambiant occlusion
-float compute_hbao(vec2 uv, sampler2D hmap, float scale, int dir_count, int step_count)
+float gain(float x, float factor)
+{
+  return x < 0.5 ? 0.5f * pow(2.f * x, factor)
+                 : 1.f - 0.5f * pow(2.f * (1.f - x), factor);
+}
+
+float compute_hbao(vec2 uv, sampler2D hmap, int dir_count, int step_count, float radius)
 {
   float h0 = texture(hmap, uv).r;
-  float occ = 0.0;
+  float occlusion = 0.0;
+
+  ivec2 res = textureSize(hmap, 0);
+  vec2  texel_size = 1.0 / res;
 
   for (int d = 0; d < dir_count; d++)
   {
-    float angle = 2.0 * 3.14159265 * float(d) / float(dir_count);
-    vec2  dir = vec2(cos(angle), sin(angle));
+    float dir_angle = 6.28318530718 * float(d) / float(dir_count);
+    vec2  dir = vec2(cos(dir_angle), sin(dir_angle));
 
-    float horizon = -1e6;
+    float horizon = -3.14159265 * 0.5; // −π/2
+    float scale = 2.f;
 
     for (int s = 1; s <= step_count; s++)
     {
-      vec2  suv = uv + dir * (float(s) / float(step_count)) * scale;
+      // float t = float(s) / float(step_count);     // 0..1
+
+      // logarithmic search along the ray
+      float lf = float(s) / float(step_count);
+      float t = (exp2(lf) - 1.0) / (2.0 - 1.0); // log stepping in [0..1]
+
+      vec2 suv = clamp(uv + dir * t * radius, 0.0, 1.0);
+
       float hs = texture(hmap, suv).r;
-      float slope = (hs - h0) / float(s);
-      horizon = max(horizon, slope);
+
+      // work in a unit cube
+      float slope = scale * (hs - h0) / (t * radius); // rise/run
+      float angle = atan(slope);                      // angle in radians
+
+      horizon = max(horizon, angle);
     }
 
-    occ += max(0.0, horizon);
+    // positive angles mean occlusion
+    occlusion += max(0.0, horizon);
   }
 
-  return clamp(1.0 - occ / float(dir_count), 0.0, 1.0);
+  // normalize AO to 0..1
+  // horizon is in [0 .. π/2], so divide by π/2
+  float ao = 1.0 - (occlusion / float(dir_count)) / (1.57079632679);
+  ao = clamp(ao, 0.0, 1.0);
+
+  ao = gain(ao, 3.f);
+
+  // ao = smoothstep(0.0, 1.0, ao);
+  ao = 1.f - ambiant_occlusion_strength + ao * ambiant_occlusion_strength;
+
+  return ao;
 }
 
 // https://www.shadertoy.com/view/WdjSW3
@@ -450,7 +482,7 @@ void main()
 
     if (add_ambiant_occlusion)
     {
-      float ao = compute_hbao(frag_uv, texture_hmap, 1.0, 8, 8);
+      float ao = compute_hbao(frag_uv, texture_hmap, 16, 16, ambiant_occlusion_radius);
       result *= ao;
     }
 
@@ -550,5 +582,8 @@ void main()
 
   if (apply_tonemap)
     frag_color = vec4(tonemap_ACES(frag_color.xyz), alpha);
+
+  float gamma = 2.0;
+  frag_color.rgb = pow(frag_color.rgb, vec3(1.0 / gamma));
 }
 )""

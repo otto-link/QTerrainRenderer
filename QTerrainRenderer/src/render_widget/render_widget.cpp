@@ -180,7 +180,7 @@ void RenderWidget::initializeGL()
 
   // shadow map texture and buffer
   {
-    int shadow_map_res = 2048;
+    int shadow_map_res = 1024; // 2048;
 
     this->sp_texture_manager->add_depth_texture(QTR_TEX_SHADOW_MAP,
                                                 shadow_map_res,

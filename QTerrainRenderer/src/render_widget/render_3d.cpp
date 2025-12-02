@@ -238,8 +238,8 @@ void RenderWidget::render_ui_render_3d()
       changed |= ImGui::SliderFloat("Strength",
                                     &this->ambiant_occlusion_strength,
                                     0.f,
-                                    1000.f);
-      changed |= ImGui::SliderInt("Radius", &this->ambiant_occlusion_radius, 0, 32);
+                                    1.f);
+      changed |= ImGui::SliderFloat("Radius", &this->ambiant_occlusion_radius, 0.f, 0.5f);
       ImGui::TreePop();
     }
   }
