@@ -482,8 +482,8 @@ void main()
 
     if (add_ambiant_occlusion)
     {
-      float ao = compute_hbao(frag_uv, texture_hmap, 16, 16, ambiant_occlusion_radius);
-      result *= ao;
+      float ao = compute_hbao(frag_uv, texture_hmap, 16, 8, ambiant_occlusion_radius);
+      result *= pow(ao, 0.5f);
     }
 
     frag_color = vec4(result, alpha);
@@ -582,8 +582,5 @@ void main()
 
   if (apply_tonemap)
     frag_color = vec4(tonemap_ACES(frag_color.xyz), alpha);
-
-  float gamma = 2.0;
-  frag_color.rgb = pow(frag_color.rgb, vec3(1.0 / gamma));
 }
 )""
