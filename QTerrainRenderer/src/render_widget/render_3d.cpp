@@ -82,7 +82,7 @@ void RenderWidget::render_scene_render_3d()
     // heightmap
     if (this->render_hmap)
     {
-      p_shader->setUniformValue("base_color", QVector3D(0.9f, 0.9f, 0.9f));
+      p_shader->setUniformValue("base_color", QVector3D(1.f, 1.f, 1.f));
       p_shader->setUniformValue(
           "use_texture_albedo",
           true && !this->bypass_texture_albedo &&
