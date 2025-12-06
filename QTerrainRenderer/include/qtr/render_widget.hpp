@@ -70,6 +70,26 @@ public:
   // --- Setters
   void set_render_type(const RenderType &new_render_type);
 
+  bool get_bypass_texture_albedo() const;
+  bool get_render_plane() const;
+  bool get_render_points() const;
+  bool get_render_path() const;
+  bool get_render_hmap() const;
+  bool get_render_rocks() const;
+  bool get_render_trees() const;
+  bool get_render_water() const;
+  bool get_render_leaves() const;
+
+  void set_bypass_texture_albedo(bool new_state);
+  void set_render_plane(bool new_state);
+  void set_render_points(bool new_state);
+  void set_render_path(bool new_state);
+  void set_render_hmap(bool new_state);
+  void set_render_rocks(bool new_state);
+  void set_render_trees(bool new_state);
+  void set_render_water(bool new_state);
+  void set_render_leaves(bool new_state);
+
   // --- QWidget interface
   QSize sizeHint() const override;
 

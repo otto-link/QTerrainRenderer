@@ -102,6 +102,27 @@ ImGuiIO &RenderWidget::get_imgui_io()
   return ImGui::GetIO();
 }
 
+bool RenderWidget::get_bypass_texture_albedo() const
+{
+  return this->bypass_texture_albedo;
+}
+
+bool RenderWidget::get_render_plane() const { return this->render_plane; }
+
+bool RenderWidget::get_render_points() const { return this->render_points; }
+
+bool RenderWidget::get_render_path() const { return this->render_path; }
+
+bool RenderWidget::get_render_hmap() const { return this->render_hmap; }
+
+bool RenderWidget::get_render_rocks() const { return this->render_rocks; }
+
+bool RenderWidget::get_render_trees() const { return this->render_trees; }
+
+bool RenderWidget::get_render_water() const { return this->render_water; }
+
+bool RenderWidget::get_render_leaves() const { return this->render_leaves; }
+
 Mesh &RenderWidget::get_water_mesh() { return this->water_mesh; }
 
 void RenderWidget::initializeGL()
@@ -337,6 +358,12 @@ void RenderWidget::resizeGL(int w, int h)
   this->doneCurrent();
 }
 
+void RenderWidget::set_bypass_texture_albedo(bool new_state)
+{
+  this->bypass_texture_albedo = new_state;
+  this->need_update = true;
+}
+
 void RenderWidget::set_common_uniforms(QOpenGLShaderProgram &shader,
                                        const glm::mat4      &model,
                                        const glm::mat4      &projection,
@@ -569,6 +596,54 @@ void RenderWidget::set_points(const std::vector<float> &x,
 void RenderWidget::set_render_type(const RenderType &new_render_type)
 {
   this->render_type = new_render_type;
+}
+
+void RenderWidget::set_render_plane(bool new_state)
+{
+  this->render_plane = new_state;
+  this->need_update = true;
+}
+
+void RenderWidget::set_render_points(bool new_state)
+{
+  this->render_points = new_state;
+  this->need_update = true;
+}
+
+void RenderWidget::set_render_path(bool new_state)
+{
+  this->render_path = new_state;
+  this->need_update = true;
+}
+
+void RenderWidget::set_render_hmap(bool new_state)
+{
+  this->render_hmap = new_state;
+  this->need_update = true;
+}
+
+void RenderWidget::set_render_rocks(bool new_state)
+{
+  this->render_rocks = new_state;
+  this->need_update = true;
+}
+
+void RenderWidget::set_render_trees(bool new_state)
+{
+  this->render_trees = new_state;
+  this->need_update = true;
+}
+
+void RenderWidget::set_render_water(bool new_state)
+{
+  this->render_water = new_state;
+  this->need_update = true;
+}
+
+void RenderWidget::set_render_leaves(bool new_state)
+{
+  this->render_leaves = new_state;
+  this->need_update = true;
 }
 
 void RenderWidget::set_rocks(const std::vector<float> &x,
