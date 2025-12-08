@@ -317,7 +317,7 @@ private:
   std::unique_ptr<TextureManager> sp_texture_manager;
 
   // --- ImGUI
-  ImGuiContext *imgui_context;
+  ImGuiContext *imgui_context = nullptr;
 };
 
 // --- Helpers

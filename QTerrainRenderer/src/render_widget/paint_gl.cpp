@@ -22,14 +22,25 @@ namespace qtr
 
 void RenderWidget::paintGL()
 {
-  this->update_time();
+  QOpenGLContext *ctx = context();
+  if (!ctx || !ctx->isValid())
+  {
+    Logger::log()->warn("RenderWidget::paintGL: OpenGL context not valid!");
+    return;
+  }
 
+  QOpenGLFunctions *f = QOpenGLContext::currentContext()->functions();
+  if (!f)
+  {
+    Logger::log()->warn("RenderWidget::paintGL: OpenGL functions not available!");
+    return;
+  }
+
+  this->update_time();
   this->update_light();
   this->update_camera();
 
   // scene and UI
-  this->makeCurrent();
-
   switch (this->render_type)
   {
   case RenderType::RENDER_2D:
@@ -42,8 +53,6 @@ void RenderWidget::paintGL()
     this->render_ui_render_3d();
     break;
   }
-
-  this->doneCurrent();
 }
 
 } // namespace qtr
