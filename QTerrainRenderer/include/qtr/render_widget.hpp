@@ -299,6 +299,7 @@ private:
   std::unique_ptr<ShaderManager> sp_shader_manager;
   GLuint                         fbo;
   GLuint                         fbo_depth;
+  bool                           initial_gl_done = false;
 
   // --- Scene components
   Camera camera_shadow_pass;

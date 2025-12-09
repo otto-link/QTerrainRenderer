@@ -22,19 +22,11 @@ namespace qtr
 
 void RenderWidget::paintGL()
 {
-  QOpenGLContext *ctx = context();
-  if (!ctx || !ctx->isValid())
-  {
-    Logger::log()->warn("RenderWidget::paintGL: OpenGL context not valid!");
+  if (!this->initial_gl_done)
     return;
-  }
 
-  QOpenGLFunctions *f = QOpenGLContext::currentContext()->functions();
-  if (!f)
-  {
-    Logger::log()->warn("RenderWidget::paintGL: OpenGL functions not available!");
-    return;
-  }
+  if (QOpenGLContext::currentContext() != this->context())
+    this->makeCurrent();
 
   this->update_time();
   this->update_light();
@@ -53,6 +45,10 @@ void RenderWidget::paintGL()
     this->render_ui_render_3d();
     break;
   }
+
+#ifdef __linux__
+  this->doneCurrent();
+#endif
 }
 
 } // namespace qtr

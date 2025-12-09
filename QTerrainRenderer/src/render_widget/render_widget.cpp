@@ -66,14 +66,13 @@ RenderWidget::~RenderWidget()
 {
   if (this->context())
   {
-    this->makeCurrent();
+    // don't try to make context current in destructor Qt might have
+    // already destroyed the context
     ImGui::SetCurrentContext(this->imgui_context);
     ImGui_ImplOpenGL3_Shutdown();
     ImGui::DestroyContext(this->imgui_context);
-    this->doneCurrent();
+    this->imgui_context = nullptr;
   }
-
-  this->imgui_context = nullptr;
 }
 
 void RenderWidget::clear()
@@ -237,6 +236,8 @@ void RenderWidget::initializeGL()
   ImGui_ImplOpenGL3_Init("#version 330");
 
   this->doneCurrent();
+
+  this->initial_gl_done = true;
 }
 
 void RenderWidget::reset_camera_position()
@@ -351,9 +352,16 @@ void RenderWidget::resizeEvent(QResizeEvent *event)
 
 void RenderWidget::resizeGL(int w, int h)
 {
+  if (!isValid())
+    return;
+
   this->makeCurrent();
   this->glViewport(0, 0, w, h);
-  this->get_imgui_io().DisplaySize = ImVec2(float(w), float(h));
+  if (this->imgui_context)
+  {
+    ImGui::SetCurrentContext(this->imgui_context);
+    this->get_imgui_io().DisplaySize = ImVec2(float(w), float(h));
+  }
   this->need_update = true;
   this->doneCurrent();
 }

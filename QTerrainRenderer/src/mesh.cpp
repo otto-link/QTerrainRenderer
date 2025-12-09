@@ -72,7 +72,7 @@ void Mesh::create(std::vector<Vertex> vertices_in,
 
 void Mesh::draw()
 {
-  if (!this->vbo && !this->vao)
+  if (!this->vao)
     return;
 
   glBindVertexArray(this->vao);

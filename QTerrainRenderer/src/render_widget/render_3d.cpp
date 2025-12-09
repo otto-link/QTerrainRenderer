@@ -22,6 +22,9 @@ namespace qtr
 
 void RenderWidget::render_scene_render_3d()
 {
+  if (QOpenGLContext::currentContext() != this->context())
+    this->makeCurrent();
+
   // model
   glm::mat4 model = glm::mat4(1.0f);
   model = glm::scale(model, glm::vec3(1.f, this->scale_h, 1.f));
@@ -30,9 +33,13 @@ void RenderWidget::render_scene_render_3d()
   glm::mat4 light_space_matrix;
   this->render_shadow_map(model, light_space_matrix);
 
-  // projection
-  float aspect_ratio = static_cast<float>(this->width()) /
-                       static_cast<float>(this->height());
+  // projection - guard against zero height
+  int h = this->height();
+  int w = this->width();
+  if (h <= 0 || w <= 0)
+    return;
+
+  float aspect_ratio = static_cast<float>(w) / static_cast<float>(h);
 
   glm::mat4 projection = this->camera.get_projection_matrix_perspective(aspect_ratio);
 
