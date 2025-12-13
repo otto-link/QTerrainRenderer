@@ -444,40 +444,20 @@ void RenderWidget::set_heightmap_geometry(const std::vector<float> &data,
 
   this->makeCurrent();
 
-  // regenerate the whole mesh only if needed
-  if (!this->hmap.is_active() || height != this->current_height ||
-      add_skirt != this->current_add_skirt_state)
-  {
-    generate_heightmap(this->hmap,
-                       data,
-                       width,
-                       height,
-                       0.f,
-                       this->hmap_h0,
-                       0.f,
-                       this->hmap_w,
-                       this->hmap_h,
-                       this->hmap_w,
-                       add_skirt,
-                       /* add_level */ 0.f,
-                       /* exclude_below */ -FLT_MAX,
-                       &this->hmap_hmin);
-
-    this->current_width = width;
-    this->current_height = height;
-    this->current_add_skirt_state = add_skirt;
-  }
-  else
-  {
-    update_heightmap_elevation(this->hmap,
-                               data,
-                               width,
-                               height,
-                               this->hmap_h0,
-                               this->hmap_h,
-                               this->hmap_hmin, // [out]
-                               /* add_level */ 0.f);
-  }
+  generate_heightmap(this->hmap,
+                     data,
+                     width,
+                     height,
+                     0.f,
+                     this->hmap_h0,
+                     0.f,
+                     this->hmap_w,
+                     this->hmap_h,
+                     this->hmap_w,
+                     add_skirt,
+                     /* add_level */ 0.f,
+                     /* exclude_below */ -FLT_MAX,
+                     &this->hmap_hmin);
 
   // regenerate plane
   generate_plane(this->plane,
