@@ -26,8 +26,14 @@ void RenderWidget::render_scene_render_3d()
     this->makeCurrent();
 
   // model
+  bool flip_x = qtr::Config::get_config()->viewer3d.flip_x;
+  bool flip_y = qtr::Config::get_config()->viewer3d.flip_y;
+
+  float cx = flip_x ? -1.f : 1.f;
+  float cy = flip_y ? -1.f : 1.f;
+
   glm::mat4 model = glm::mat4(1.0f);
-  model = glm::scale(model, glm::vec3(1.f, this->scale_h, 1.f));
+  model = glm::scale(model, glm::vec3(cx, this->scale_h, cy));
 
   // shadow map
   glm::mat4 light_space_matrix;

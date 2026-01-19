@@ -24,6 +24,8 @@ public:
   struct Viewer3D
   {
     bool show_mouse_control = false;
+    bool flip_y = true;
+    bool flip_x = false;
   } viewer3d;
 
 private:
